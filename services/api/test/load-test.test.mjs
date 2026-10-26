@@ -131,3 +131,16 @@ test('real Node default test discovery does not execute the load CLI filename', 
     await unlink(copiedScript); await rmdir(directory);
   }
 });
+
+test('a wall-clock date change does not invalidate the controlled business workload', { timeout: 15000 }, async () => {
+  const originalNow = Date.now;
+  let reads = 0;
+  Date.now = () => Date.parse('2026-10-27T15:59:59.999Z') + (reads++ >= 12 ? 1 : 0);
+  try {
+    const report = await runner.runLoadTest({ durationSeconds: 1, workers: 1 });
+    assert.equal(report.passed, true, 'load invariants must use their own advancing test clock instead of crossing the host Shanghai day');
+    assert.equal(report.errors, 0);
+    assert.equal(report.verifiedAccounts, 1);
+    assert.equal(report.sandboxRemoved, true);
+  } finally { Date.now = originalNow; }
+});

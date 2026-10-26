@@ -12,6 +12,10 @@ const DEFAULTS = Object.freeze({ workers: 4, durationSeconds: 60, requestsPerWor
 const RATE_LIMIT = Object.freeze({ maxRequests: 10000, windowMs: 1000, authMaxAttempts: 1000, authWindowMs: 1000 });
 const INVENTORY = Object.freeze({ fertilizer: 2, tools: 1, seedPacks: 0, eggs: 0, crops: 0, meat: 0, decorations: 0 });
 const REQUEST_TIMEOUT_MS = 5000, CYCLE_PAUSE_MS = 250, RESPONSE_LIMIT_BYTES = 256 * 1024;
+// Business time advances with real elapsed time from a controlled daytime seed.
+// Wall-clock/Shanghai-midnight behavior has separate API rules tests; it must not
+// introduce unrelated revision conflicts into this fixed-workload comparison.
+const BUSINESS_CLOCK_EPOCH = Date.parse('2026-10-27T04:00:00Z');
 const FAILURE_CODES = new Set(['cancelled', 'deadline', 'transport', 'requestTimeout', 'responseInvalid', 'unexpected5xx',
   'unexpectedStatus', 'assetMismatch', 'replayMismatch', 'conflictMismatch', 'requestBudget', 'cleanup', 'shutdown', 'startup']);
 
@@ -125,6 +129,7 @@ export async function runLoadTest(options = {}) {
   const settings = normalizedOptions(options), started = performance.now(), controller = new AbortController();
   const histogram = monitorEventLoopDelay({ resolution: 20 }), latency = [];
   const report = { schemaVersion: 1, passed: false, workers: settings.workers, durationSecondsRequested: settings.durationSeconds,
+    businessClock: 'controlled-daytime-plus-monotonic-elapsed',
     requestsPerWorkerLimit: settings.requestsPerWorker, hardRequestLimit: settings.workers * settings.requestsPerWorker,
     elapsedMs: 0, workloadElapsedMs: 0, requests: 0, responses: 0, readRequests: 0, writeRequests: 0,
     expected409: 0, expected401: 0, initialCheckouts: 0, sameKeyReplayPairs: 0, revisionConflictPairs: 0,
@@ -144,6 +149,7 @@ export async function runLoadTest(options = {}) {
   const ensureRunning = () => { if (controller.signal.aborted) throw new LoadFailure(deadlineExceeded ? 'deadline' : 'cancelled'); };
   const createTemporaryApp = () => createApp({ mode: 'development', allowDevelopmentAuth: true,
     databasePath: path.join(directory, 'load.sqlite'),
+    clock: () => BUSINESS_CLOCK_EPOCH + Math.floor(performance.now() - started),
     developmentAuthLimit: { maxAttempts: RATE_LIMIT.authMaxAttempts, windowMs: RATE_LIMIT.authWindowMs },
     requestRateLimit: { maxRequests: RATE_LIMIT.maxRequests, windowMs: RATE_LIMIT.windowMs } });
   const connect = async () => {
