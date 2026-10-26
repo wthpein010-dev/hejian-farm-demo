@@ -1,0 +1,7 @@
+.scratch/
+__pycache__/
+*.pyc
+premium-audit.json
+.env*
+!.env*.example
+node_modules/

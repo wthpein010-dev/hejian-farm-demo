@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="title desc">
+  <title id="title">菜畦与滴灌的田间插画示意</title>
+  <desc id="desc">清晨的菜地绘制示意。前景为层层绿叶与滴灌管，远处是温室、树木与低山。本图为插画，并非实拍或监控照片。</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#cce4dd"/><stop offset="1" stop-color="#f2f1d6"/></linearGradient>
+    <linearGradient id="ground" x2="0" y2="1"><stop stop-color="#b7c78c"/><stop offset="1" stop-color="#758f5c"/></linearGradient>
+    <linearGradient id="soil" x2="0.3" y2="1"><stop stop-color="#a88b5e"/><stop offset="1" stop-color="#786344"/></linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#a0bc6c"/><stop offset=".55" stop-color="#719c55"/><stop offset="1" stop-color="#456e42"/></linearGradient>
+    <linearGradient id="leaf-light" x2="1" y2="1"><stop stop-color="#bfd389"/><stop offset="1" stop-color="#729c54"/></linearGradient>
+    <linearGradient id="glass" x2="0.7" y2="1"><stop stop-color="#edf2dd" stop-opacity=".9"/><stop offset="1" stop-color="#97bbb0" stop-opacity=".8"/></linearGradient>
+    <pattern id="earth" width="46" height="31" patternUnits="userSpaceOnUse"><path d="M5 8L11 6M28 23L35 24" stroke="#dac19a" stroke-width="1" opacity=".25"/><circle cx="21" cy="11" r="1" fill="#5c543a" opacity=".3"/></pattern>
+    <filter id="texture" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".58" numOctaves="2" seed="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".055"/></feComponentTransfer><feBlend in="SourceGraphic" mode="multiply"/></filter>
+    <g id="lettuce">
+      <ellipse cy="8" rx="29" ry="9" fill="#3e5635" opacity=".2"/>
+      <path d="M0 4C-21 8-38-8-28-22C-25-31-15-26-11-21C-19-40-4-43 2-30C4-48 20-42 18-29C33-42 43-25 30-14C47-13 38 9 17 9Z" fill="url(#leaf)"/>
+      <path d="M0 5C-18 4-24-7-19-17C-16-23-9-20-6-13C-10-32 5-34 9-21C17-34 30-24 23-14C36-13 26 3 12 6Z" fill="url(#leaf-light)"/>
+      <path d="M1 5L1-22M0-2L-12-15M2 1L18-15M-3 1L-21-8M3-11L10-18" fill="none" stroke="#d1dfa2" stroke-width="1.5" stroke-linecap="round" opacity=".75"/>
+      <path d="M-25-15Q-25-7-17-3M18-26L14-18M28-11L21-4" stroke="#a8c57a" stroke-width="1.3" fill="none" opacity=".6"/>
+    </g>
+    <g id="tree"><path d="M-3 0L-1-42H4L3 0Z" fill="#7e7953"/><path d="M-29-30C-39-42-27-61-15-58C-15-77 11-82 20-61C38-61 43-37 28-28C13-15-16-14-29-30Z" fill="#688e65"/><path d="M-24-48C-17-63-7-57-5-65C4-77 20-60 18-53C7-59 2-48-8-49C-14-42-20-43-24-40Z" fill="#87a777"/></g>
+    <g id="small-leaf"><path d="M0 0V-14" stroke="#4f7347" stroke-width="2"/><path d="M0-6C-17-3-22-15-13-18C-5-20-1-12 0-6C2-21 18-23 19-15C19-8 9-5 0-6Z" fill="#709953"/><path d="M-10-13L0-7L12-15" stroke="#a9c57e" fill="none" stroke-width="1.1"/></g>
+  </defs>
+  <path d="M0 0H800V500H0Z" fill="url(#sky)"/>
+  <circle cx="131" cy="74" r="35" fill="#f3df9f" opacity=".75"/>
+  <g fill="#f9fae6" opacity=".5"><path d="M210 57C216 42 233 42 240 54C258 47 271 58 271 67H196C197 58 203 54 210 57Z"/><path d="M572 44C577 34 594 34 599 44C613 39 624 48 624 55H560C560 48 565 42 572 44Z"/></g>
+  <path d="M0 177Q80 123 158 146Q209 86 277 148Q330 96 388 148Q468 97 534 151Q610 94 689 143Q747 121 800 151V251H0Z" fill="#a9c3a5"/>
+  <path d="M0 194Q74 154 143 181Q230 132 303 181Q393 143 468 185Q553 141 624 178Q725 138 800 184V253H0Z" fill="#93b591"/>
+  <path d="M0 219Q192 201 388 215Q589 198 800 226V500H0Z" fill="url(#ground)"/>
+  <path d="M0 232Q146 219 287 234Q557 213 800 241" stroke="#c8d3a0" stroke-width="16" fill="none" opacity=".5"/>
+  <g opacity=".95"><use href="#tree" x="60" y="224" transform="translate(18 74) scale(.68)"/><use href="#tree" x="107" y="228" transform="translate(15 58) scale(.76)"/><use href="#tree" x="163" y="225" transform="translate(42 92) scale(.6)"/><use href="#tree" x="716" y="225" transform="translate(214 77) scale(.68)"/><use href="#tree" x="763" y="231" transform="translate(215 68) scale(.72)"/></g>
+  <g transform="translate(496 209)">
+    <ellipse cx="63" cy="16" rx="119" ry="13" fill="#6d8e66" opacity=".17"/>
+    <path d="M-44 8V-26Q-44-71 1-70H91Q135-70 139-26V8Z" fill="url(#glass)" stroke="#8ba494" stroke-width="2"/>
+    <path d="M-44 8V-26Q-44-71 1-70Q45-70 45-26V8Z" fill="#c5dac1" fill-opacity=".5" stroke="#8ba494" stroke-width="2"/>
+    <path d="M-16 8V-28Q-16-66 26-68M16 8V-27Q16-65 56-69M47 8V-26Q47-65 87-69M78 8V-25Q78-60 113-61M109 8V-25Q109-49 129-51" fill="none" stroke="#b6c8b1" stroke-width="2.5"/>
+    <path d="M-45-17H138M-38-46H132M-44 9H140" stroke="#90aa98" stroke-width="2" fill="none"/><path d="M-15 8V-23Q0-34 15-23V8Z" fill="#91b8a3" stroke="#889e87" stroke-width="2"/>
+    <path d="M-25-44Q-19-59-3-60M34-50Q48-63 68-62M87-46Q101-55 116-52" stroke="#f0f5df" stroke-width="3" stroke-linecap="round" opacity=".65" fill="none"/>
+  </g>
+  <g stroke="#a4a17b" stroke-width="2.5" fill="none"><path d="M0 226L182 235M0 236L180 245"/><path d="M18 216V244M58 220V247M98 222V249M137 226V252M177 227V255"/></g>
+  <path d="M319 230L-56 500H98L350 231Z" fill="#bbaa7c"/>
+  <path d="M354 232L105 500H282L385 233Z" fill="url(#soil)"/>
+  <path d="M389 234L296 500H461L419 235Z" fill="url(#soil)"/>
+  <path d="M423 235L480 500H662L451 236Z" fill="url(#soil)"/>
+  <path d="M455 236L681 500H842L485 237Z" fill="url(#soil)"/>
+  <path d="M354 232L105 500H282L385 233ZM389 234L296 500H461L419 235ZM423 235L480 500H662L451 236ZM455 236L681 500H842L485 237Z" fill="url(#earth)"/>
+  <g fill="none" stroke="#c4b27f" stroke-width="4" opacity=".5"><path d="M351 233L99 500M387 235L288 500M421 236L469 500M453 237L671 500"/></g>
+  <g fill="none" stroke="#3f6555" stroke-linecap="round"><path d="M366 241L189 500" stroke-width="4.5"/><path d="M405 241L378 500" stroke-width="5"/><path d="M438 242L568 500" stroke-width="5"/><path d="M471 245L760 500" stroke-width="5"/></g>
+  <g fill="none" stroke="#a4c2ac" stroke-width="1.2" opacity=".65"><path d="M367 241L191 500M406 242L380 500M439 243L570 500M473 246L762 500"/></g>
+  <g opacity=".85"><use href="#small-leaf" x="349" y="247" transform="translate(157 115) scale(.55)"/><use href="#small-leaf" x="380" y="247" transform="translate(163 108) scale(.58)"/><use href="#small-leaf" x="413" y="247" transform="translate(170 104) scale(.6)"/><use href="#small-leaf" x="446" y="247" transform="translate(178 101) scale(.62)"/></g>
+  <g transform="translate(332 270) scale(.35)"><use href="#lettuce"/></g><g transform="translate(363 273) scale(.37)"><use href="#lettuce"/></g><g transform="translate(397 275) scale(.4)"><use href="#lettuce"/></g><g transform="translate(433 277) scale(.4)"><use href="#lettuce"/></g><g transform="translate(472 279) scale(.42)"><use href="#lettuce"/></g>
+  <g transform="translate(314 293) scale(.46)"><use href="#lettuce"/></g><g transform="translate(355 298) scale(.48)"><use href="#lettuce"/></g><g transform="translate(398 301) scale(.5)"><use href="#lettuce"/></g><g transform="translate(448 306) scale(.53)"><use href="#lettuce"/></g><g transform="translate(501 310) scale(.55)"><use href="#lettuce"/></g>
+  <g transform="translate(284 324) scale(.59)"><use href="#lettuce"/></g><g transform="translate(340 331) scale(.62)"><use href="#lettuce"/></g><g transform="translate(398 337) scale(.64)"><use href="#lettuce"/></g><g transform="translate(462 343) scale(.66)"><use href="#lettuce"/></g><g transform="translate(535 350) scale(.7)"><use href="#lettuce"/></g>
+  <g transform="translate(250 361) scale(.76)"><use href="#lettuce"/></g><g transform="translate(322 370) scale(.79)"><use href="#lettuce"/></g><g transform="translate(399 379) scale(.84)"><use href="#lettuce"/></g><g transform="translate(486 389) scale(.9)"><use href="#lettuce"/></g><g transform="translate(577 398) scale(.94)"><use href="#lettuce"/></g>
+  <g transform="translate(209 407) scale(.94)"><use href="#lettuce"/></g><g transform="translate(296 420) scale(1.02)"><use href="#lettuce"/></g><g transform="translate(395 432) scale(1.08)"><use href="#lettuce"/></g><g transform="translate(511 446) scale(1.13)"><use href="#lettuce"/></g><g transform="translate(631 459) scale(1.18)"><use href="#lettuce"/></g>
+  <g transform="translate(155 466) scale(1.2)"><use href="#lettuce"/></g><g transform="translate(267 483) scale(1.3)"><use href="#lettuce"/></g><g transform="translate(393 501) scale(1.4)"><use href="#lettuce"/></g><g transform="translate(540 520) scale(1.5)"><use href="#lettuce"/></g><g transform="translate(704 538) scale(1.6)"><use href="#lettuce"/></g>
+  <g transform="translate(288 275) scale(.35)"><use href="#lettuce"/></g><g transform="translate(256 299) scale(.46)"><use href="#lettuce"/></g><g transform="translate(211 332) scale(.61)"><use href="#lettuce"/></g><g transform="translate(155 374) scale(.8)"><use href="#lettuce"/></g><g transform="translate(85 426) scale(1.02)"><use href="#lettuce"/></g><g transform="translate(0 489) scale(1.35)"><use href="#lettuce"/></g>
+  <g transform="translate(513 274) scale(.37)"><use href="#lettuce"/></g><g transform="translate(556 303) scale(.5)"><use href="#lettuce"/></g><g transform="translate(615 340) scale(.67)"><use href="#lettuce"/></g><g transform="translate(688 386) scale(.88)"><use href="#lettuce"/></g><g transform="translate(778 444) scale(1.14)"><use href="#lettuce"/></g>
+  <path d="M800 280L716 270L484 238L304 235L253 230" stroke="#506f5b" stroke-width="6" fill="none" stroke-linejoin="round"/>
+  <path d="M800 278L716 268L484 236L304 233" stroke="#9bb79b" stroke-width="1.5" fill="none"/>
+  <g transform="translate(721 269)"><path d="M0 4V-21H9V5" fill="none" stroke="#608578" stroke-width="6"/><path d="M-6-22H15" stroke="#d7b15f" stroke-width="4" stroke-linecap="round"/><circle cx="5" cy="-22" r="5" fill="#e9ca7e"/><path d="M-2-22H12M5-28V-16" stroke="#ad945b" stroke-width="1.5"/></g>
+  <g transform="translate(98 286)"><path d="M0 0V-46" stroke="#6a8067" stroke-width="4"/><path d="M-16-46H16V-27H-16Z" fill="#e8e9c8" stroke="#a5b494" stroke-width="1.5"/><path d="M-11-41H11M-11-36H3" stroke="#8ca17e" stroke-width="2"/><path d="M0-53V-46" stroke="#7e9478" stroke-width="2"/><circle cy="-54" r="4" fill="#b6c6a5"/><ellipse cy="1" rx="10" ry="3" fill="#53724e" opacity=".15"/></g>
+  <path d="M0 466Q42 443 83 464L31 500H0Z" fill="#75975e"/>
+  <g fill="none" stroke="#9ab778" stroke-width="2"><path d="M28 481L14 449M27 481L39 445M26 478L52 458M61 461L62 435M61 461L78 445"/></g>
+  <g fill="#efe3af"><circle cx="14" cy="449" r="4"/><circle cx="39" cy="445" r="4"/><circle cx="78" cy="445" r="3"/></g>
+  <g fill="#8da4a0" opacity=".6"><path d="M680 77Q686 71 692 77Q698 71 704 77Q697 73 692 81Q686 74 680 77Z"/><path d="M649 96Q654 91 659 96Q664 91 669 96Q663 94 659 100Q655 94 649 96Z"/></g>
+  <path d="M0 0H800V500H0Z" fill="#c6c598" opacity=".08" filter="url(#texture)"/>
+</svg>

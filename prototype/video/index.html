@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#244d3d">
+  <meta name="description" content="通过五张 Demo 界面截图，20 秒了解禾间农场的种养、推荐、猪第一视角、福利和示例邮寄。">
+  <title>20 秒了解禾间 · 农场 H5 演示</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body.video-page{display:block;min-height:100vh;margin:0;padding:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);overflow:auto}
+    .video-page *{box-sizing:border-box}
+    .video-page a{cursor:pointer;text-decoration:none}
+    .video-page a:focus-visible,.video-page video:focus-visible{outline:3px solid var(--focus);outline-offset:5px}
+    .film-shell{max-width:1080px;padding:30px 40px 44px;margin:0 auto}
+    .film-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+    .film-brand{display:flex;align-items:center;gap:12px;font:25px var(--font-display);letter-spacing:2px}
+    .film-brand svg{width:32px;height:32px;color:var(--brand)}
+    .film-back{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:10px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font-size:16px;transition:background .15s}
+    .film-back:hover{background:var(--brand-soft)}
+    .film-back:active{background:var(--line)}
+    .film-back svg{width:18px;height:18px}
+    .film-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:center;gap:70px;padding-top:42px}
+    .film-eyebrow{display:inline-block;color:var(--secondary);font-size:14px;letter-spacing:1.5px;border-left:3px solid var(--accent);padding-left:12px;margin-bottom:20px}
+    .film-copy h1{font:42px/1.4 var(--font-display);font-weight:400;letter-spacing:1px;margin:0 0 19px}
+    .film-lead{font-size:18px;line-height:1.8;color:var(--secondary);margin:0;max-width:430px}
+    .film-chapters{list-style:none;margin:30px 0 28px;padding:0;border-top:1px solid var(--line)}
+    .film-chapters li{display:grid;grid-template-columns:58px 1fr;align-items:baseline;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);font-size:16px;line-height:1.6}
+    .film-chapters time{font-family:var(--font-data);font-size:14px;color:var(--secondary);font-variant-numeric:tabular-nums}
+    .film-chapters strong{font-weight:550}
+    .film-note{font-size:14px;line-height:1.9;color:var(--secondary);max-width:450px;margin:0}
+    .film-player{width:100%;margin:0}
+    .film-video{display:block;width:100%;height:auto;aspect-ratio:9/16;border:1px solid var(--line);border-radius:22px;background:var(--brand-soft);box-shadow:0 18px 42px #1d332919;object-fit:contain}
+    .film-player figcaption{margin-top:15px;font-size:13px;color:var(--secondary);line-height:1.8;text-align:center}
+    .film-error{font-size:14px;line-height:1.8;color:var(--warning);background:#fbf2e0;border:1px solid #e6d6b1;padding:12px;border-radius:10px;margin-top:12px}
+    .film-error[hidden]{display:none}
+    .film-footer{margin-top:40px;padding-top:19px;border-top:1px solid var(--line);font-size:13px;line-height:1.8;color:var(--secondary)}
+    @media(max-width:760px){.film-shell{max-width:480px;padding:18px 20px 30px}.film-header{padding-bottom:18px}.film-brand{font-size:23px}.film-back{padding:9px 12px;font-size:15px}.film-main{grid-template-columns:1fr;gap:26px;padding-top:27px}.film-eyebrow{margin-bottom:14px;font-size:13px}.film-copy h1{font-size:32px;margin-bottom:12px}.film-lead{font-size:17px}.film-player{grid-row:2;max-width:340px;justify-self:center}.film-chapters{margin:23px 0}.film-note{font-size:14px}.film-footer{margin-top:26px}.film-video{border-radius:18px}}
+    @media(prefers-reduced-motion:reduce){.video-page *{transition:none!important;scroll-behavior:auto!important}}
+    @media(forced-colors:active){.film-video,.film-back{border:1px solid CanvasText}}
+  </style>
+</head>
+<body class="video-page">
+  <div class="film-shell">
+    <header class="film-header">
+      <div class="film-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 28V15M16 22C5 22 3 13 4 6c8-1 14 4 12 16ZM16 18C16 7 24 3 29 4c1 8-4 14-13 14Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>禾间</div>
+      <a class="film-back" href="../index.html"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m13 5-7 7 7 7M6 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>返回体验</a>
+    </header>
+    <main class="film-main">
+      <section class="film-copy" aria-labelledby="film-title">
+        <span class="film-eyebrow">截图讲解 · 20 秒 · 5 个画面</span>
+        <h1 id="film-title">看看禾间，<br>从种养到收获。</h1>
+        <p class="film-lead">五张 Demo 界面截图，每张停留 4 秒，带你快速了解一次农场体验。</p>
+        <ol class="film-chapters" aria-label="视频画面顺序">
+          <li><time datetime="PT0S">00:00</time><strong>我的农场 · 认出自己的田</strong></li>
+          <li><time datetime="PT4S">00:04</time><strong>当季优选 · 看推荐与收获</strong></li>
+          <li><time datetime="PT8S">00:08</time><strong>猪的第一视角 · 换个角度</strong></li>
+          <li><time datetime="PT12S">00:12</time><strong>福利中心 · 观看后再领奖</strong></li>
+          <li><time datetime="PT16S">00:16</time><strong>收获到家 · 了解示例邮寄</strong></li>
+        </ol>
+        <p class="film-note" id="video-source">内容来自模拟 H5 的界面截图，采用静态画面与单行字幕编排，无音频。设备、摄像头、广告和履约均为演示。</p>
+      </section>
+      <figure class="film-player">
+        <video id="walkthrough" class="film-video" controls preload="metadata" playsinline poster="poster.webp" aria-label="禾间农场 20 秒截图讲解" aria-describedby="video-source">
+          <source src="walkthrough.mp4" type="video/mp4">
+          当前浏览器无法播放视频。你可以<a href="walkthrough.mp4">打开 MP4 文件</a>。
+        </video>
+        <p class="film-error" id="video-error" role="status" hidden>视频暂时无法加载，请稍后重试，或返回 H5 直接体验。</p>
+        <figcaption>完整手机界面 · 可暂停查看 · 全长 20 秒</figcaption>
+      </figure>
+    </main>
+    <footer class="film-footer">本页为截图讲解，非连续实机录屏。当前版本为可体验的 H5 Demo，不代表微信或抖音小程序已经上架。</footer>
+  </div>
+  <script>
+    const player = document.querySelector('#walkthrough');
+    const error = document.querySelector('#video-error');
+    const revealError = () => { error.hidden = false; };
+    player.addEventListener('error', revealError);
+    player.querySelector('source').addEventListener('error', revealError);
+    player.addEventListener('loadedmetadata', () => { error.hidden = true; });
+  </script>
+</body>
+</html>
