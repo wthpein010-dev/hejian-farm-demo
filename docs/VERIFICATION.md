@@ -42,6 +42,7 @@
 - 12个公网资源均HTTP200且SHA256与Git文件逐字节一致；包括三张场景WebP、HTML/CSS/JavaScript、手机预览页和视频。
 - 视频Range请求返回206；真实浏览器播放currentTime已推进、duration20秒、readyState4、error为空。视频为截图讲解，没有宣称连续实机录屏。
 - 公开分享弹窗生成本站HTTPS地址，复制操作不发送邀请或自动奖励；浏览器系统分享能力由终端支持情况决定。
+- 静态CSS和JavaScript带版本查询参数，避免二次发布后旧浏览器缓存继续加载过期脚本。
 - 本次独立发布，没有修改用户网站或AI Application Hub目录。
 
 后续文档或界面修正由同一Pages工作流继续验证与部署，当前结果可查看仓库Actions。没有将HTTP检查当作原生小程序或真实手机验收。
