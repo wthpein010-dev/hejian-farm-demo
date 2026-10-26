@@ -111,6 +111,21 @@ export class FarmStore {
     }
   }
 
+  readiness() {
+    if (this.#closed) return false;
+    try {
+      const row = this.#database.prepare('SELECT last_time FROM server_clock WHERE singleton = 1').get();
+      return Number.isSafeInteger(row?.last_time) && row.last_time >= 0;
+    } catch { return false; }
+  }
+
+  prepareShutdown() {
+    // A synchronous SQLite lock wait would block both the shutdown timer and
+    // every other request on this event loop. This connection-local setting
+    // lets already accepted work finish only when its write lock is available.
+    if (!this.#closed) this.#database.exec('PRAGMA busy_timeout = 0');
+  }
+
   serverNow() {
     const now = this.#config.clock();
     if (!Number.isSafeInteger(now) || now < 0) throw new TypeError('服务器时间无效');

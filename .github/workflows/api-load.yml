@@ -1,0 +1,44 @@
+name: Verify isolated API workload
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.15.0'
+      - name: Run a two-minute temporary SQLite business workload
+        run: node services/api/tools/load-api.mjs --duration 120 --workers 4 > api-load-report.json
+      - name: Verify sustained duration, assets and cleanup
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const report = JSON.parse(readFileSync('api-load-report.json', 'utf8'));
+          assert.equal(report.passed, true);
+          assert.equal(report.errors, 0);
+          assert.equal(report.unexpected5xx, 0);
+          assert.equal(report.requests, report.responses);
+          assert.ok(report.workloadElapsedMs >= 120000);
+          assert.equal(report.stoppedByRequestLimitWorkers, 0);
+          assert.equal(report.verifiedAccounts, 4);
+          assert.equal(report.initialCheckouts, 4);
+          assert.equal(report.sandboxRemoved, true);
+          NODE
+      - name: Save numeric workload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-api-load-linux
+          path: api-load-report.json
+          if-no-files-found: error

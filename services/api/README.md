@@ -121,6 +121,8 @@ node --check services/api/src/server.mjs
 
 ## 安全及运维约束
 
-仅存会话 token 的 SHA256 摘要，不在 DB 存明文 token；身份 code 不持久化，不写请求日志、URL或错误信息。私有响应 `no-store`，添加 `nosniff` 和 requestId。默认每 IP 每分钟240次请求、10次登录尝试，基于 socket 地址，忽略客户端伪造的 `X-Forwarded-For`。代理部署前需单独设计可信代理和边界限流；当前不是多实例分布式限流。
+探活、只读准备检查、结构化安全日志、嵌入指标和有界关停见[OPERATIONS.md](OPERATIONS.md)；持续业务工具见[LOAD-TEST.md](LOAD-TEST.md)。这些本机工程检查不替代生产采集、告警、TLS、容量和真实平台验收。
+
+仅存会话 token 的 SHA256 摘要，不在 DB 存明文 token；身份 code 不持久化，不写请求日志、URL或错误信息。私有响应 `no-store`，添加 `nosniff` 和 requestId。默认业务请求每 IP 每分钟240次、10次登录尝试；健康探针独立于业务限流。限流基于 socket 地址，忽略客户端伪造的 `X-Forwarded-For`。代理部署前需单独设计可信代理和边界限流；当前不是多实例分布式限流。
 
 当前使用同进程同步 SQLite 事务。生产 TLS、数据库访问权限与加密、备份／恢复演练、监控告警、容量负载、灾备及多实例策略仍待真实部署验证。源码与这些本地检查不能作为已完成正式上线、官方身份联调、真实硬件或小程序官方审核的证明。

@@ -44,6 +44,7 @@ export function normalizeConfig(options = {}) {
     clock: typeof options.clock === 'function' ? options.clock : Date.now,
     sessionTtlMs: integer(options.sessionTtlMs, 30 * 60_000, 1000, 30 * 86400000, '会话时长'),
     providerTimeoutMs: integer(options.providerTimeoutMs, 8000, 100, 30_000, '平台请求超时'),
+    shutdownTimeoutMs: integer(options.shutdownTimeoutMs, 10000, 100, 60_000, '关停截止时间'),
     platformProviders: Object.freeze({ ...providers }),
     authLimit: Object.freeze({ max: integer(authLimit.maxAttempts, 10, 1, 1000, '登录限速'),
       windowMs: integer(authLimit.windowMs, 60_000, 1000, 3600_000, '登录窗口') }),
@@ -62,6 +63,7 @@ export function configFromEnvironment(env = process.env) {
     databasePath: env.FARM_DATABASE_PATH ?? DEFAULT_DATABASE,
     allowedOrigins: env.FARM_ALLOWED_ORIGINS ? env.FARM_ALLOWED_ORIGINS.split(',').map(value => value.trim()) : [],
     platformProviders: platformProvidersFromEnvironment(env),
+    shutdownTimeoutMs: env.FARM_SHUTDOWN_TIMEOUT_MS === undefined ? 10000 : Number(env.FARM_SHUTDOWN_TIMEOUT_MS),
     host: env.FARM_HOST ?? '127.0.0.1', port,
   };
 }

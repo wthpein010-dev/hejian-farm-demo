@@ -1,9 +1,10 @@
 import http from 'node:http';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { normalizeConfig, configFromEnvironment } from './config.mjs';
 import { FarmStore } from './store.mjs';
 import { PlatformIdentityError } from './providers.mjs';
+import { createOperations, createJsonLineLogger } from './operations.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -72,12 +73,15 @@ class RateLimit {
   }
 }
 
-async function verifyPlatform(provider, input, timeoutMs) {
-  let timer;
+async function verifyPlatform(provider, input, timeoutMs, shutdownSignal) {
+  let timer, abort;
   const controller = new AbortController();
   try {
     const result = await Promise.race([Promise.resolve().then(() => provider({ ...input, signal: controller.signal })), new Promise((_, reject) => {
       timer = setTimeout(() => { controller.abort(); reject(new Error('Provider timeout')); }, timeoutMs); timer.unref();
+    }), new Promise((_, reject) => {
+      abort = () => { controller.abort(); reject(new Error('Service shutdown')); };
+      if (shutdownSignal.aborted) abort(); else shutdownSignal.addEventListener('abort', abort, { once: true });
     })]);
     if (!result || typeof result.subject !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(result.subject)) throw new Error('Invalid provider identity');
     return result.subject;
@@ -85,15 +89,17 @@ async function verifyPlatform(provider, input, timeoutMs) {
     if (error instanceof PlatformIdentityError) throw new RequestError(error.status, error.code, error.message);
     throw new RequestError(502, 'IDENTITY_PROVIDER_FAILED', '平台身份核验暂不可用，请稍后重新登录');
   }
-  finally { clearTimeout(timer); controller.abort(); }
+  finally { clearTimeout(timer); shutdownSignal.removeEventListener('abort', abort); controller.abort(); }
 }
 
 export function createApp(options = {}) {
+  const operations = createOperations(options.logger);
   const config = normalizeConfig(options), store = new FarmStore(config);
   const loginLimit = new RateLimit(config.authLimit), requestLimit = new RateLimit(config.requestLimit);
-  let closed = false;
-  const server = http.createServer(async (request, response) => {
-    const requestId = randomUUID();
+  const handlers = new Set(), sockets = new Set(), forcedShutdown = new AbortController();
+  let draining = false, closePromise;
+  const handle = async (request, response) => {
+    const observation = operations.observe(request, response), { requestId } = observation;
     response.setHeader('Content-Type', 'application/json; charset=utf-8');
     response.setHeader('Cache-Control', 'no-store, private'); response.setHeader('Pragma', 'no-cache');
     response.setHeader('X-Content-Type-Options', 'nosniff'); response.setHeader('X-Request-Id', requestId);
@@ -114,6 +120,14 @@ export function createApp(options = {}) {
       const url = new URL(request.url, 'http://api.internal');
       if (url.search) throw invalid();
       const pathname = url.pathname;
+      observation.route(pathname);
+      if (request.method === 'GET' && ['/livez', '/readyz', '/healthz'].includes(pathname)) {
+        if (pathname !== '/livez' && (draining || !store.readiness())) {
+          send(503, { error: { code: 'NOT_READY', message: '服务暂未就绪，请稍后重试' } }); return;
+        }
+        send(200, { data: { status: 'ok' } }); return;
+      }
+      if (draining) { request.resume(); throw new RequestError(503, 'SERVICE_DRAINING', '服务正在维护，请稍后重试'); }
       if (request.method === 'OPTIONS') {
         const requestedHeaders = String(request.headers['access-control-request-headers'] ?? '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
         if (!origin || !['GET', 'POST'].includes(request.headers['access-control-request-method']) ||
@@ -128,7 +142,6 @@ export function createApp(options = {}) {
       const address = request.socket.remoteAddress ?? 'unknown';
       const wait = requestLimit.consume(address, now);
       if (wait) { response.setHeader('Retry-After', String(wait)); throw new RequestError(429, 'RATE_LIMITED', '操作较频繁，请稍后重试'); }
-      if (pathname === '/healthz' && request.method === 'GET') { send(200, { data: { status: 'ok' } }); return; }
       if (!pathname.startsWith(PREFIX + '/')) throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
       const route = pathname.slice(PREFIX.length);
       if (['/auth/development', '/auth/platform'].includes(route)) {
@@ -150,11 +163,17 @@ export function createApp(options = {}) {
         const claimedCode = store.claimPlatformCode(body.platform, namespace, body.code, store.serverNow());
         if (!claimedCode) throw new RequestError(409, 'IDENTITY_CODE_USED', '这次平台登录凭证正在核验或已使用，请重新发起平台登录');
         try {
-          const subject = await verifyPlatform(provider, { platform: body.platform, code: body.code }, config.providerTimeoutMs);
+          const subject = await verifyPlatform(provider, { platform: body.platform, code: body.code }, config.providerTimeoutMs, forcedShutdown.signal);
+          if (forcedShutdown.signal.aborted) throw new RequestError(503, 'SERVICE_DRAINING', '服务正在维护，请稍后重试');
           const data = store.createIdentity(body.platform, subject, store.serverNow());
           store.finishPlatformCode(claimedCode, 'used', store.serverNow());
           send(200, { data }); return;
-        } catch (error) { store.finishPlatformCode(claimedCode, 'failed', store.serverNow()); throw error; }
+        } catch (error) {
+          // A forced shutdown has no result to confirm. Keep the code claimed
+          // and never wait for another writer or reopen a closed store.
+          if (!forcedShutdown.signal.aborted) store.finishPlatformCode(claimedCode, 'failed', store.serverNow());
+          throw error;
+        }
       }
       // The one-use capability also recovers a lost success response after all sessions are removed.
       if (route === '/account/deletion/confirm') {
@@ -219,25 +238,56 @@ export function createApp(options = {}) {
       if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });
     }
+  };
+  const server = http.createServer((request, response) => {
+    const pending = handle(request, response);
+    handlers.add(pending);
+    pending.finally(() => handlers.delete(pending)).catch(() => {});
   });
+  server.on('connection', socket => { sockets.add(socket); socket.once('close', () => sockets.delete(socket)); });
   server.requestTimeout = 15_000; server.headersTimeout = 10_000; server.keepAliveTimeout = 5000;
   server.maxHeadersCount = 50; server.maxRequestsPerSocket = 100;
-  return { server, store, close: async () => {
-    if (closed) return;
-    closed = true;
-    if (server.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-    store.close();
+  return { server, store, metrics: () => operations.metrics(), close: () => {
+    if (closePromise) return closePromise;
+    let resolveClose, rejectClose;
+    closePromise = new Promise((resolve, reject) => { resolveClose = resolve; rejectClose = reject; });
+    draining = true; operations.lifecycle('draining');
+    (async () => {
+      let deadline;
+      try {
+        // close() also cancels a pending DNS listen. Skipping it while
+        // listening=false would allow the DNS callback to open a late socket.
+        const listenerClosed = new Promise((resolve, reject) => server.close(error =>
+          error && error.code !== 'ERR_SERVER_NOT_RUNNING' ? reject(error) : resolve()));
+        deadline = setTimeout(() => {
+          operations.lifecycle('forced'); forcedShutdown.abort();
+          for (const socket of sockets) socket.destroy();
+        }, config.shutdownTimeoutMs);
+        deadline.unref();
+        store.prepareShutdown();
+        await listenerClosed;
+        await Promise.allSettled([...handlers]);
+      } finally {
+        clearTimeout(deadline); store.close(); operations.lifecycle('stopped');
+      }
+    })().then(resolveClose, rejectClose);
+    return closePromise;
   } };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const logger = createJsonLineLogger(process.stdout);
+  const lifecycle = phase => logger({ event: 'lifecycle', phase });
   try {
-    const configuration = configFromEnvironment(), app = createApp(configuration);
+    const configuration = configFromEnvironment(), app = createApp({ ...configuration, logger });
     app.server.listen(configuration.port, configuration.host, () => {
-      process.stdout.write(`Farm API ready at ${configuration.host}:${configuration.port} (${configuration.mode})\n`);
+      lifecycle('listening');
     });
-    app.server.on('error', () => { process.stderr.write('Farm API failed to start; verify server configuration.\n'); process.exitCode = 1; app.store.close(); });
-    const shutdown = async () => { await app.close(); process.exitCode = 0; };
+    app.server.on('error', () => {
+      lifecycle('startup_failed'); process.exitCode = 1;
+      app.close().then(() => process.exit(1), () => process.exit(1));
+    });
+    const shutdown = () => { app.close().then(() => process.exit(0), () => process.exit(1)); };
     process.once('SIGINT', shutdown); process.once('SIGTERM', shutdown);
-  } catch { process.stderr.write('Farm API configuration is invalid; no service started.\n'); process.exitCode = 1; }
+  } catch { lifecycle('configuration_failed'); process.exitCode = 1; }
 }
