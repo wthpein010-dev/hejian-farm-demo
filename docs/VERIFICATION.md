@@ -43,7 +43,11 @@
 
 - 本轮六张实际 UI 截图各 4 秒，共 24 秒，720×1280、24fps、H.264/yuv420p/faststart，无音频；已重新生成。这是截图讲解视频，不是连续实机录屏。
 - 当前身份、独立仓库 push/admin 权限及 main 远端已现场重新核实；发布前远端为 `9b1ef1e`。
-- 新版公开部署与线上资源／浏览器／视频播放结果将在实际完成后补充；此处不把既有地址可访问当作本轮部署成功。
+- 功能提交 `ea0c52424901131e103febe4dffd9a6190269f1b` 已推送 main；[工作流40386437023](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40386437023) 的43项测试、五脚本语法和 Pages 部署均成功。
+- 18 个公网运行资源均 HTTP 200、SHA256 与该提交逐字节一致，包含新 systems／expansion JS／CSS、三横幅、预览页和视频；视频 Range 返回 206、1024 字节。
+- 公网浏览器已实际操作五入口、商品详情、加入购物车、兑换和仓库，余额 80→50、饲料 6→9；签到后按钮禁用；分享生成本站 HTTPS 地址且复制成功反馈可见，没有自动奖励。
+- 公网视频实际从 0 播放至 24 秒、ended=true、error=null；主应用公网页 console 无 warn/error。截图讲解标识、六章节与播放器时长一致。
+- 后续验收文档提交不更改上述运行资源，继续由同一 CI／Pages 工作流部署；最终部署可在仓库 Actions 核对。
 - 独立地址继续为[禾间 H5](https://wthpein010-dev.github.io/hejian-farm-demo/)，仅更新原独立项目，不接入用户网站或 AI Application Hub。
 
 ## 初版历史：自动检查
