@@ -1,5 +1,9 @@
 # 禾间农场 · 竖版 H5 Demo
 
+> 正式App／微信／抖音小程序工程正在推进，尚未达到全量上线验收。新增 `apps/mobile` 跨端客户端与 `services/api` 持久账户/资产服务；现有公开Pages仍是 `prototype/` H5演示。两者验证边界见[上线矩阵](docs/release/READINESS.md)，不能把演示发布或跨端编译写成正式上架。
+
+跨端本地开发（Node≥24.15）：先按[服务端说明](services/api/README.md)启动明确的本机沙盒，再运行 `npm ci --ignore-scripts` 及根 `npm run dev:mobile`。客户端公开配置与构建说明见[移动工程](apps/mobile/README.md)。真实平台AppID／后端HTTPS域名、签名和设备联调仍待配置。
+
 面向 30–50 岁及中老年用户的农场体验演示：认养农作物与牲畜、远程照料、看农田与牧场、参加福利，再体验收获到家。
 
 - 部署地址：[打开禾间 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)（部署与线上验收状态见[验收记录](docs/VERIFICATION.md)）。
@@ -37,6 +41,23 @@ python prototype/serve.py
 
 打开 [http://127.0.0.1:4173/](http://127.0.0.1:4173/)，按 `Ctrl+C` 结束服务。无需安装前端依赖，也不需要账户或 API Key。
 
+## 跨端依赖校验
+
+移动工程需要 Node≥24.15。依赖修补由根锁文件、版本与哈希校验脚本统一维护：
+
+```sh
+npm ci --ignore-scripts
+npm run verify:dependencies
+npm run typecheck
+npm run build:h5
+npm run build:weixin
+npm run build:douyin
+npm run build:app
+npm audit --json
+```
+
+普通 `npm ci` 会执行适配脚本；即使用 `--ignore-scripts`，移动 dev／build 前置步骤仍会核查。不要手工跳过版本或哈希失败，也不要运行 `npm audit fix --force`。当前 Vite 存在明确记录的上游 peer 例外，`npm ls` 的非零结果不能写成全绿；具体版本、四端验证、i18n／图片识别适配与 SSR 边界见[依赖修补说明](docs/release/DEPENDENCIES.md)。App 构建资源仍须真实渠道配置、签名、原生联调与平台验收。
+
 ## 验证与部署
 
 ```sh
@@ -48,7 +69,7 @@ node --check prototype/systems.js
 node --check prototype/expansion.js
 ```
 
-[Pages 工作流](.github/workflows/pages.yml) 在 `main` 推送或手动触发后，使用 Node.js 22 执行测试及语法检查，再将 `prototype/` 直接部署为 GitHub Pages；没有安装依赖或构建步骤。仓库 Pages 来源需配置为 GitHub Actions。
+[Pages 工作流](.github/workflows/pages.yml) 在 `main` 推送或手动触发后，使用 Node.js 24.15.0 执行测试与语法检查；独立任务按锁文件安装移动工程依赖，校验适配与已知漏洞、类型和视觉 token，再实际编译 H5、微信、抖音及 App 离线资源。两组验证全部成功后，将 `prototype/` 部署为 GitHub Pages；未签名的跨端资源另存为工作流附件。仓库 Pages 来源需配置为 GitHub Actions。
 
 本地检查、浏览器体验和实际部署结果分开记录，详见[验收记录](docs/VERIFICATION.md)。
 

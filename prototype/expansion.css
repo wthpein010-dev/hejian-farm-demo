@@ -108,7 +108,8 @@
 .coupon-choice small{display:block;font-size:12px;line-height:1.7;color:var(--secondary);margin-top:3px}
 .coupon-choice.selected{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}
 .coupon-choice:disabled,.coupon-choice.disabled{opacity:1;color:var(--secondary);background:var(--canvas);box-shadow:none}
-.checkout-footer{position:sticky;bottom:0;z-index:3;display:grid;gap:10px;border-top:1px solid var(--line);background:var(--paper);padding:14px 0 max(10px,env(safe-area-inset-bottom));margin-top:18px}
+/* Keep the commit action after the readable quote; a bottom-sticky child overlaps coupons. */
+.checkout-footer{position:static;display:grid;gap:10px;border-top:1px solid var(--line);background:var(--paper);padding:14px 0 max(10px,env(safe-area-inset-bottom));margin-top:18px}
 .checkout-footer>div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px}
 .checkout-footer .primary-button{width:100%}
 .sheet--cart{overflow-y:auto;scroll-padding-bottom:130px}
@@ -151,7 +152,7 @@
 .achievement-card{display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;gap:14px;padding:17px;border-radius:16px;border:1px solid var(--line);background:var(--paper);margin:12px 0}
 .achievement-medal{width:54px;height:60px;display:grid;place-items:center;border-radius:15px 15px 20px 20px;background:color-mix(in srgb,var(--accent) 13%,var(--paper));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));color:var(--warning)}
 .achievement-medal .icon,.achievement-medal>svg{width:30px;height:30px}
-.achievement-card h3{font-size:17px;line-height:1.5;margin-bottom:5px}
+.achievement-card h2,.achievement-card h3{font-size:17px;line-height:1.5;margin-bottom:5px}
 .achievement-card p{font-size:13px;line-height:1.7;color:var(--secondary)}
 .achievement-progress{height:5px;background:var(--brand-soft);border-radius:5px;margin-top:10px;overflow:hidden}
 .achievement-progress>span{height:100%;display:block;background:var(--brand);border-radius:5px}
@@ -159,7 +160,7 @@
 .warehouse-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0}
 .warehouse-item{position:relative;min-width:0;display:flex;flex-direction:column;align-items:flex-start;padding:14px 12px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
 .warehouse-item>.icon,.warehouse-item>svg{width:43px;height:43px;margin-bottom:12px;color:var(--brand)}
-.warehouse-item h3{font-size:16px;line-height:1.5;margin-bottom:5px}
+.warehouse-item h2,.warehouse-item h3{font-size:17px;line-height:1.5;margin-bottom:5px}
 .warehouse-item p{font-size:12px;line-height:1.8;color:var(--secondary)}
 .warehouse-count{display:flex;align-items:baseline;gap:4px;font:25px/1.4 var(--font-data);color:var(--ink);font-variant-numeric:tabular-nums;margin:7px 0 10px}
 .warehouse-count small{font:12px var(--font-body);color:var(--secondary)}
@@ -176,7 +177,7 @@
 .album-card.locked .album-art>svg,.album-card.locked .album-art>.icon{opacity:.55}
 .album-card.locked .album-name{color:var(--secondary)}
 .message-card{position:relative;display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);background:var(--paper);border-radius:15px;padding:17px;margin:12px 0}
-.message-card h3{font-size:16px;line-height:1.6;margin-bottom:6px}
+.message-card h2,.message-card h3{font-size:16px;line-height:1.6;margin-bottom:6px}
 .message-card p{font-size:14px;line-height:1.8;color:var(--secondary)}
 .message-card time,.message-card small{display:block;font-size:12px;color:var(--secondary);margin-top:9px}
 .message-dot{width:8px;height:8px;margin-top:9px;flex:0 0 8px;border-radius:50%;background:var(--brand)}
@@ -269,3 +270,6 @@ button:where(:not(:disabled)){transition:background-color .16s,border-color .16s
 .hero-decor-label{left:14px;top:48px;right:auto;bottom:auto;writing-mode:horizontal-tb;max-height:none;padding:4px 8px;background:color-mix(in srgb,var(--accent) 16%,var(--paper));border-color:color-mix(in srgb,var(--accent) 45%,var(--line));letter-spacing:1px}
 @media(min-width:400px){.task-card{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}.task-icon{width:40px;height:40px}.task-card>.task-action{grid-column:3;grid-row:1;align-self:center}.task-card .task-action>button{min-width:82px;padding:10px}.achievement-card{grid-template-columns:50px minmax(0,1fr) auto}}
 @media(max-width:360px){.store-wallet{padding:12px;gap:8px}.store-wallet>div:first-child>span{font-size:12px}.store-wallet>div:last-child:not(:first-child){gap:6px}.store-wallet .link-button{font-size:12px;gap:3px}.store-wallet .link-button>.icon{width:18px;height:18px}.store-wallet .outline-button{padding:8px;gap:4px}.store-wallet .outline-button>.icon{width:19px;height:19px}.store-wallet .cart-badge{min-width:20px;width:20px}.recommend-note{gap:6px}.asset-ribbon>button{min-height:62px}}
+/* Essential actions use body-size text at every phone width. */
+.goods-add,.inventory-use,.warehouse-actions>button,.task-card .task-action>button,.achievement-card .primary-button,.achievement-card .outline-button{font-size:16px;line-height:1.5}
+@media(max-width:600px){.adoption-toolbar select{font-size:16px}}

@@ -199,3 +199,11 @@ components:
 - **Do:** 推荐理由、限制原因、模拟标识和收货状态在相关位置持续可见。
 - **Don't:** 缩小手机视图、把必要字降到 12px 以下，或用低对比金色小字。
 - **Don't:** 把演示视频、邀请、设备回执、农时、收益或物流写成真实已发生。
+
+## 跨端运行时适配与共享控件（2026-10-27）
+
+正式工程位于 `apps/mobile`。`prototype/styles.css`继续拥有canonical视觉token，`tools/sync-mobile-tokens.mjs`生成`src/styles/tokens.css`，通过`--check`阻止第二套色板漂移。新客户端CSS组合样式不反向覆盖原H5演示。
+
+`FarmButton`拥有跨端按钮行为：H5用真正原生HTML button处理Enter/Space，防重复和忙碌后焦点恢复；非H5保留平台button并显式传递原生属性（小程序不支持对象v-bind展开）。FarmNavigation在H5和微信/抖音提供13–14px、至少48px控件的共享五入口；App使用明确配置14px/64px的平台tabBar。微信/抖音原生tabBar不能通过fontSize改大，因此按官方hideTabBar+switchTab模式使用页面导航；真实切页闪烁、安全区和层级仍待真机验收。FarmScreen统一状态、错误、未登录、未知操作核对与数据不可用，不用零值掩盖缺失Snapshot。
+
+购物车确认区在完整明细后正常文档流呈现，核对/返回/成功都有明确焦点目标；不能用浮动按钮遮挡优惠券或金额。API响应完整性和账户代际由core客户端处理，属于行为约束，不在屏幕里复制。真实软键盘、系统字体缩放及屏幕阅读器仍须真机验收。

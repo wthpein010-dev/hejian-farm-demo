@@ -1,0 +1,16 @@
+export interface CatalogItem { id: string; title: string; description: string; category: 'supplies' | 'gifts'; cost: number; limit: number; art: string; }
+export interface Coupon { id: string; title: string; min: number; off: number; used: boolean; }
+export interface Reward { points?: number; feed?: number; fertilizer?: number; tools?: number; coupon?: object; }
+export interface Task { id: string; title: string; description: string; progress: number; target: number; claimed: boolean; ready: boolean; reward: Reward; }
+export interface Snapshot {
+  serverTime: number; revision: number; environment: 'development' | 'production';
+  profile: { id: string; displayName: string };
+  wallet: { points: number; feed: number };
+  system: { cart: Record<string, number>; coupons: Coupon[]; inventory: Record<string, number>; daily: { bought: Record<string, number> }; purchases: Array<{ id: string; day: string; total: number; count: number }> };
+  catalog: CatalogItem[]; tasks: Task[]; achievements: Task[];
+  signIn: { todayClaimed: boolean; streak: number; nextIndex: number; rewards: Array<{ day: number; label: string }> };
+  season: { count: number; total: number; ready: boolean; claimed: boolean };
+  level: { level: number; label: string; xp: number; progress: number; next: number | null };
+  farm: { plots: Array<{ id: string; name: string; status: string }>; animals: Array<{ id: string; name: string; status: string }> };
+  capabilities: Record<string, boolean>;
+}

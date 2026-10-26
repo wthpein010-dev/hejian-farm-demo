@@ -1,0 +1,76 @@
+{
+  "pages": [
+    {
+      "path": "pages/farm/index",
+      "style": {
+        "navigationBarTitleText": "我的农场"
+      }
+    },
+    {
+      "path": "pages/shop/index",
+      "style": {
+        "navigationBarTitleText": "农场商城"
+      }
+    },
+    {
+      "path": "pages/activities/index",
+      "style": {
+        "navigationBarTitleText": "田园活动"
+      }
+    },
+    {
+      "path": "pages/live/index",
+      "style": {
+        "navigationBarTitleText": "农场实景"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的田园"
+      }
+    },
+    {
+      "path": "pages/cart/index",
+      "style": {
+        "navigationBarTitleText": "积分购物车"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#f4f6f2",
+    "backgroundColor": "#f4f6f2",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#596c60",
+    "selectedColor": "#244d3d",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/farm/index",
+        "text": "我的农场"
+      },
+      {
+        "pagePath": "pages/shop/index",
+        "text": "商城"
+      },
+      {
+        "pagePath": "pages/activities/index",
+        "text": "活动"
+      },
+      {
+        "pagePath": "pages/live/index",
+        "text": "实景"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ],
+    "fontSize": "14px",
+    "height": "64px"
+  }
+}

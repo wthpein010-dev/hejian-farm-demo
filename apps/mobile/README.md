@@ -1,0 +1,30 @@
+# 禾间跨端客户端
+
+当前为正式工程推进中的客户端，使用uni-app Vue3/TypeScript，目标微信、抖音小程序及App。已实现五入口、账户连接、服务端积分购物车/活动/仓库；真实认养、设备、视频、支付广告与物流仍待接入，见[上线矩阵](../../docs/release/READINESS.md)。
+
+## 本机联调
+
+需要Node≥24.15.0。在根目录安装依赖后，按[API说明](../../services/api/README.md)显式启动development沙盒；允许来源设为 `http://127.0.0.1:5174`，服务默认 `http://127.0.0.1:8787`。
+
+运行 `npm run dev:mobile`，打开 `http://127.0.0.1:5174`，在“我的”连接联调账户。开发登录不接收真实个人信息或密码，只是本机验证持久资产的沙盒身份。相同账户刷新/重开后需重连，资产仍从SQLite恢复；正式环境不允许此入口。
+
+公开环境变量（不是秘密）：
+
+- `VITE_API_BASE_URL`：完整HTTPS服务源地址，客户端自动接 `/api/v1`；本机DEV默认loopback8787。正式构建未配置时不连接假后端。
+- 沙盒登录入口仅在编译器 DEV 模式启用，正式构建没有可启用该入口的前端环境开关；production API也会独立拒绝开发身份。
+
+平台密钥、会话token和真实地址不得写入这些前端变量、URL、storage、源码或日志。当前会话只在运行内存持有，数据保存在服务端。
+
+## 请求与重试
+
+所有资产操作使用服务端Snapshot.revision与同一幂等键；请求结果未知时锁定新操作，提供“核对上次操作”，保留原payload/key重试。结果未确认期间，只接受原账户重新登录；误选其他身份会保留恢复入口与原操作，不覆盖会话。409冲突更新数据并要求重新核对；过期清除私有快照；账号切换后旧成功/401不能覆盖新会话。UI不向服务端提交余额、奖励值或“照料成功”。
+
+## 构建与证据边界
+
+根命令：`npm run typecheck`、`npm run build:h5`、`npm run build:weixin`、`npm run build:douyin`、`npm run build:app`。编译输出在本目录 `dist/`（忽略Git）。App构建只得到离线资源，签名安装包还需HBuilderX或原生SDK及相应账号；不能称已上架。
+
+编译器版本、依赖安全修补及四端编译基线见[依赖说明](../../docs/release/DEPENDENCIES.md)，本轮实际结果见[验收记录](../../docs/VERIFICATION.md)。平台AppID、域名白名单、隐私资质、真机/签名/官方审核仍分别验收。没有用开发工具“关闭域名校验”当作生产网络通过。
+
+## 视觉归属
+
+`prototype/styles.css`为已有canonical token源。运行根 `npm run tokens` 生成 `src/styles/tokens.css`；后续只改上游token并重新生成。当前场景WebP沿用项目原创概念素材，不冒充实时视频或实拍。

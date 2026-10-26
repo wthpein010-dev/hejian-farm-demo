@@ -1,0 +1,20 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["prototype", "apps/mobile/src", "services/api/src"],
+  "locale": "zh-CN",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Toast", "Scrollbar"],
+  "requiredCommands": ["unit", "typecheck", "tokens", "h5", "weixin", "douyin", "app"],
+  "commands": {
+    "unit": "node --test",
+    "typecheck": "npm run typecheck",
+    "tokens": "node tools/sync-mobile-tokens.mjs --check",
+    "h5": "npm run build:h5",
+    "weixin": "npm run build:weixin",
+    "douyin": "npm run build:douyin",
+    "app": "npm run build:app"
+  },
+  "evidence": {
+    "failurePaths": "tests/mobile-api-integration.test.mjs"
+  }
+}

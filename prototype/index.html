@@ -1,20 +1,28 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#244d3d">
 <meta name="description" content="禾间真实农场H5演示：当季种植、牲畜认养、远程照料、收获到家。">
 <meta property="og:title" content="禾间农场 · 让田园回到生活">
 <meta property="og:description" content="一方菜园，一份牵挂。体验种植、认养、照料与收获。H5演示，无真实交易。">
 <title>禾间农场 · 让田园回到生活</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23244d3d'/%3E%3Ctext x='20' y='28' text-anchor='middle' font-size='26' fill='white'%3E禾%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=20261027-3">
-<link rel="stylesheet" href="expansion.css?v=20261027-3">
+<link rel="stylesheet" href="styles.css?v=20261027-4">
+<link rel="stylesheet" href="expansion.css?v=20261027-4">
 </head>
 <body>
 <div class="desktop-caption"><span class="desktop-logo">禾</span><div><strong>禾间农场</strong><p>让田园，回到生活。</p></div><span class="caption-tag">竖版 H5 体验</span></div>
-<main id="app" class="mobile-app" aria-label="禾间农场手机端演示"></main>
+<main id="app" class="mobile-app" aria-label="禾间农场手机端演示">
+<section class="boot-panel card" role="status" aria-live="polite">
+<h1 id="boot-title">正在打开你的田园</h1>
+<p id="boot-status">正在加载页面；等待较久时，请检查网络后重新加载。</p>
+<a href="./" class="primary-button full">重新加载</a>
+<p class="helper">重新加载会重置本页演示数据，不会发送真实设备的停止指令。已启动设备时，请通过农场确认状态。</p>
+<noscript><p>请在支持 JavaScript 的浏览器中打开本页。</p></noscript>
+</section>
+</main>
 <dialog id="app-dialog" class="sheet" aria-labelledby="dialog-title"></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-<script src="domain.js?v=20261027-3" defer></script><script src="ui.js?v=20261027-3" defer></script><script src="systems.js?v=20261027-3" defer></script><script src="expansion.js?v=20261027-3" defer></script><script src="app.js?v=20261027-3" defer></script>
+<script src="boot.js?v=20261027-4" defer></script><script src="domain.js?v=20261027-4" defer></script><script src="ui.js?v=20261027-4" defer></script><script src="systems.js?v=20261027-4" defer></script><script src="expansion.js?v=20261027-4" defer></script><script src="app.js?v=20261027-4" defer></script>
 </body></html>

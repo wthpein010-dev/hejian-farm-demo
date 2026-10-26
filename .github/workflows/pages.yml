@@ -23,8 +23,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: Run domain tests
+          node-version: '24.15.0'
+      - name: Run domain, resilience, API and client tests
         run: node --test
       - name: Check JavaScript syntax
         run: |
@@ -33,9 +33,45 @@ jobs:
           node --check prototype/domain.js
           node --check prototype/systems.js
           node --check prototype/expansion.js
+          node --check prototype/boot.js
+          node --check services/api/src/providers.mjs
+          node --check services/api/src/server.mjs
+
+  verify-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.15.0'
+          cache: npm
+      - name: Install exact dependencies without dependency lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Verify audited compiler adapters
+        run: npm run verify:dependencies
+      - name: Audit known dependency vulnerabilities
+        run: npm audit --audit-level=moderate
+      - name: Check mobile types and token adapter
+        run: |
+          npm run typecheck
+          node tools/sync-mobile-tokens.mjs --check
+      - name: Compile four platform targets
+        run: |
+          npm run build:h5
+          npm run build:weixin
+          npm run build:douyin
+          npm run build:app
+      - name: Save unsigned platform resources
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-platform-resources-unsigned
+          path: apps/mobile/dist/build
+          if-no-files-found: error
 
   deploy:
-    needs: verify
+    needs: [verify, verify-mobile]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

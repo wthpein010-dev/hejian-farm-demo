@@ -31,23 +31,23 @@
 
 ## Canonical UI Map
 
-| 能力 | 唯一归属 | 变体 | 验证 |
-|---|---|---|---|
-| Navigation | `prototype/app.js` 的主状态与 expansion 适配 | 五入口，首页农田／牧场，商城三分类 | 返回、选中、标题和焦点 |
-| Button | 原生 button／a 与共享 CSS | 主／次、领取、停止、busy | 48px、键盘、禁用无效 |
-| Iconography | `prototype/ui.js` | 功能图标、农作物与牲畜插画 | 同一 SVG 语言与中文操作名称 |
-| Form | 原生带 label 输入与 app 表单逻辑 | 示例邮寄、对象／时长选择 | 本地中文校验、焦点、无外发 |
-| Dialog | app 的唯一原生 dialog／frame，expansion 经 bridge 复用 | 详情、确认、设备、广告、邮寄、购物车、活动 | Escape、关闭、焦点恢复、短屏 |
-| Toast | app 共享 status 区域 | 普通、成功、警告 | 去重、不抢焦点、关键状态常驻 |
-| Domain rules | `prototype/domain.js` 的纯规则 | 推荐、照料资格／间隔、福利、邮寄校验与脱敏 | 重复、边界、资格与状态一致 |
-| FarmSystems | `prototype/systems.js` 的 UMD 纯规则 | 积分购物、签到／任务／印章／成就、库存与等级 | 原子提交、日界、事件和领取幂等 |
-| Extension adapter | `prototype/expansion.js` 与 app bridge | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
-| Device state | `prototype/app.js` 的唯一内存设备状态，动作资格调用 domain | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
-| Privacy | domain／app 示例邮寄提交边界 | 校验中的暂存、提交后脱敏摘要 | storage／URL／请求／日志无原始信息 |
-| Sharing | app 的共享链接动作 | 可用时系统分享、复制、手动复制 | 真 H5 URL、失败诚实反馈 |
-| Scrollbar | `styles.css` canonical baseline，`expansion.css` 消费 | 页面内容、模态正文 | 不裁切、末尾操作可达 |
+| Capability | Canonical owner | Source of truth | Allowed variants | Verification |
+|---|---|---|---|---|
+| Navigation | H5：app 主状态与 expansion；跨端：FarmNavigation／pages.json | docs/PRODUCT.md；DESIGN.md | 五入口，首页农田／牧场，商城三分类 | 返回、选中、标题和焦点 |
+| Button | H5：原生 button／a 与共享 CSS；跨端：FarmButton | DESIGN.md；本文交互约定 | 主／次、领取、停止、busy | 48px、键盘、禁用无效 |
+| Iconography | H5：prototype/ui.js；跨端：共享导航及场景资产 | DESIGN.md | 功能图标、农作物与牲畜插画 | 同族语言与中文操作名称 |
+| Form | H5：原生 label 输入与 app 校验；跨端：profile 的联调账户输入 | docs/PRODUCT.md；docs/release/API-CONTRACT.md | 示例邮寄、对象／时长选择、开发身份 | 中文校验、焦点、不收真实地址 |
+| Dialog | H5：唯一原生 dialog／frame；跨端：cart 文档流内确认区 | 本文确认与焦点约定 | H5 模态；跨端内联确认 | Escape、关闭、焦点恢复、短屏 |
+| Toast | H5：app 共享 status；跨端：FarmScreen 状态／错误区域 | 本文反馈约定；docs/release/API-CONTRACT.md | 普通、成功、警告、未知结果 | 去重、不抢焦点、关键状态常驻 |
+| Domain rules | prototype/domain.js 的纯规则 | docs/PRODUCT.md | 推荐、照料资格／间隔、福利、邮寄脱敏 | 重复、边界、资格与状态一致 |
+| FarmSystems | prototype/systems.js；正式资产由服务事务调用 | docs/release/API-CONTRACT.md | 积分购物、活动、库存与等级 | 原子提交、日界、事件和领取幂等 |
+| Extension adapter | prototype/expansion.js 与 app bridge | docs/PRODUCT.md | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
+| Device state | prototype/app.js 唯一模拟设备状态；跨端未开放 | docs/PRODUCT.md；docs/release/READINESS.md | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
+| Privacy | H5：domain／app 示例邮寄边界；跨端：core 客户端与 API | docs/PRODUCT.md；docs/release/API-CONTRACT.md | H5 脱敏摘要；正式会话仅内存 | storage／URL／日志无秘密与原始地址 |
+| Sharing | prototype/app.js 共享链接动作 | docs/PRODUCT.md | 系统分享、复制、手动复制 | 真 H5 URL、失败诚实反馈 |
+| Scrollbar | styles.css canonical baseline；跨端 app.css 适配 | DESIGN.md | 页面内容、模态正文 | 不裁切、末尾操作可达 |
 
-不适用：真实账户、服务端权限、支付、远程搜索、上传、分页表格、真实广告归因和物流接口。没有生产实现的能力不能因按钮存在就视为已接入。
+H5 演示不适用真实账户和服务端权限；新跨端工程的账户与资产恢复按 docs/release/API-CONTRACT.md 执行。支付、远程搜索、上传、分页表格、真实广告归因和物流接口目前没有开放。没有生产实现的能力不能因按钮存在就视为已接入。
 
 ## Component behavior
 
@@ -158,3 +158,11 @@ toast 固定位置、统一时长、同类去重，以 status 温和播报，不
 - 可访问性：大字、48px、文字对比、键盘、模态焦点／Escape、短屏长内容及 reduced-motion。
 - 线上：实际 GitHub 身份／权限／分支，Pages 部署结果，公开 URL、资源相对路径、刷新和真实分享／复制。
 - 未执行项、发现差异和真实平台未决项如实记录；本轮浏览器／部署待主任务实测，不借用上一轮通过，也不以静态 audit 代替浏览器验证。
+
+## 正式工程的账户和数据约束（2026-10-27）
+
+以上原型模拟约束继续适用于prototype；新apps/mobile与services/api的完整目标以docs/release/READINESS.md为准。开发沙盒与生产账户严格隔离，production禁开发登录；服务端官方provider未配置返回503，真实业务能力未核定时关闭，不冒充作业完成。
+
+新客户端仅在运行内存保留会话，服务器持久保存资产。私有Snapshot须通过完整形状、当前账户和版本校验。任何旧会话回包或旧登录失败都不能改新会话；登录与资产写互斥。资产请求带服务器revision与幂等键，未确认结果锁定新写并保留原请求核对，不能换key自动再扣；409要求重新核对。GET失败保留最后有效数据并提示重试，401清除私有快照。
+
+积分兑换先明细再最终确认；返回修改回到原触发，成功到空车可操作入口。服务端同时重新校验余额/库存/券，客户端不提交奖励值/余额/农事成功事件。跨端编译、沙盒测试、正式平台登录、签名安装和真实服务联调是不同验收项。

@@ -5,3 +5,8 @@ premium-audit.json
 .env*
 !.env*.example
 node_modules/
+apps/*/dist/
+.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

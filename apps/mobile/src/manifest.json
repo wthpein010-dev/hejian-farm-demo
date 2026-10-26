@@ -1,0 +1,39 @@
+{
+  "name": "禾间农场",
+  "description": "连接一方田园，照料一份日常",
+  "versionName": "0.2.0",
+  "versionCode": "20",
+  "transformPx": false,
+  "vueVersion": "3",
+  "app-plus": {
+    "usingComponents": true,
+    "distribute": {
+      "android": {
+        "permissions": []
+      },
+      "ios": {}
+    }
+  },
+  "h5": {
+    "title": "禾间农场",
+    "router": {
+      "mode": "hash"
+    }
+  },
+  "mp-weixin": {
+    "usingComponents": true,
+    "setting": {
+      "urlCheck": true
+    },
+    "requiredPrivateInfos": []
+  },
+  "mp-toutiao": {
+    "usingComponents": true,
+    "setting": {
+      "urlCheck": true
+    }
+  },
+  "uniStatistics": {
+    "enable": false
+  }
+}

@@ -16,6 +16,14 @@
 
 本机长期记忆规则继续适用；当前明确指令优先于旧原型文档及历史默认流程。
 
+## 正式上线目标推进（2026-10-27）
+
+用户新增目标为“整体优化验收好，符合上线app和小程序的水平”。此前H5演示范围不能充当最终完成标准。`prototype/`继续遵守内存演示／设备模拟和示例地址约束；新 `apps/mobile/` 为uni-app Vue3跨端工程，`services/api/` 为Node24持久账户及资产服务，按 [API契约](docs/release/API-CONTRACT.md) 与 [上线验收矩阵](docs/release/READINESS.md) 推进。
+
+生产平台身份、签名安装、真机、真实农场/硬件/视频/广告支付/实体履约及运维证据缺失时，必须保持目标未完成，不把跨端编译或沙盒HTTP测试替代真实上线。当前已询问用户公开平台配置和农场接口；秘密只进入服务端安全环境配置，不进聊天/源码/日志。开发登录须显式启用，production强制禁用；生产未开放能力失败关闭，不生成模拟执行成功。
+
+新工程使用根workspace命令，最低Node24.15.0；根package不设type:module以保持prototype UMD兼容，服务端使用.mjs。运行数据/SQLite/备份不入Git。跨端视觉token经 `tools/sync-mobile-tokens.mjs` 从prototype/styles.css生成，不手改第二套颜色。新代码按实际HTTP、持久化、用户隔离、并发、响应丢失及跨会话场景验收。当前实施记录 `.scratch/release-readiness/`。
+
 ## 实现约定
 
 1. vanilla HTML／CSS／JavaScript 位于 `prototype/`。`domain.js` 负责原照料／推荐／邮寄／福利规则，`systems.js` 提供 UMD 纯模块 `FarmSystems` 的商城和活动等规则，`ui.js` 提供共享 SVG，`app.js` 拥有主状态和共享交互。`expansion.js` 通过 app bridge 接入，不复制钱包、设备或 modal；`styles.css` 拥有 canonical token，`expansion.css` 只消费这些 token 定义组合样式。

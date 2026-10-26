@@ -1,0 +1,61 @@
+{
+  "name": "hejian-farm",
+  "version": "0.2.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "dev:mobile": "npm run dev --workspace @hejian/mobile",
+    "dev:api": "npm run start --workspace @hejian/api",
+    "tokens": "node tools/sync-mobile-tokens.mjs",
+    "typecheck": "npm run typecheck --workspace @hejian/mobile",
+    "build:h5": "npm run tokens && npm run build:h5 --workspace @hejian/mobile",
+    "build:weixin": "npm run tokens && npm run build:mp-weixin --workspace @hejian/mobile",
+    "build:douyin": "npm run tokens && npm run build:mp-toutiao --workspace @hejian/mobile",
+    "build:app": "npm run tokens && npm run build:app --workspace @hejian/mobile",
+    "postinstall": "node tools/patch-mobile-dependencies.mjs --if-installed",
+    "verify:dependencies": "node tools/patch-mobile-dependencies.mjs && node tools/verify-mobile-dependencies.mjs"
+  },
+  "devDependencies": {
+    "vite": "6.4.5",
+    "file-type": "21.3.2"
+  },
+  "overrides": {
+    "vite": "$vite",
+    "esbuild": "0.25.12",
+    "@babel/core": "7.29.7",
+    "source-map-js": "1.2.2",
+    "postcss": "8.5.31",
+    "ws": "8.21.0",
+    "adm-zip": "0.6.1",
+    "express": "4.22.3",
+    "body-parser": "1.20.9",
+    "qs": "6.16.0",
+    "cookie": "0.7.2",
+    "path-to-regexp": "0.1.13",
+    "serve-static": "1.16.3",
+    "send": "0.19.1",
+    "jimp": "0.22.12",
+    "@intlify/core-base": "9.14.5",
+    "@intlify/shared": "9.14.5",
+    "@intlify/vue-devtools": "9.14.5",
+    "@vue/server-renderer": "3.5.42",
+    "@dcloudio/uni-cli-shared": {
+      "postcss-selector-parser": "6.1.5"
+    },
+    "@dcloudio/uni-h5": {
+      "postcss-selector-parser": "6.1.5"
+    },
+    "@dcloudio/uni-app-plus": {
+      "postcss-selector-parser": "6.1.5"
+    },
+    "file-type": "$file-type",
+    "@jimp/core": "0.22.12"
+  }
+}

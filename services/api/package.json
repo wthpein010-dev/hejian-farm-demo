@@ -1,0 +1,13 @@
+{
+  "name": "@hejian/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-authoritative account and farm asset API",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/config.mjs && node --check src/store.mjs && node --check src/providers.mjs && node --check src/server.mjs"
+  }
+}

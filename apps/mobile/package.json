@@ -1,0 +1,37 @@
+{
+  "name": "@hejian/mobile",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "uni --host 127.0.0.1 --port 5174",
+    "typecheck": "vue-tsc --noEmit",
+    "build:h5": "uni build",
+    "build:mp-weixin": "uni build -p mp-weixin",
+    "build:mp-toutiao": "uni build -p mp-toutiao",
+    "build:app": "uni build -p app",
+    "predev": "node ../../tools/patch-mobile-dependencies.mjs",
+    "prebuild:h5": "node ../../tools/patch-mobile-dependencies.mjs",
+    "prebuild:mp-weixin": "node ../../tools/patch-mobile-dependencies.mjs",
+    "prebuild:mp-toutiao": "node ../../tools/patch-mobile-dependencies.mjs",
+    "prebuild:app": "node ../../tools/patch-mobile-dependencies.mjs"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-5030320261023001",
+    "@dcloudio/uni-app-plus": "3.0.0-5030320261023001",
+    "@dcloudio/uni-components": "3.0.0-5030320261023001",
+    "@dcloudio/uni-h5": "3.0.0-5030320261023001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-5030320261023001",
+    "@dcloudio/uni-mp-toutiao": "3.0.0-5030320261023001",
+    "vue": "3.4.21",
+    "vue-i18n": "9.14.5"
+  },
+  "devDependencies": {
+    "@dcloudio/types": "3.4.31",
+    "@dcloudio/uni-cli-shared": "3.0.0-5030320261023001",
+    "@dcloudio/vite-plugin-uni": "3.0.0-5030320261023001",
+    "typescript": "5.6.3",
+    "vue-tsc": "2.2.12",
+    "@types/node": "24.19.2"
+  }
+}
