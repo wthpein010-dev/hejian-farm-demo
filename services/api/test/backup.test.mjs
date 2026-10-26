@@ -134,7 +134,7 @@ test('online WAL backup restores confirmed assets, invalidates old sessions and 
   let report;
   try { [report] = await Promise.all([copyingResult, writes]); } finally { fill.close(); }
   assert.ok(overlappingWrites > 0, 'at least one HTTP write must commit during the online backup');
-  assert.ok([2, 3].includes(report.schemaVersion));
+  assert.ok([2, 3, 4].includes(report.schemaVersion));
   assert.match(report.sha256, /^[a-f0-9]{64}$/);
   assert.deepEqual((await readdir(f.output('backup'))).sort(), ['farm.sqlite', 'manifest.json']);
   const bytes = await readFile(path.join(f.output('backup'), 'farm.sqlite'));

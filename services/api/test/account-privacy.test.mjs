@@ -265,12 +265,15 @@ test('slow prepare rechecks a logged-out session and a concurrent revision befor
 
 test('schema v2 upgrades preserve existing users, sessions and assets while adding account deletion ledgers', async t => {
   const f = await fixture(t), a = await f.login();
-  await f.request('/activities/sign-in', { token: a.token, body: { expectedRevision: 0 }, headers: { 'Idempotency-Key': 'privacy-upgrade-001' } });
+  const original = await f.request('/activities/sign-in', { token: a.token, body: { expectedRevision: 0 }, headers: { 'Idempotency-Key': 'privacy-upgrade-001' } });
   await f.getApp().close();
-  f.database(db => db.exec('DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2'));
+  f.database(db => {
+    db.prepare('UPDATE idempotency SET success_json = ?').run(JSON.stringify(original.json.data));
+    db.exec('DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2');
+  });
   await f.restart();
   assert.equal((await f.request('/bootstrap', { token: a.token })).json.data.wallet.points, 100);
-  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 3);
+  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 4);
   assert.deepEqual(f.counts(), { users: 1, sessions: 1, idempotency: 1, deletion_confirmations: 0, deletion_receipts: 0 });
   assert.equal((await f.prepare(a.token, 1)).status, 200);
 });

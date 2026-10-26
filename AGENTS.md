@@ -28,6 +28,8 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 
 代理来源归属`services/api/src/client-address.mjs`，默认不信任任何转发头；只有部署方明确核实的网络配置才能启用XFF。必须保留规范IP、raw重复头检查、从右向左到首个不可信hop及头/链预算，不默认信任loopback、任意私网或固定跳数。来源地址不进入日志。幂等历史完整原结果重放仍为契约；持久增长不能通过静默删除旧key或改返最新快照来掩盖，需明确存储/容量/保留设计与备份兼容。
 
+当前schema4的历史回执编码只由`receipt-codec.mjs`拥有，服务及备份共用；1024字节至8MiB有实际收益时压缩，否则原样JSON，预算不等于历史容量上限。旧schema2/3回执不批量重写，旧服务拒绝schema4；恢复清session和schema>=3注销确认，不放松固定表/索引与回执归属校验。未知资产请求不能因通用4xx/5xx丢原key，只有协议明确的Store后幂等拒绝＋合法同账户快照才可终结；保留generation、401原账户恢复和未知注销隔离。
+
 ## 实现约定
 
 1. vanilla HTML／CSS／JavaScript 位于 `prototype/`。`domain.js` 负责原照料／推荐／邮寄／福利规则，`systems.js` 提供 UMD 纯模块 `FarmSystems` 的商城和活动等规则，`ui.js` 提供共享 SVG，`app.js` 拥有主状态和共享交互。`expansion.js` 通过 app bridge 接入，不复制钱包、设备或 modal；`styles.css` 拥有 canonical token，`expansion.css` 只消费这些 token 定义组合样式。

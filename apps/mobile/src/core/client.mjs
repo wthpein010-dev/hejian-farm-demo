@@ -11,6 +11,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   }
   let token = '', profile = null, snapshot = null, pending = null, generation = 0, loginAttempt = 0, activeLogins = 0, activeMutation = false;
   let privacy = null, deletionProposal = null, deletionAttempt = 0;
+  const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
   function acceptSnapshot(value) {
     if (!isFarmSnapshot(value, profile?.id)) throw error('SERVER_UNAVAILABLE', '田园数据未能确认，请重新同步。');
@@ -21,6 +22,18 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   function requireSession() {
     if (!base) throw error('SERVICE_UNCONFIGURED', '农场服务尚未配置，请稍后再来。');
     if (!token) throw error('SESSION_REQUIRED', '请先登录，再查看自己的田园。');
+  }
+  function responseFailure(response, authenticated, key, fallback) {
+    const code = response.data?.error?.code || 'REQUEST_REJECTED';
+    const failure = error(code, response.data?.error?.message || fallback, response.status);
+    // These exact Store refusals follow the successful-receipt lookup. A
+    // generic gateway/status code cannot establish an earlier attempt's result.
+    const afterReceiptLookup = (response.status === 409 && ['IDEMPOTENCY_CONFLICT', 'REVISION_CONFLICT'].includes(code)) ||
+      (response.status === 422 && code === 'BUSINESS_RULE') || (response.status === 503 && code === 'CAPABILITY_UNAVAILABLE');
+    if (authenticated && key && afterReceiptLookup && isFarmSnapshot(response.data?.data, profile?.id)) {
+      acceptSnapshot(response.data.data); confirmedMutationRefusals.add(failure);
+    }
+    return failure;
   }
   async function send(path, method, body, authenticated = true, key = '') {
     if (!base) throw error('SERVICE_UNCONFIGURED', '农场服务尚未配置，请稍后再来。');
@@ -37,14 +50,14 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     guard();
     if (!response || !Number.isInteger(response.status) || response.status >= 500) {
       if (response?.status === 503 && response.data?.error?.code) {
-        throw error(response.data.error.code, response.data.error.message || '这项农场服务暂未开放。', 503);
+        throw responseFailure(response, authenticated, key, '这项农场服务暂未开放。');
       }
       throw error('SERVER_UNAVAILABLE', '农场服务暂时繁忙，请稍后重试。', response?.status || 0);
     }
     if (response.status >= 400) {
       if (response.status === 401 && authenticated) { token = ''; snapshot = null; privacy = null; cancelAccountDeletion(); generation++; }
       if (response.status === 409 && response.data?.data) acceptSnapshot(response.data.data);
-      throw error(response.data?.error?.code || 'REQUEST_REJECTED', response.data?.error?.message || '操作未完成，请刷新后核对。', response.status);
+      throw responseFailure(response, authenticated, key, '操作未完成，请刷新后核对。');
     }
     if (!response.data || !Object.prototype.hasOwnProperty.call(response.data, 'data')) throw error('SERVER_UNAVAILABLE', '服务回复未能确认，请稍后重试。');
     return response.data.data;
@@ -71,7 +84,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       const result = await send(operation.path, 'POST', operation.body, true, operation.key);
       acceptSnapshot(result); pending = null; return snapshot;
     } catch (failure) {
-      if (['NETWORK_UNAVAILABLE', 'SERVER_UNAVAILABLE', 'SESSION_CHANGED'].includes(failure.code)) {
+      if (!confirmedMutationRefusals.has(failure) && (failure.status >= 500 ||
+        ['NETWORK_UNAVAILABLE', 'SERVER_UNAVAILABLE', 'SESSION_CHANGED'].includes(failure.code) || (retry && failure.status !== 401))) {
         pending = operation;
         throw error('RESULT_UNKNOWN', '这次操作的结果尚未确认。请使用“核对上次操作”，避免重复提交。');
       }

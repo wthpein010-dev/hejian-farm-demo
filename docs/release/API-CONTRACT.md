@@ -52,6 +52,10 @@ Snapshot:
 
 所有POST资产变更必须带 `Idempotency-Key`（8–100字符ASCII安全ID）。在SQLite事务中按userId+key查重，指纹包含method/path/业务payload（包括expectedRevision）；相同请求重放返回原成功结果且不二次变更，不同指纹409。先检查幂等再检查版本；新请求expectedRevision不匹配409，返回最新Snapshot让用户重新核对。不自动重试冲突。不接受任意事件注入接口；care/harvest成功只能由未来已认证设备或工作人员事件产生。
 
+结果未知后的资产核对只有合法同账户成功Snapshot，或以下精确Store拒绝且附合法同账户Snapshot，才能结束：409 `IDEMPOTENCY_CONFLICT`／`REVISION_CONFLICT`、422 `BUSINESS_RULE`、503 `CAPABILITY_UNAVAILABLE`。这些拒绝都发生在成功回执查找之后。普通429、通用4xx、维护/代理的503及缺少或无效Snapshot的同名错误码不能证明第一次未提交；客户端保留原key与正文。401清会话后保留原操作，只接受原账户恢复。首次无明确Store终态的5xx也进入未知结果核对。
+
+schema4的无损回执编码及schema2/3/4备份兼容属于[内部存储契约](../../services/api/RECEIPTS.md)，不改变HTTP原结果重放。编码、SQL或持久化失败不能出现半扣款、半发放或仅保存状态而缺原成功回执。
+
 ## HTTP边界
 
 JSON请求最大16KiB，拒绝未知字段、错误类型及无穷数，受限CORS，禁止缓存私有响应，添加nosniff和requestId；development登录限速。数据库文件不进Git；支持同进程并发串行事务、重启保留资产。生产备份恢复、监控、TLS及多实例/数据库运维须独立验证，不因HTTP单测通过宣称上线完成。

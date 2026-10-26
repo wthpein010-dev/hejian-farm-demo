@@ -420,12 +420,14 @@ test('failed or uncertain platform exchange is not retried using the same code a
 
 test('schema v1 upgrades preserve existing assets and sessions while creating the one-use code ledger', async t => {
   const f = await start(t), { token } = await f.login('schema-upgrade-account');
-  await f.mutate(token, '/activities/sign-in', { expectedRevision: 0 });
+  const original = await f.mutate(token, '/activities/sign-in', { expectedRevision: 0 });
   await f.getApp().close();
-  const old = new DatabaseSync(f.file); old.exec('DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
+  const old = new DatabaseSync(f.file);
+  old.prepare('UPDATE idempotency SET success_json = ?').run(JSON.stringify(original.json.data));
+  old.exec('DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
   await f.restart();
   assert.equal((await f.snapshot(token)).wallet.points, 100);
   const upgraded = new DatabaseSync(f.file, { readOnly: true });
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 3);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 4);
   assert.equal(upgraded.prepare('SELECT COUNT(*) AS count FROM code_claims').get().count, 0); upgraded.close();
 });

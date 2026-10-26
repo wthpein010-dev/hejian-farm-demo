@@ -5,6 +5,7 @@ import { constants, openSync, closeSync, readSync, writeSync, fsyncSync, fstatSy
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { isDeepStrictEqual } from 'node:util';
+import { decodeReceipt } from '../src/receipt-codec.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -13,7 +14,7 @@ const Domain = require('../../../prototype/domain.js');
 const DATABASE = 'farm.sqlite';
 const MANIFEST = 'manifest.json';
 const FORMAT = 1;
-const SUPPORTED_SCHEMAS = new Set([2, 3]);
+const SUPPORTED_SCHEMAS = new Set([2, 3, 4]);
 const COLUMNS = {
   server_clock: ['singleton:INTEGER', 'last_time:INTEGER'],
   users: ['id:TEXT', 'environment:TEXT', 'identity_provider:TEXT', 'identity_subject:TEXT', 'display_name:TEXT',
@@ -220,7 +221,7 @@ function writeAll(fd, buffer, position = 0) {
 
 function stateObject(json) {
   let state;
-  try { state = JSON.parse(json); } catch { fail('INVALID_APPLICATION_DATA'); }
+  try { state = typeof json === 'string' ? JSON.parse(json) : json; } catch { fail('INVALID_APPLICATION_DATA'); }
   if (!state || typeof state !== 'object' || Array.isArray(state) || !state.wallet || !state.system ||
     !integer(state.wallet.points) || !integer(state.wallet.feed) || !integer(state.system.xp) ||
     !state.system.inventory || typeof state.system.inventory !== 'object' || !Array.isArray(state.system.coupons)) fail('INVALID_APPLICATION_DATA');
@@ -234,8 +235,11 @@ function stateObject(json) {
   return state;
 }
 
-function validateReceipt(row, latestTime) {
-  const snapshot = stateObject(row.success_json);
+function validateReceipt(row, latestTime, schemaVersion) {
+  let decoded;
+  try { decoded = decodeReceipt(row.success_json, { allowCompressed: schemaVersion >= 4 }); }
+  catch { fail('INVALID_APPLICATION_RECEIPT'); }
+  const snapshot = stateObject(decoded);
   const fields = ['serverTime', 'revision', 'environment', 'profile', 'wallet', 'system', 'catalog', 'tasks',
     'signIn', 'season', 'achievements', 'level', 'farm', 'capabilities'];
   if (!isDeepStrictEqual(Object.keys(snapshot).sort(), fields.sort()) || snapshot.environment !== row.environment ||
@@ -268,7 +272,7 @@ function validateDatabase(file, { standalone = false } = {}) {
     if (checks.length !== 1 || checks[0].integrity_check !== 'ok') fail('INTEGRITY_CHECK_FAILED');
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_CHECK_FAILED');
     if (standalone && db.prepare('PRAGMA journal_mode').get().journal_mode !== 'delete') fail('NON_STANDALONE_DATABASE');
-    const expected = Object.keys(COLUMNS).filter(name => schemaVersion === 3 || !name.startsWith('deletion_')).sort();
+    const expected = Object.keys(COLUMNS).filter(name => schemaVersion >= 3 || !name.startsWith('deletion_')).sort();
     const schema = db.prepare("SELECT name, type, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' AND type != 'index'").all();
     if (schema.some(row => row.type !== 'table') || JSON.stringify(schema.map(row => row.name).sort()) !== JSON.stringify(expected)) fail('INVALID_APPLICATION_SCHEMA');
     for (const table of schema) if (normalizedSql(table.sql) !== normalizedSql(TABLE_SQL[table.name])) fail('INVALID_APPLICATION_SCHEMA');
@@ -289,7 +293,7 @@ function validateDatabase(file, { standalone = false } = {}) {
     }
     for (const row of db.prepare(`SELECT i.success_json, i.user_id, i.created_at AS receipt_created_at,
       u.environment, u.identity_provider, u.display_name, u.revision, u.created_at AS user_created_at
-      FROM idempotency AS i JOIN users AS u ON u.id = i.user_id WHERE i.success_json IS NOT NULL`).iterate()) validateReceipt(row, clock[0].last_time);
+      FROM idempotency AS i JOIN users AS u ON u.id = i.user_id WHERE i.success_json IS NOT NULL`).iterate()) validateReceipt(row, clock[0].last_time, schemaVersion);
     if (db.prepare("SELECT 1 FROM code_claims WHERE status NOT IN ('pending', 'used', 'failed') LIMIT 1").get()) fail('INVALID_APPLICATION_DATA');
     db.exec('ROLLBACK');
     assertTree(tree);
@@ -414,7 +418,7 @@ export async function restoreBackup({ backupDirectory, outputDirectory } = {}) {
     const restored = new DatabaseSync(held.file);
     try {
       restored.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL; BEGIN IMMEDIATE; DELETE FROM sessions');
-      if (schemaVersion === 3) restored.exec('DELETE FROM deletion_confirmations');
+      if (schemaVersion >= 3) restored.exec('DELETE FROM deletion_confirmations');
       restored.exec('COMMIT');
     } finally { restored.close(); }
     validateDatabase(held.file, { standalone: true });

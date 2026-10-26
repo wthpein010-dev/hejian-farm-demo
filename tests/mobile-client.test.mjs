@@ -42,6 +42,88 @@ test('response-loss retry preserves the exact key and expected revision and bloc
   assert.equal(h.client.snapshot.revision, 4);
   assert.equal(h.client.hasPending(), false);
 });
+
+for (const [status, code] of [
+  [503, 'SERVICE_DRAINING'], [503, 'CAPABILITY_UNAVAILABLE'], [503, 'PROXY_UNAVAILABLE'],
+  [429, 'RATE_LIMITED'], [403, 'ORIGIN_FORBIDDEN'], [404, 'NOT_FOUND'], [400, 'INVALID_REQUEST'],
+  [409, 'REVISION_CONFLICT'], [422, 'BUSINESS_RULE'],
+]) test(`an uncertain asset retry retains its original request after non-definitive ${status} ${code}`, async () => {
+  const h = harness(); await login(h);
+  h.replies.push(new Error('checkout result was lost'));
+  await assert.rejects(() => h.client.mutate('/checkout', { couponId: 'welcome-20' }), { code: 'RESULT_UNKNOWN' });
+  h.replies.push({ status, data: { error: { code, message: 'request temporarily rejected before receipt lookup' } } });
+  await assert.rejects(() => h.client.retryPending(), { code: 'RESULT_UNKNOWN' });
+  assert.equal(h.client.hasPending(), true);
+  assert.deepEqual(h.calls[3].body, h.calls[2].body);
+  assert.equal(h.calls[3].headers['Idempotency-Key'], h.calls[2].headers['Idempotency-Key']);
+  await assert.rejects(() => h.client.mutate('/checkout'), { code: 'PENDING_OPERATION' });
+  h.replies.push(success({ revision: 4, wallet: { points: 40 }, profile: { id: 'member-a' } }));
+  await h.client.retryPending();
+  assert.equal(h.client.hasPending(), false);
+  assert.equal(h.calls[4].headers['Idempotency-Key'], h.calls[2].headers['Idempotency-Key']);
+  assert.deepEqual(h.calls[4].body, h.calls[2].body);
+  assert.equal(h.client.snapshot.wallet.points, 40);
+});
+
+for (const code of ['SERVICE_DRAINING', 'CAPABILITY_UNAVAILABLE', 'PROXY_UNAVAILABLE']) {
+  test(`an initial structured 503 ${code} cannot certify that an asset operation did not commit`, async () => {
+    const h = harness(); await login(h);
+    h.replies.push({ status: 503, data: { error: { code, message: 'upstream operation could not be confirmed' } } });
+    await assert.rejects(() => h.client.mutate('/checkout'), { code: 'RESULT_UNKNOWN' });
+    assert.equal(h.client.hasPending(), true);
+    h.replies.push(success({ revision: 4, wallet: { points: 50 } })); await h.client.retryPending();
+    assert.equal(h.client.hasPending(), false);
+    assert.deepEqual(h.calls[2].body, h.calls[3].body);
+    assert.equal(h.calls[2].headers['Idempotency-Key'], h.calls[3].headers['Idempotency-Key']);
+  });
+}
+
+for (const [status, code] of [[409, 'IDEMPOTENCY_CONFLICT'], [409, 'REVISION_CONFLICT'],
+  [422, 'BUSINESS_RULE'], [503, 'CAPABILITY_UNAVAILABLE']]) {
+  test(`a validated same-account post-receipt ${status} ${code} ends uncertain reconciliation`, async () => {
+    const h = harness(); await login(h);
+    h.replies.push(new Error('checkout result was lost'));
+    await assert.rejects(() => h.client.mutate('/checkout'), { code: 'RESULT_UNKNOWN' });
+    h.replies.push({ status, data: { error: { code, message: 'authoritative request refusal' },
+      data: mobileSnapshot({ revision: 8, wallet: { points: 30 } }) } });
+    await assert.rejects(() => h.client.retryPending(), { code, status });
+    assert.equal(h.client.hasPending(), false);
+    assert.equal(h.client.snapshot.revision, 8); assert.equal(h.client.snapshot.wallet.points, 30);
+  });
+}
+
+for (const [name, status, code, snapshot] of [
+  ['unknown code', 409, 'UNVERIFIED_REJECTION', mobileSnapshot({ revision: 8 })],
+  ['foreign account', 422, 'BUSINESS_RULE', mobileSnapshot({ revision: 8, profile: { id: 'member-b' }, wallet: { points: 999 } })],
+  ['malformed data', 503, 'CAPABILITY_UNAVAILABLE', { revision: 8, profile: { id: 'member-a' } }],
+]) test(`a retry does not trust a rejection with ${name} as a terminal receipt`, async () => {
+  const h = harness(); await login(h);
+  h.replies.push(new Error('checkout result was lost'));
+  await assert.rejects(() => h.client.mutate('/checkout'), { code: 'RESULT_UNKNOWN' });
+  h.replies.push({ status, data: { error: { code, message: 'unverified refusal' }, data: snapshot } });
+  await assert.rejects(() => h.client.retryPending(), { code: 'RESULT_UNKNOWN' });
+  assert.equal(h.client.hasPending(), true);
+  assert.equal(h.client.snapshot.profile.id, 'member-a');
+  assert.notEqual(h.client.snapshot.wallet.points, 999);
+});
+
+test('an expired asset-retry session keeps the original operation available to the original account', async () => {
+  const h = harness(); await login(h);
+  h.replies.push(new Error('checkout result was lost'));
+  await assert.rejects(() => h.client.mutate('/checkout'), { code: 'RESULT_UNKNOWN' });
+  h.replies.push({ status: 401, data: { error: { code: 'UNAUTHENTICATED', message: 'login expired before lookup' } } });
+  await assert.rejects(() => h.client.retryPending(), { code: 'UNAUTHENTICATED', status: 401 });
+  assert.equal(h.client.authenticated, false); assert.equal(h.client.snapshot, null); assert.equal(h.client.hasPending(), true);
+  await login(h, 'member-a');
+  h.replies.push(success({ revision: 4, wallet: { points: 50 } })); await h.client.retryPending();
+  const requests = h.calls.filter(call => call.url.endsWith('/checkout'));
+  assert.equal(requests.length, 3);
+  for (const request of requests) {
+    assert.equal(request.headers['Idempotency-Key'], requests[0].headers['Idempotency-Key']);
+    assert.deepEqual(request.body, requests[0].body);
+  }
+  assert.equal(h.client.hasPending(), false); assert.equal(h.client.snapshot.wallet.points, 50);
+});
 test('version conflict updates the current view and requires a fresh human decision', async () => {
   const h = harness(); await login(h);
   h.replies.push({ status: 409, data: { error: { code: 'VERSION_CONFLICT', message: '资产已更新，请重新核对' }, data: mobileSnapshot({ revision: 8, wallet: { points: 30 } }) } });

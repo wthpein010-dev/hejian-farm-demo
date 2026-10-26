@@ -3,6 +3,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { encodeReceipt, decodeReceipt } from './receipt-codec.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -38,7 +39,7 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 3) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      if (schema > 4) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -95,7 +96,7 @@ export class FarmStore {
         token_hash TEXT PRIMARY KEY,
         completed_at INTEGER NOT NULL
       );
-      PRAGMA user_version = 3;
+      PRAGMA user_version = 4;
     `);
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
@@ -282,7 +283,9 @@ export class FarmStore {
       const row = this.#user(userId);
       const existing = this.#prepare('SELECT fingerprint, success_json FROM idempotency WHERE user_id = ? AND key = ?').get(userId, key);
       if (existing?.fingerprint === fingerprint && existing.success_json) {
-        return { status: 200, data: JSON.parse(existing.success_json), replayed: true, message: '这次操作已经完成，已恢复原结果' };
+        const recovered = decodeReceipt(existing.success_json);
+        if (recovered.profile?.id !== userId || recovered.environment !== row.environment) throw new Error('回执归属未能确认');
+        return { status: 200, data: recovered, replayed: true, message: '这次操作已经完成，已恢复原结果' };
       }
       const state = this.#sync(row, now);
       const failure = (status, code, message) => ({ status, error: { code, message }, data: this.#snapshot(row, state, now) });
@@ -310,7 +313,7 @@ export class FarmStore {
           .run(serialized, row.revision, now, userId);
       }
       const snapshot = this.#snapshot(row, next, now);
-      this.#prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(JSON.stringify(snapshot), userId, key);
+      this.#prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(encodeReceipt(snapshot), userId, key);
       return { status: 200, data: snapshot, replayed: false, message: result.reason };
     });
   }

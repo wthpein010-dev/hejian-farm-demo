@@ -36,6 +36,7 @@ jobs:
           node --check prototype/boot.js
           node --check services/api/src/providers.mjs
           node --check services/api/src/client-address.mjs
+          node --check services/api/src/receipt-codec.mjs
           node --check services/api/src/operations.mjs
           node --check services/api/src/server.mjs
           node --check services/api/tools/load-api.mjs
