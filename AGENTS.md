@@ -26,6 +26,8 @@
 
 API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板与脱敏运行指标，健康探针不是完整业务上线证明。`FarmStore`的prepared statement只按单连接复用固定内部SQL，动态参数每次重新绑定，禁止缓存用户快照或用用户输入扩展缓存键；schema、权限、事务和幂等语义不能因性能优化改变。负载工具为 `tools/load-api.mjs`（避免Node默认发现为测试），只创建自己的临时loopback服务；实际时长、资源变化和平台差异均如实记录，不把固定节奏短负载写成生产容量或无泄漏证明。
 
+代理来源归属`services/api/src/client-address.mjs`，默认不信任任何转发头；只有部署方明确核实的网络配置才能启用XFF。必须保留规范IP、raw重复头检查、从右向左到首个不可信hop及头/链预算，不默认信任loopback、任意私网或固定跳数。来源地址不进入日志。幂等历史完整原结果重放仍为契约；持久增长不能通过静默删除旧key或改返最新快照来掩盖，需明确存储/容量/保留设计与备份兼容。
+
 ## 实现约定
 
 1. vanilla HTML／CSS／JavaScript 位于 `prototype/`。`domain.js` 负责原照料／推荐／邮寄／福利规则，`systems.js` 提供 UMD 纯模块 `FarmSystems` 的商城和活动等规则，`ui.js` 提供共享 SVG，`app.js` 拥有主状态和共享交互。`expansion.js` 通过 app bridge 接入，不复制钱包、设备或 modal；`styles.css` 拥有 canonical token，`expansion.css` 只消费这些 token 定义组合样式。

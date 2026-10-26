@@ -5,6 +5,7 @@ import { normalizeConfig, configFromEnvironment } from './config.mjs';
 import { FarmStore } from './store.mjs';
 import { PlatformIdentityError } from './providers.mjs';
 import { createOperations, createJsonLineLogger } from './operations.mjs';
+import { ClientAddressError } from './client-address.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -138,8 +139,8 @@ export function createApp(options = {}) {
         response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key');
         send(204, {}); return;
       }
+      const address = config.clientAddress(request);
       const now = store.serverNow();
-      const address = request.socket.remoteAddress ?? 'unknown';
       const wait = requestLimit.consume(address, now);
       if (wait) { response.setHeader('Retry-After', String(wait)); throw new RequestError(429, 'RATE_LIMITED', '操作较频繁，请稍后重试'); }
       if (!pathname.startsWith(PREFIX + '/')) throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
@@ -235,7 +236,8 @@ export function createApp(options = {}) {
       const result = store.mutate(userId, idempotencyKey, fingerprint, body.expectedRevision, { ...operation, ...body }, refreshSession());
       send(result.status, result.error ? { error: result.error, data: result.data } : { data: result.data, message: result.message, replayed: result.replayed });
     } catch (error) {
-      if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
+      if (error instanceof ClientAddressError) send(400, { error: { code: 'INVALID_PROXY_HEADER', message: '代理转发信息无效，请联系服务维护人员' } });
+      else if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });
     }
   };

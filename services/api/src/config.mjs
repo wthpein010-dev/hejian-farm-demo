@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { platformProvidersFromEnvironment } from './providers.mjs';
+import { createClientAddressResolver } from './client-address.mjs';
 
 const DEFAULT_DATABASE = fileURLToPath(new URL('../data/farm.sqlite', import.meta.url));
 
@@ -40,6 +41,7 @@ export function normalizeConfig(options = {}) {
   const requestLimit = options.requestRateLimit ?? {};
   return Object.freeze({
     mode, allowDevelopmentAuth, databasePath,
+    clientAddress: createClientAddressResolver(options.trustedProxyCidrs),
     allowedOrigins: origins(options.allowedOrigins ?? [], mode),
     clock: typeof options.clock === 'function' ? options.clock : Date.now,
     sessionTtlMs: integer(options.sessionTtlMs, 30 * 60_000, 1000, 30 * 86400000, '会话时长'),
@@ -62,6 +64,7 @@ export function configFromEnvironment(env = process.env) {
     mode: env.FARM_MODE ?? 'production', allowDevelopmentAuth: boolean(env.FARM_ALLOW_DEVELOPMENT_AUTH),
     databasePath: env.FARM_DATABASE_PATH ?? DEFAULT_DATABASE,
     allowedOrigins: env.FARM_ALLOWED_ORIGINS ? env.FARM_ALLOWED_ORIGINS.split(',').map(value => value.trim()) : [],
+    trustedProxyCidrs: env.FARM_TRUSTED_PROXY_CIDRS ? env.FARM_TRUSTED_PROXY_CIDRS.split(',').map(value => value.trim()) : [],
     platformProviders: platformProvidersFromEnvironment(env),
     shutdownTimeoutMs: env.FARM_SHUTDOWN_TIMEOUT_MS === undefined ? 10000 : Number(env.FARM_SHUTDOWN_TIMEOUT_MS),
     host: env.FARM_HOST ?? '127.0.0.1', port,
