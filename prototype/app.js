@@ -33,7 +33,7 @@
  function eligibility(p,kind){return D.careEligibility({kind,...careFor(p.id,kind),now:time(),moisture:p.moisture,growing:p.status==='growing',inventory:state.wallet.feed});}
  function recordCare(p,kind){const c=careFor(p.id,kind);c.usedToday++;c.lastAt=time();}
  function addLog(text,note='刚刚 · 模拟操作'){state.logs.unshift({text,note});}
- function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').classList.add('show');toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3400);}
+ function toast(text){clearTimeout(toastTimer);const inline=dialog.open?$('#modal-feedback'):null;if(inline){$('#toast').classList.remove('show');inline.textContent=text;return;}$('#toast').textContent=text;$('#toast').classList.add('show');toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3400);}
  function capture(el){if(!el?.dataset||(!el.dataset.action&&!el.dataset.route))return null;return{node:el,data:{...el.dataset}};}
  function restore(saved,root=document){if(!saved)return false;const el=saved.node?.isConnected?saved.node:Array.from(root.querySelectorAll('button,a,select')).find(e=>Object.entries(saved.data).every(([k,v])=>e.dataset[k]===v)&&!e.disabled);if(el){el.focus({preventScroll:true});return true;}return false;}
  function navigate(view){state.view=view;const u=new URL(location.href);u.hash=view;history.pushState({},'',u);render();$('.app-scroll').scrollTop=0;const h=$('.app-scroll h1');if(h){h.tabIndex=-1;h.focus({preventScroll:true});}}
@@ -75,7 +75,7 @@
  }
  function open(type,data={}){if(modal?.type==='ad'&&type!=='ad')clearInterval(adTimer);if(!dialog.open)opener=capture(document.activeElement);modal={type,...data};renderModal();if(!dialog.open)dialog.showModal();else dialog.querySelector('[data-action="close"]')?.focus({preventScroll:true});}
  function close(){if(modal?.type==='ad')clearInterval(adTimer);dialog.close();modal=null;if(!restore(opener))$('.bottom-nav a')?.focus({preventScroll:true});}
- function frame(title,body){return`<div class="sheet-header"><h2 id="dialog-title">${title}</h2>${btn('close',icon('close'),'icon-button','aria-label="关闭弹窗"')}</div><div class="sheet-body">${body}</div>`;}
+ function frame(title,body){return`<div class="sheet-header"><h2 id="dialog-title">${title}</h2>${btn('close',icon('close'),'icon-button','aria-label="关闭弹窗"')}</div><div class="sheet-body">${body}<div id="modal-feedback" class="modal-feedback" role="status" aria-live="polite"></div></div>`;}
  function modalProduct(p){return`<div class="modal-crop"><div class="crop-picture">${art(p)}</div><div><h3>${p.name}</h3><p>约 ${p.total||p.days} 天成熟 · ${p.type==='animal'?'规范圈养管理':'当季作物种植'}</p></div></div>`;}
  function simulator(){return`<div class="simulator"><span class="field-label">设备状态演示</span><div class="choice-row" role="group" aria-label="模拟设备连接状态">${[['online','在线'],['offline','离线'],['timeout','无回执']].map(([key,text])=>btn('device-mode',text,`choice ${state.device.mode===key?'selected':''}`,`data-mode="${key}" aria-pressed="${state.device.mode===key}" ${state.device.status!=='idle'?'disabled':''}`)).join('')}</div></div>`;}
  function renderModal(){if(!modal)return;const focus=capture(document.activeElement),m=modal,d=state.device;let out='';

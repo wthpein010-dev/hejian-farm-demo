@@ -33,17 +33,18 @@
 
 截图保存在本机临时验收目录；随发布提供20秒截图讲解视频，五张截图各4秒，H.264/yuv420p，非连续实机录屏。没有宣称真实手机、真实设备或平台小程序已验收。
 
-## 部署证据待补
+## 公开部署验证
 
-部署目标：[https://wthpein010-dev.github.io/hejian-farm-demo/](https://wthpein010-dev.github.io/hejian-farm-demo/)。源码目标：[wthpein010-dev/hejian-farm-demo](https://github.com/wthpein010-dev/hejian-farm-demo)。本记录尚未据此宣称已部署或已线上验收。
+- 仓库：`wthpein010-dev/hejian-farm-demo`，公开，当前身份已现场核验有push/admin权限；默认及发布分支为main。
+- 首次部署提交：`dc5facfb3da42b3345777735441d2657a10db303`。
+- [首次成功工作流](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40377841097)：规则验证和Pages部署均成功。
+- [公开H5](https://wthpein010-dev.github.io/hejian-farm-demo/)已在实际浏览器打开，界面、场景图片和导航正常；检查时console无error/warn。
+- 12个公网资源均HTTP200且SHA256与Git文件逐字节一致；包括三张场景WebP、HTML/CSS/JavaScript、手机预览页和视频。
+- 视频Range请求返回206；真实浏览器播放currentTime已推进、duration20秒、readyState4、error为空。视频为截图讲解，没有宣称连续实机录屏。
+- 公开分享弹窗生成本站HTTPS地址，复制操作不发送邀请或自动奖励；浏览器系统分享能力由终端支持情况决定。
+- 本次独立发布，没有修改用户网站或AI Application Hub目录。
 
-| 项目 | 待记录证据 |
-|---|---|
-| GitHub 身份、仓库权限、远端分支 | 实际核验结果 |
-| 工作流 | 成功运行链接及对应提交 |
-| Pages | 实际部署结果与公开地址 |
-| 线上页面与资源 | 首页、相对资源、刷新与主要交互结果 |
-| 分享 | 线上链接复制／分享的实际结果 |
+后续文档或界面修正由同一Pages工作流继续验证与部署，当前结果可查看仓库Actions。没有将HTTP检查当作原生小程序或真实手机验收。
 
 ## 用户与平台待验收
 

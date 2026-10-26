@@ -53,3 +53,4 @@ body{margin:0;min-width:320px}button,input,textarea,select{font:inherit;color:in
 .live-stage:has(img[src$="pig-pov.webp"]) .live-bottom h2{font-size:16px;margin:0}
 .live-stage:has(img[src$="pig-pov.webp"]) .live-bottom p{display:none}
 @media(max-width:360px){.hero-content h2{font-size:20px;letter-spacing:0}}
+.modal-feedback:empty{display:none}.modal-feedback{font-size:14px;line-height:1.8;background:var(--brand-soft);color:var(--ink);padding:12px;border-radius:10px;margin-top:15px;border:1px solid var(--line)}
