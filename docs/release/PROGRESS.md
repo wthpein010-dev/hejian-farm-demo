@@ -6,6 +6,10 @@
 
 另收尾此前API诊断：每连接复用固定内部SQL，仅重新绑定参数，不缓存用户快照；2000次读与2000次写预热后新增prepare均为0。负载器受控业务日期避开上海午夜插入合法日变更。最新Windows120秒11736请求、0业务错误/5xx、四账户重启核对及清理通过，但RSS60.25→207.14MB，混合负载内存增长仍需区分，不能宣称无泄漏或生产容量。详细对照见[LOAD-TEST](../../services/api/LOAD-TEST.md)。本机备份文件级偶发失败也保留为未定根因，未被随后通过结果抹去。
 
+功能提交`1af8b834de6fc4a8cd77181d65213bb50cbb2aa8`已推送main。当前连接与CLI身份均为wthpein010-dev，独立仓库push/admin权限及origin/main已现场核实。[Pages工作流40412996550](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40412996550)的verify、verify-mobile、deploy全部成功；Linux CI实际219/219，0失败/跳过，依赖审计及四端资源构建通过。
+
+公网23个HTML/CSS/JS/SVG/WebP资源HTTP200且SHA256与该提交的Git blob全部一致，视频Range为206及1024字节。[独立分享版本](https://wthpein010-dev.github.io/hejian-farm-demo/?v=1af8b83)实际完成：加入饲料→车→券页→去使用→浏览器后退仍返回购物车→兑换30积分→仓库余额50／饲料9→完整记录；键盘Enter签到后两个入口均锁定。该公开页面控制台无warn/error。H5资源版本参数为20261027-5；没有部署生产API，也不代表真机、官方SDK或真实农场上线。
+
 本页记录工程推进，**不宣布整体上线完成**。完整缺口以 [READINESS](READINESS.md) 为准。
 
 ## 账户隐私与备份恢复补齐

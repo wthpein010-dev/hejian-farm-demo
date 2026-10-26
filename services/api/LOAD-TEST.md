@@ -46,4 +46,16 @@ Node 24.15.0，4 workers，默认每 worker 10000 请求硬上限。以下三次
 
 总 RSS 在最新混合负载中仍增长 146.89 MB，不能声称内存增长已消失。只读短对照证明了 prepare 的可回收分配因素和语句复用效果，没有证明永久无泄漏；混合负载的历史记录、其他短命分配和 native 分配器占用仍需进一步区分。当前结果也不建立生产 SLA 或容量结论。
 
-脱敏原始报告保存在仓库根目录 `.scratch/api-operations/`：`load-windows-120.json`、`load-windows-cached-120.json`、`load-windows-cached-daytime-120.json`；`windows-load-comparison.json` 汇总三次实际数值及当前源码 SHA-256。旧报告保留原版本身份，当前受控时钟报告不冒称已完成同版本 Linux 验证。
+脱敏原始报告保存在仓库根目录 `.scratch/api-operations/`：`load-windows-120.json`、`load-windows-cached-120.json`、`load-windows-cached-daytime-120.json`；`windows-load-comparison.json` 汇总三次实际数值及当前源码 SHA-256。旧报告保留原版本身份。
+
+## Linux 当前版本对照（2026-10-27）
+
+[Linux 工作流 40413028078](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40413028078) 已成功，checkout 为 `1af8b834de6fc4a8cd77181d65213bb50cbb2aa8`，Node 固定 24.15.0。该提交的 `store.mjs`、`load-api.mjs` SHA-256 与 Windows 当前受控时钟报告记录一致。Linux 实际持续 120010.98ms，13157 请求全部响应，1875 轮/预期 409、4 预期 401，4 账户重启资产核对通过，0 错误/5xx，清理成功。
+
+| 环境/阶段 | 请求数 | p95 / p99（ms） | RSS 起始→结束 / 峰值（十进制 MB） |
+| --- | ---: | ---: | ---: |
+| Linux 复用前基线 40408737308 | 13143 | 3.457 / 5.837 | 61.89→221.72 / 221.72 |
+| Linux 当前受控时钟版本 | 13157 | 2.682 / 4.277 | 61.90→121.81 / 121.81 |
+| Windows 同 API 核心源码/受控时钟 | 11736 | 14.235 / 18.322 | 60.25→207.14 / 214.44 |
+
+Linux 当前比其旧基线多 14 个请求，结束/峰值 RSS 少 99.92 MB，event loop p95 为 21.152ms；当前 RSS 仍增长 59.91 MB。Windows 未出现相同的总 RSS 下降，操作系统、主机、时钟及请求数也不完全相同，因此不把差异当作单一改动的因果证明，不宣称永久无泄漏或生产容量。当前 artifact 在 `.scratch/api-operations/linux-cached-daytime-40413028078/api-load-report.json`；`cross-platform-load-comparison.json` 保存三份报告、精确数值差及源码/报告 SHA-256。
