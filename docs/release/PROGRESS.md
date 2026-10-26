@@ -34,4 +34,10 @@ ChatGPT内置浏览器、本机Vite5174＋SQLite API8787，账户为示例review
 - 本轮浏览器另使用独立示例账户验证：两份饲料60积分，用券后40；兑换余额80→40、饲料6→12、订单1；实际刷新重连后维持同一资产，签到一次后按钮禁用。原同账户弱网、320/390和短屏证据如上保留。
 - 两位只读审查者检查服务事务/客户端和移动UI；已修复上述恢复问题及README工作流版本说明。正式App/小程序全量验收仍未完成，缺口见READINESS。
 
-独立GitHub推送、CI和Pages更新在实际完成后另记，不将上述本机结果称为线上部署或官方上架。
+## 独立发布与公网验收
+
+- 工程提交 `04addbc34c1ecee27a72011ccbf24eb2baf37991` 已推送独立仓库 main；现场核验当前身份 wthpein010-dev 具有 push/admin 权限，未修改其他网站或Hub。
+- [工作流40400124124](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40400124124) 的 verify、verify-mobile、deploy 全部成功。Linux CI同样通过120项测试、类型与token检查、0项已知漏洞和四端编译；另提供未签名跨端资源附件，不能当安装包。
+- [独立H5](https://wthpein010-dev.github.io/hejian-farm-demo/) 的24个运行资源均HTTP200、SHA256与Git提交中的原始blob逐字节一致；没有拿Windows工作区的CRLF与Git LF直接误判。视频Range返回206和1024字节。
+- 公网实际操作物资分类→加入饲料→确认结算→兑换→仓库，积分80→50、饲料6→9；再进入活动签到，同日按钮禁用。控制台warn/error为空。最终活动截图保存于本机验收目录。
+- 当前Pages仍部署prototype H5；真实客户端与账户服务代码另在仓库，尚未部署生产API。正式App／小程序全目标仍未完成，不能用此次成功发布替代平台身份、真实农场、支付履约、签名安装和真机审核。
