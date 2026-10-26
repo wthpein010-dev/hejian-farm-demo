@@ -41,6 +41,7 @@
 | Toast | H5：app 共享 status；跨端：FarmScreen 状态／错误区域 | 本文反馈约定；docs/release/API-CONTRACT.md | 普通、成功、警告、未知结果 | 去重、不抢焦点、关键状态常驻 |
 | Domain rules | prototype/domain.js 的纯规则 | docs/PRODUCT.md | 推荐、照料资格／间隔、福利、邮寄脱敏 | 重复、边界、资格与状态一致 |
 | FarmSystems | prototype/systems.js；正式资产由服务事务调用 | docs/release/API-CONTRACT.md | 积分购物、活动、库存与等级 | 原子提交、日界、事件和领取幂等 |
+| Activity receipts | prototype/rewards.js；expansion 成功事务适配 | docs/PRODUCT.md；本文活动明细约定 | 四类活动来源、内存明细、北京时间当天汇总 | 失败不记、重复ID不记、深克隆与跨日 |
 | Extension adapter | prototype/expansion.js 与 app bridge | docs/PRODUCT.md | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
 | Device state | prototype/app.js 唯一模拟设备状态；跨端未开放 | docs/PRODUCT.md；docs/release/READINESS.md | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
 | Privacy | H5：domain／app 示例邮寄边界；跨端：core 客户端与 API | docs/PRODUCT.md；docs/release/API-CONTRACT.md | H5 脱敏摘要；正式会话仅内存 | storage／URL／日志无秘密与原始地址 |
@@ -110,6 +111,14 @@ H5 演示不适用真实账户和服务端权限；新跨端工程的账户与�
 事件类型为 browse/care/adoption/harvest。每个真实的模拟成功节点只发一个稳定 eventId：进入商城为 browse，原订单创建成功为 adoption，灌溉 ACK／投喂成功为 care，收蛋成功或首次采收／处理完成为 harvest。水请求发送前的额度预留、离线／无回执、预约采收、填写地址、运输后续步骤、render 和重复打开页面都不能计成功事件。
 
 系统事件去重和奖励 receipt 去重分别保留；任务、经验、印章、资源及成就不能被同一事件反复累计。收获 items 仅允许鸡蛋、农作物、处理后肉类的整数样本。所有积分和资源奖励都不改变原照料冷却、次数或设备状态。
+
+## 活动引导与到账回看（第四轮）
+
+活动页沿用既有签到/任务/集章/成就规则，动态主动作按未签到、可领任务、可领丰收礼、可领成就、当前可做农事的顺序呈现。没有可行照料时不强推重复操作；成熟对象引导携带对象，切到对应农田/牧场并聚焦同一收获卡，只定位不发送命令。
+
+`FarmRewards`只拥有H5当前页面的活动明细，来源仅签到、每日任务、丰收集章和成长成就；在原事务成功后用实际回执ID、奖励对象及捕获的毫秒时间追加。原福利不伪装成这四类记录；失败、重复领取和重新打开页面不能发奖或追加。明细不进入FarmSystems、API Snapshot、storage或URL，不恢复任何资产；当天统计不等于当前钱包余额。物资收入同一仓库，券仍由原优惠券状态拥有。
+
+奖励明细从活动/任务/成就/我的/仓库进入时保存白名单来源；每条history entry保存其来源但不保存奖励或资产。奖励明细经过其优惠券入口返回须保留原来源与导航归属。非法来源或直接URL安全回活动。商品排序仅影响物资/好礼的展示，不改变当季认养推荐顺序、购物车、余额、券或库存；商品详情和列表共享今日剩余/车中/还可加及禁用状态，执行时仍以FarmSystems重查。
 
 ## Care limits and device resilience
 

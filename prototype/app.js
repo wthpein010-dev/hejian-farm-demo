@@ -1,7 +1,7 @@
 /* Hejian H5 demo. Hardware, commerce and mini-program SDK calls are simulated. */
 (()=>{
  'use strict';
- if(!window.FarmDomain||!window.FarmSystems||!window.FarmUI||!window.FarmExpansion){window.FarmBoot?.fail();return;}
+ if(!window.FarmDomain||!window.FarmSystems||!window.FarmRewards||!window.FarmUI||!window.FarmExpansion){window.FarmBoot?.fail();return;}
  const D=window.FarmDomain,S=window.FarmSystems,{icon,cropArt,animalArt}=window.FarmUI,$=s=>document.querySelector(s);
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const btn=(a,label,cls='',attrs='')=>`<button type="button" data-action="${a}" class="${cls}" ${attrs}>${label}</button>`;
@@ -17,12 +17,12 @@
   {id:'goat',name:'山地黑山羊',art:'goat',type:'animal',seasons:['spring','autumn'],days:180,cost:680,yieldKg:[12,18],pricePerKg:[68,88],note:'观察生长，成熟后由农场规范处理'},
  ];
  const time=()=>Date.now(),monthNow=()=>Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Shanghai',month:'numeric'}).format(new Date()));
- const routes=['farm','shop','live','mine','orders','deliveries','welfare','activities','warehouse','cart','coupons','exchanges','achievements','tasks','album','messages'];
+ const routes=['farm','shop','live','mine','orders','deliveries','welfare','activities','warehouse','cart','coupons','exchanges','rewards','achievements','tasks','album','messages'];
  const state={view:routes.includes(location.hash.slice(1))?location.hash.slice(1):'farm',tab:'crop',selected:'A01',animal:'P01',shopKind:'crop',month:monthNow(),platform:'wechat',camera:'field',day:D.chinaDayKey(time()),wallet:{points:80,feed:6,receipts:[],adToday:0,inviteCount:0,welcomeClaimed:false},eggs:3,orders:[],shipments:[],care:{},requests:new Set(),pendingPlots:new Set(),logs:[{text:'农场工作人员完成晨间巡视',note:'示例记录 · 青禾农场 A 区'},{text:'A02 胡萝卜已到采收期',note:'示例记录 · 可预约配送到家'}],device:{mode:'online',status:'idle',plot:null,duration:3,remaining:180,deadlineAt:null,lastTickAt:null,uncertainReason:'',op:0},
   plots:[{id:'A01',name:'小番茄',art:'tomato',days:18,total:65,moisture:32,status:'growing'},{id:'A02',name:'甜脆胡萝卜',art:'carrot',days:75,total:75,moisture:58,status:'ready'},{id:'A03',name:'奶油生菜',art:'lettuce',days:12,total:35,moisture:53,status:'growing'},{id:'A04',name:'空闲地块',art:'empty',days:0,total:0,moisture:45,status:'empty'},{id:'A05',name:'上海青',art:'lettuce',days:9,total:30,moisture:48,status:'growing'},{id:'A06',name:'四季香葱',art:'onion',days:21,total:45,moisture:55,status:'growing'}],
   animals:[{id:'P01',name:'生态黑猪',art:'pig',days:135,total:150,weight:78,status:'growing',output:'分割冷鲜猪肉'},{id:'C01',name:'林下土鸡',art:'chicken',days:86,total:120,weight:1.6,status:'growing',output:'鸡蛋 / 处理好的土鸡'},{id:'G01',name:'山地黑山羊',art:'goat',days:180,total:180,weight:32,status:'ready',output:'处理分装羊肉'}]
  };
- state.system=S.createState(time());Object.assign(state,{storefront:'adopt',activityTab:'today',selectedCoupon:'',decoration:'',systemSerial:0,commerceBusy:false});
+ state.system=S.createState(time());Object.assign(state,{storefront:'adopt',activityTab:'today',selectedCoupon:'',decoration:'',systemSerial:0,commerceBusy:false,rewardHistory:window.FarmRewards.createHistory()});
  let expansion=null;
  let modal=null,opener=null,toastTimer=null,adTimer=null,waterTimer=null,sendTimer=null,receiptTimer=null,stopTimer=null,serial=0,suspendedDevice=false;
  const dialog=$('#app-dialog'),app=$('#app');
@@ -158,7 +158,7 @@
  }
  function startAd(){daily();if(state.wallet.adToday>=3)return;clearInterval(adTimer);open('ad',{remaining:8,receipt:'ad-'+(++serial)+'-'+time()});adTimer=setInterval(()=>{if(modal?.type!=='ad'){clearInterval(adTimer);return;}if(document.hidden)return;modal.remaining=Math.max(0,modal.remaining-1);const label=$('#ad-count');if(label)label.textContent=modal.remaining?`还需完整观看 ${modal.remaining} 秒`:'已完整观看，可领取演示奖励';if(!modal.remaining){clearInterval(adTimer);renderModal();}},1000);}
  document.addEventListener('click',async event=>{const route=event.target.closest('[data-route]');if(route){event.preventDefault();navigate(route.dataset.route);return;}const target=event.target.closest('[data-action]');if(!target||target.disabled)return;const a=target.dataset.action,id=target.dataset.id,validDay=daily();if(!validDay&&['place-order','fulfill-order','start-water','confirm-feed','request-care','eggs','shipment-next','welcome','qualify-invite','ad','claim-ad','x-add-cart','x-quantity','x-confirm-checkout','x-signin','x-claim-task','x-claim-season','x-claim-achievement','x-collect-eggs'].includes(a)){toast('当前设备日期早于已确认记录，请校准时间后重试');return;}if(expansion.handleAction(a,target))return;
-  if(a==='focus-care'){const panel=$('.care-panel');if(panel){panel.tabIndex=-1;panel.focus({preventScroll:true});panel.scrollIntoView({block:'start'});}return;}
+  if(a==='focus-care'){focusCare();return;}
   if(a==='close'){close();return;}if(routes.includes(a)){if(dialog.open)close();navigate(a);return;}
   if(a==='farm-tab'){state.tab=target.dataset.tab;render();return;}if(a==='plot'){state.selected=id;render();document.querySelector('.plot-selector')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});return;}if(a==='animal'){state.animal=id;render();return;}
   if(a==='adopt-shop'){if(dialog.open)close();openAdoptionShop(target.dataset.kind||'crop');return;}if(a==='shop-kind'){state.shopKind=target.dataset.kind;render();return;}if(a==='shop-empty'){if(dialog.open)close();openAdoptionShop('crop');return;}
@@ -197,7 +197,8 @@
  window.addEventListener('pageshow',event=>resumePage(!!event.persisted));
  window.addEventListener('focus',()=>resumePage());
  window.addEventListener('popstate',event=>{const view=routes.includes(location.hash.slice(1))?location.hash.slice(1):'farm';expansion.restoreNavigationContext(event.state?.farmNavigation);state.view=view;if(dialog.open)close();if(state.view==='shop')expansion.track('browse','browse-'+D.chinaDayKey(time()));render();});
- expansion=window.FarmExpansion.create({state,S,D,icon,cropArt,animalArt,esc,btn,products,open,close,navigate,render,renderModal,frame,toast,addLog,collectEggs,getModal:()=>modal,eligibility});
+ function focusCare(){const panel=$('.care-panel');if(panel){panel.tabIndex=-1;panel.focus({preventScroll:true});panel.scrollIntoView({block:'start'});}}
+ expansion=window.FarmExpansion.create({state,S,D,icon,cropArt,animalArt,esc,btn,products,open,close,navigate,render,renderModal,frame,toast,addLog,collectEggs,getModal:()=>modal,eligibility,shipmentFor,focusCare});
  expansion.restoreNavigationContext(history.state?.farmNavigation);
  if(state.view==='shop')expansion.track('browse','browse-'+D.chinaDayKey(time()));
  render();

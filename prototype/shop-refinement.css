@@ -1,0 +1,88 @@
+/* Shop composition consumes the canonical tokens in styles.css. */
+.goods-sorting {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 16px;
+}
+.goods-sort-button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 5px;
+  border: 1px solid var(--secondary);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--secondary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.goods-sort-button[aria-pressed="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--ink);
+}
+.goods-sort-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.goods-card .goods-stock {
+  display: grid;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.goods-card .product-footer {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 9px;
+}
+.goods-card .goods-cost small {
+  white-space: nowrap;
+}
+.goods-card .goods-add {
+  width: 100%;
+  min-height: 48px;
+  font-size: 15px;
+}
+.goods-detail-summary {
+  margin-top: 18px;
+}
+.goods-detail-summary .summary-row {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.goods-grants {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--canvas);
+}
+.goods-grants h4 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.goods-grants ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.goods-grants li + li {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.goods-grants li > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 16px;
+}
+.goods-grants p {
+  margin: 5px 0 0;
+  color: var(--secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
