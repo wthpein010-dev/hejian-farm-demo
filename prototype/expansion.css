@@ -273,3 +273,52 @@ button:where(:not(:disabled)){transition:background-color .16s,border-color .16s
 /* Essential actions use body-size text at every phone width. */
 .goods-add,.inventory-use,.warehouse-actions>button,.task-card .task-action>button,.achievement-card .primary-button,.achievement-card .outline-button{font-size:16px;line-height:1.5}
 @media(max-width:600px){.adoption-toolbar select{font-size:16px}}
+
+/* Third pass: an actionable farm scene and an unobscured commerce shell. */
+.hero{height:220px}
+.hero-content{display:flex;align-items:center;justify-content:space-between;gap:10px;left:16px;right:16px;bottom:14px}
+.hero-content>div{min-width:0}
+.hero-content h2{font-size:23px;letter-spacing:.5px}
+.hero-content p{font-size:14px}
+.hero-care-link{flex-shrink:0;min-height:48px;padding:10px 12px;display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--paper);border-radius:11px;background:var(--paper);color:var(--brand);font-size:16px;font-weight:600;box-shadow:0 3px 10px color-mix(in srgb,var(--ink) 12%,transparent)}
+.hero-care-link>.icon{width:17px;height:17px}
+.map-links{bottom:80px}
+.care-panel{scroll-margin-top:8px}
+.care-limit{font-size:14px;line-height:1.8;color:var(--secondary)}
+.care-action{font-size:16px}
+.commerce-dock{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:10px 20px;background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -4px 15px color-mix(in srgb,var(--ink) 4%,transparent)}
+.commerce-dock-copy{min-width:0;display:flex;flex-direction:column;gap:2px;color:var(--secondary);font-size:14px;line-height:1.5}
+.commerce-dock-copy strong{color:var(--ink);font-size:18px;font-variant-numeric:tabular-nums}
+.commerce-dock>.primary-button{flex-shrink:0;min-height:48px;font-size:16px;padding:10px 14px}
+body:has(.commerce-dock) .toast{bottom:190px}
+.store-services{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px 16px;margin:-10px 0 6px}
+.store-services .link-button{font-size:14px;gap:5px}
+.activity-overview{padding:16px;margin:0 0 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)}
+.activity-overview-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.activity-overview-head h2{font-size:18px}
+.activity-overview-head strong{font-size:18px;color:var(--brand)}
+.activity-overview-head p,.activity-overview-stamps{font-size:14px;color:var(--secondary);line-height:1.7}
+.activity-overview-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.activity-overview-actions>button{min-width:0;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 5px;border:1px solid var(--line);border-radius:12px;background:var(--canvas);color:var(--ink);font-size:14px;line-height:1.5}
+.activity-overview-actions>button strong{font-size:16px;color:var(--brand)}
+.activity-overview-actions>button small{font-size:12px;color:var(--secondary)}
+.activity-overview-actions>button:disabled{opacity:1;color:var(--secondary);background:var(--brand-soft)}
+.activity-overview-stamps{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.task-copy p,.achievement-card p{font-size:15px;line-height:1.7}
+.task-reward{font-size:14px}
+.exchange-card{margin:14px 0;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)}
+.exchange-card h2{font-size:18px;line-height:1.5}
+.exchange-date{display:block;font-size:14px;color:var(--secondary);margin:3px 0 12px}
+.exchange-items{list-style:none;margin:12px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:16px;line-height:1.7}
+.exchange-items>li{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:6px 0}
+.exchange-items>li>span{min-width:0;overflow-wrap:anywhere}
+.exchange-items strong{flex-shrink:0;font-size:15px}
+.exchange-summary{font-size:14px;color:var(--secondary)}
+.exchange-summary strong{font-size:19px;color:var(--brand)}
+@media(max-width:360px){
+ .hero-content{left:12px;right:12px;gap:7px}.hero-content h2{font-size:21px}.hero-content p{font-size:13px}.hero-care-link{font-size:15px;padding:10px 8px;gap:2px}
+ .commerce-dock{padding:9px 14px;gap:8px}.commerce-dock-copy strong{font-size:16px}.commerce-dock>.primary-button{padding:10px;font-size:15px}
+ body:has(.commerce-dock) .toast{bottom:210px}
+ .activity-overview{padding:14px}.activity-overview-actions{gap:6px}.activity-overview-head{align-items:flex-start;flex-wrap:wrap}.exchange-card{padding:15px}
+}
+@media(max-height:440px){.commerce-dock{min-height:64px;padding-top:6px;padding-bottom:6px}.commerce-dock-copy>span{display:none}}

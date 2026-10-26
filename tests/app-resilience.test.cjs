@@ -2,6 +2,27 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createApp } = require('./helpers/farm-app.cjs');
 
+test('unavailable care actions explain resources, cooldown and quota without claiming success', async () => {
+  const app = createApp();
+  await app.click('我的牧场');
+  app.state.wallet.feed = 0; app.render();
+  assert.ok(app.controls().some(c => c.name === '饲料不足' && c.disabled));
+  assert.ok(!app.controls().some(c => c.name === '已投喂'));
+  app.state.wallet.feed = 6;
+  app.state.care['P01:feed'] = { usedToday: 1, lastAt: app.clock };
+  app.render();
+  assert.ok(app.controls().some(c => c.name === '等待间隔' && c.disabled));
+  assert.match(app.html, /下次可用/);
+  app.state.care['P01:feed'] = { usedToday: 2, lastAt: app.clock - 5 * 3600000 };
+  app.render();
+  assert.ok(app.controls().some(c => c.name === '今日已完成' && c.disabled));
+  await app.click('我的菜园');
+  app.state.plots[0].moisture = 70; app.render();
+  assert.ok(app.controls().some(c => c.name === '湿度充足' && c.disabled));
+  assert.equal(app.state.wallet.feed, 6);
+  assert.equal(app.state.plots[0].moisture, 70);
+});
+
 async function startOneMinuteWater(app) {
   await app.click('浇水');
   await app.click('1 分钟');

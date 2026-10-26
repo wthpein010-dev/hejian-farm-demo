@@ -71,6 +71,22 @@ function createApp(hash = '', options = {}) {
     Object.assign(location, { href: url.href, search: url.search, hash: url.hash });
   }
   setURL('https://farm.invalid/index.html' + hash);
+  const copyHistoryState = value => value == null ? null : JSON.parse(JSON.stringify(value));
+  const historyEntries = [{ url: location.href, state: null }];
+  let historyIndex = 0;
+  const history = {
+    get state() { return copyHistoryState(historyEntries[historyIndex].state); },
+    pushState(state, _title, url) {
+      if (url != null) setURL(url);
+      historyEntries.splice(historyIndex + 1);
+      historyEntries.push({ url: location.href, state: copyHistoryState(state) });
+      historyIndex++;
+    },
+    replaceState(state, _title, url) {
+      if (url != null) setURL(url);
+      historyEntries[historyIndex] = { url: location.href, state: copyHistoryState(state) };
+    },
+  };
   class ClockDate extends Date {
     constructor(...args) { super(...(args.length ? args : [clock])); }
     static now() { return clock; }
@@ -80,7 +96,7 @@ function createApp(hash = '', options = {}) {
     FormData: class { constructor() { this.values = [...formFields].map(([key, field]) => [key, field.value]); } [Symbol.iterator]() { return this.values[Symbol.iterator](); } },
     matchMedia(query) { return { media: query, matches: false, addEventListener() {}, removeEventListener() {} }; },
     navigator: { clipboard: { async writeText() {} } },
-    history: { pushState(_state, _title, url) { setURL(url); }, replaceState(_state, _title, url) { setURL(url); } },
+    history,
     window: { location, addEventListener(type, fn) { listen(windowEvents, type, fn); } },
     setTimeout(fn, delay = 0) { const id = ++serial; timers.set(id, { fn, delay, due: clock + delay }); return id; },
     clearTimeout(id) { timers.delete(id); },
@@ -134,7 +150,23 @@ function createApp(hash = '', options = {}) {
     },
     fill(name, value) { const field = formFields.get(name); assert.ok(field, `visible form field ${name}`); field.value = value; return field; },
     async submit() { assert.ok(dialogHTML.includes('id="shipping-form"')); await fire(documentEvents, 'submit', { target: form, preventDefault() {} }); },
-    async popstate(route) { setURL('#' + route); await fire(windowEvents, 'popstate'); },
+    async popstate(route, state = null) {
+      setURL('#' + route);
+      historyEntries[historyIndex] = { url: location.href, state: copyHistoryState(state) };
+      await fire(windowEvents, 'popstate', { state: history.state });
+    },
+    async back() {
+      if (!historyIndex) return;
+      historyIndex--;
+      setURL(historyEntries[historyIndex].url);
+      await fire(windowEvents, 'popstate', { state: history.state });
+    },
+    async forward() {
+      if (historyIndex === historyEntries.length - 1) return;
+      historyIndex++;
+      setURL(historyEntries[historyIndex].url);
+      await fire(windowEvents, 'popstate', { state: history.state });
+    },
     nextDay() { clock += 86400000; }, advance(ms) { clock += ms; },
     render() { context.__farmProbe.render(); },
     flushTimeout(delay) { const entry = [...timers].find(([, timer]) => timer.delay === delay); assert.ok(entry, `scheduled timeout ${delay}`); timers.delete(entry[0]); entry[1].fn(); },
