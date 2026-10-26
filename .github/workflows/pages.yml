@@ -25,12 +25,14 @@ jobs:
         with:
           node-version: '22'
       - name: Run domain tests
-        run: node --test tests/domain.test.cjs
+        run: node --test
       - name: Check JavaScript syntax
         run: |
           node --check prototype/app.js
           node --check prototype/ui.js
           node --check prototype/domain.js
+          node --check prototype/systems.js
+          node --check prototype/expansion.js
 
   deploy:
     needs: verify

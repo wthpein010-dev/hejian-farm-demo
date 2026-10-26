@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a silent 20-second H5 screenshot walkthrough; this is not a screen recording."""
+"""Build a silent 24-second H5 screenshot walkthrough; this is not a screen recording."""
 
 from __future__ import annotations
 
@@ -21,23 +21,24 @@ BACKGROUND = "#e8eee5"
 INK = "#1d3329"
 FONT_PATH = Path("C:/Windows/Fonts/msyh.ttc")
 SCENES = (
-    ("01-home.png", "我的农场：一方菜园，一份牵挂"),
-    ("02-recommendations.png", "当季优选：推荐前置与收获参考"),
-    ("03-pig-pov.png", "猪的第一视角：换个角度看农场"),
-    ("04-welfare.png", "福利中心：完成观看再领奖"),
-    ("05-delivery.png", "收获到家：示例邮寄与履约流程"),
+    ("01-home.png", "我的农场：日常照料与田园成长"),
+    ("02-shop.png", "农场商城：物资好礼与当季认养"),
+    ("03-cart.png", "积分购物车：用券兑换，物资入仓"),
+    ("04-activities.png", "田园活动：七日签到与丰收集章"),
+    ("05-warehouse.png", "我的仓库：按需取用，刚好照料"),
+    ("06-pig-pov.png", "猪的第一视角：换个角度看农场"),
 )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="把五张 H5 截图制作为 20 秒竖屏讲解 MP4（非连续实机录屏）。"
+        description="把六张 H5 截图制作为 24 秒竖屏讲解 MP4（非连续实机录屏）。"
     )
     parser.add_argument(
         "--screenshots",
         type=Path,
-        default=PROJECT_ROOT / ".scratch" / "farm-prototype" / "screenshots",
-        help="五张 PNG 截图所在目录。默认：项目 .scratch/farm-prototype/screenshots",
+        default=PROJECT_ROOT / ".scratch" / "farm-expansion" / "screenshots",
+        help="六张 PNG 截图所在目录。默认：项目 .scratch/farm-expansion/screenshots",
     )
     parser.add_argument(
         "--output",
@@ -110,7 +111,7 @@ def main() -> int:
                 manifest.extend((f"file '{frame_name}'", f"duration {SECONDS_PER_SCENE}"))
                 if first_frame is None:
                     first_frame = frame
-            # The final repeated still lets concat honor its last duration; -t fixes 20 s.
+            # Repeat the final still so concat honors its duration; -t fixes total length.
             manifest.append(f"file 'frame-{len(SCENES):02d}.png'")
             manifest_path = work / "frames.txt"
             manifest_path.write_text("\n".join(manifest) + "\n", encoding="utf-8")
@@ -123,7 +124,7 @@ def main() -> int:
                 "-vf", f"fps={FPS},format=yuv420p",
                 "-c:v", "libx264", "-preset", "medium", "-crf", "20",
                 "-movflags", "+faststart",
-                "-metadata", "comment=20-second screenshot walkthrough of a simulated H5 demo; not a continuous screen recording.",
+                "-metadata", f"comment={duration}-second screenshot walkthrough of a simulated H5 demo; not a continuous screen recording.",
                 str(staged_output),
             ]
             completed = subprocess.run(
@@ -146,7 +147,7 @@ def main() -> int:
 
     print(f"已生成：{output}")
     print(f"规格：{WIDTH}×{HEIGHT} / {duration} 秒 / {FPS} fps / H.264 / yuv420p / faststart")
-    print("形式：五张截图各停留 4 秒，单行字幕，无音频；不是连续实机录屏。")
+    print(f"形式：{len(SCENES)} 张截图各停留 {SECONDS_PER_SCENE} 秒，单行字幕，无音频；不是连续实机录屏。")
     return 0
 
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc">
+  <title id="title">秋日农庄成长插画</title>
+  <desc id="desc">原创自然农庄插画，右侧为菜畦、半透明温室、低山与少量秋金树叶，左侧留白。本图非实拍。</desc>
+  <defs>
+    <linearGradient id="paper" x2="1" y2=".5"><stop stop-color="#ecf1e7"/><stop offset="1" stop-color="#d8e2d0"/></linearGradient>
+    <linearGradient id="glass" x2=".7" y2="1"><stop stop-color="#f0efde" stop-opacity=".9"/><stop offset="1" stop-color="#92ac99" stop-opacity=".8"/></linearGradient>
+    <linearGradient id="soil" x2=".7" y2="1"><stop stop-color="#a2956f"/><stop offset="1" stop-color="#786b4d"/></linearGradient>
+    <linearGradient id="leaf" x2=".5" y2="1"><stop stop-color="#a7b17d"/><stop offset="1" stop-color="#55744f"/></linearGradient>
+    <linearGradient id="left-fade" x2="1" y2="0"><stop stop-color="#ecf1e7"/><stop offset=".44" stop-color="#ecf1e7" stop-opacity=".98"/><stop offset=".69" stop-color="#ecf1e7" stop-opacity="0"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-60%" width="180%" height="220%"><feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#334c36" flood-opacity=".12"/></filter>
+    <g id="crop"><ellipse cy="4" rx="18" ry="5" fill="#4e6544" opacity=".16"/><path d="M0 5C-21 5-26-9-18-16C-12-20-6-14-3-8C-10-32 11-36 12-13C29-29 37-7 21-1C19 11 8 11 0 5Z" fill="url(#leaf)"/><path d="M2 6L4-21M2 2L-11-10M5 0L20-13" fill="none" stroke="#c4cea1" stroke-width="1.4" opacity=".75"/></g>
+  </defs>
+  <path d="M0 0H900V420H0Z" fill="url(#paper)"/>
+  <path d="M480 210Q547 132 621 169Q707 94 787 160Q854 112 900 145V327H480Z" fill="#b5c6a9"/>
+  <path d="M449 270Q545 187 633 224Q765 161 900 216V420H449Z" fill="#a0b58e"/>
+  <path d="M456 320Q589 267 712 285Q822 259 900 289V420H456Z" fill="#9eae83"/>
+  <path d="M479 420L596 288L617 288L522 420Z" fill="#c9c5a5"/>
+  <path d="M599 420L659 293L679 295L646 420ZM754 420L742 295L763 296L802 420Z" fill="#c9c5a5"/>
+  <path d="M530 366L900 346V362L517 385Z" fill="#c8c1a0"/>
+  <g transform="translate(676 234)" filter="url(#shadow)">
+    <path d="M-43 35V-17Q-43-66 6-66H112Q159-66 159-18V35Z" fill="url(#glass)" stroke="#9dad96" stroke-width="2.5"/>
+    <path d="M-43 35V-17Q-43-66 6-66Q53-66 53-18V35Z" fill="#d6dfc7" fill-opacity=".6" stroke="#9ba891" stroke-width="2.5"/>
+    <path d="M-11 35V-18Q-11-65 38-65M21 35V-18Q21-65 69-65M54 35V-18Q54-65 102-65M87 35V-18Q87-64 132-62M121 35V-18Q121-48 153-51" stroke="#bdc6ad" stroke-width="2.5" fill="none"/>
+    <path d="M-43-6H159M-35-42H153M-43 24H159" stroke="#aab99f" stroke-width="2.5" fill="none"/>
+    <path d="M-13 35V-9Q2-25 19-9V35Z" fill="#8da88f" stroke="#abb99d" stroke-width="2.5"/>
+    <path d="M53-50L108-50M121-43L144-37" stroke="#f2f2df" stroke-width="3.5" opacity=".7" stroke-linecap="round"/>
+  </g>
+  <path d="M564 300L637 299L605 354L523 359ZM677 304L726 303L734 349L653 353ZM777 301L858 299L900 341L798 348ZM518 388L594 381L568 420H488ZM649 384L735 379L745 420H640ZM805 380L900 375V420H825Z" fill="url(#soil)"/>
+  <g opacity=".94"><use href="#crop" transform="translate(580 313) scale(.55)"/><use href="#crop" transform="translate(610 312) scale(.55)"/><use href="#crop" transform="translate(562 339) scale(.65)"/><use href="#crop" transform="translate(595 337) scale(.65)"/><use href="#crop" transform="translate(689 317) scale(.55)"/><use href="#crop" transform="translate(715 316) scale(.55)"/><use href="#crop" transform="translate(675 339) scale(.65)"/><use href="#crop" transform="translate(710 338) scale(.65)"/><use href="#crop" transform="translate(798 314) scale(.55)"/><use href="#crop" transform="translate(830 313) scale(.55)"/><use href="#crop" transform="translate(822 337) scale(.65)"/><use href="#crop" transform="translate(858 335) scale(.65)"/><use href="#crop" transform="translate(542 398) scale(.85)"/><use href="#crop" transform="translate(663 400) scale(.85)"/><use href="#crop" transform="translate(710 398) scale(.85)"/><use href="#crop" transform="translate(852 401) scale(.85)"/><use href="#crop" transform="translate(890 400) scale(.85)"/></g>
+  <path d="M487 420C500 337 505 278 482 213" stroke="#a1a884" stroke-width="3" opacity=".55" fill="none"/>
+  <g fill="#b9ac7a" opacity=".8"><path d="M491 314C456 305 447 282 457 266C480 269 493 287 491 314ZM496 350C524 329 545 336 548 352C529 366 508 367 496 350ZM489 275C510 249 533 247 539 261C525 278 504 286 489 275Z"/><path d="M486 243C464 224 464 205 475 199C492 212 497 232 486 243Z"/></g>
+  <path d="M0 0H900V420H0Z" fill="url(#left-fade)"/>
+</svg>

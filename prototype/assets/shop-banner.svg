@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc">
+  <title id="title">农庄商城丰收篮插画</title>
+  <desc id="desc">成熟自然风格的原创静物插画：右侧藤编篮装有蔬菜、南瓜与麦穗，左侧留白。本图非实拍。</desc>
+  <defs>
+    <linearGradient id="paper" x2="1" y2=".5"><stop stop-color="#f0f2e7"/><stop offset="1" stop-color="#e2e7d5"/></linearGradient>
+    <linearGradient id="basket" x2=".65" y2="1"><stop stop-color="#c6a76f"/><stop offset=".5" stop-color="#a38152"/><stop offset="1" stop-color="#7b6241"/></linearGradient>
+    <linearGradient id="leaf" x2=".6" y2="1"><stop stop-color="#9ca674"/><stop offset="1" stop-color="#476849"/></linearGradient>
+    <linearGradient id="pumpkin" x2=".6" y2="1"><stop stop-color="#d5b37b"/><stop offset=".5" stop-color="#bb9157"/><stop offset="1" stop-color="#957241"/></linearGradient>
+    <linearGradient id="carrot" x2="1" y2=".8"><stop stop-color="#d4a06b"/><stop offset="1" stop-color="#ad794c"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-60%" width="180%" height="220%"><feDropShadow dx="0" dy="11" stdDeviation="9" flood-color="#334c36" flood-opacity=".16"/></filter>
+    <pattern id="weave" width="18" height="14" patternUnits="userSpaceOnUse"><path d="M0 2H18M0 9H18" stroke="#ddc498" stroke-width="2" opacity=".6"/><path d="M4 0L7 14M14 0L17 14" stroke="#6e593e" stroke-width="2" opacity=".3"/></pattern>
+    <g id="wheat"><path d="M0 3L2-115" stroke="#a68a53" stroke-width="2.3"/><g fill="#c7ae72"><path d="M2-94C-10-92-14-105-11-108C-1-110 4-99 2-94ZM2-81C14-83 16-96 12-98C3-97-1-89 2-81ZM2-70C-11-69-15-82-11-86C-1-86 3-76 2-70ZM2-57C14-59 17-73 12-75C3-73-1-66 2-57ZM2-46C-10-46-14-58-11-62C-2-62 3-54 2-46ZM2-32C14-35 16-48 12-51C3-49-1-40 2-32Z"/></g><path d="M2-101L-3-125M10-96L12-118M-9-106L-15-122M-10-84L-17-101M12-73L18-90" stroke="#d5be88" stroke-width="1"/></g>
+  </defs>
+  <path d="M0 0H900V420H0Z" fill="url(#paper)"/>
+  <path d="M476 420C531 346 600 325 683 342C787 335 849 352 900 384V420Z" fill="#c7d1b5" opacity=".45"/>
+  <path d="M854 396C804 339 827 284 869 259C866 300 880 344 854 396Z" fill="#a8b294" opacity=".25"/>
+  <path d="M868 371L898 278M876 339L852 315M886 311L897 294" stroke="#9aa985" fill="none" stroke-width="2" opacity=".2"/>
+  <ellipse cx="688" cy="355" rx="164" ry="22" fill="#6a7956" opacity=".13"/>
+  <g transform="translate(689 270)" filter="url(#shadow)">
+    <path d="M-108-6C-99-151 105-158 116-10" fill="none" stroke="#886d48" stroke-width="15"/>
+    <path d="M-108-6C-99-151 105-158 116-10" fill="none" stroke="#c6ac7a" stroke-width="7"/>
+    <path d="M-137-27L-111 74Q5 118 123 64L146-35Z" fill="url(#basket)"/>
+    <path d="M-137-27L-111 74Q5 118 123 64L146-35Z" fill="url(#weave)"/>
+    <ellipse cy="-32" rx="143" ry="37" fill="#6c6a43"/>
+    <path d="M-94-28C-139-67-101-114-73-92C-104-154-48-180-32-114C-24-187 35-170 25-113C68-173 113-127 63-86C113-104 142-70 96-29Z" fill="url(#leaf)"/>
+    <path d="M-85-38C-117-72-91-103-67-75C-74-130-29-139-19-90C0-143 46-130 33-83C76-115 103-83 71-51C56-22-50-10-85-38Z" fill="#92a171"/>
+    <path d="M-43-29L-34-115M-43-52L-79-86M-39-73L-14-98M20-23L29-104M23-57L56-83M23-69L6-92" stroke="#bdc79a" stroke-width="2.2" fill="none" opacity=".7"/>
+    <g transform="translate(62 -40) rotate(24)"><path d="M-18-70Q1-84 20-69L3 23Q-1 32-4 21Z" fill="url(#carrot)"/><path d="M-15-58L-3-54M-9-38L1-35M-6-19L2-16" stroke="#e3bf8c" stroke-width="2"/><path d="M0-72C-23-101-27-120-16-123C-1-118 0-87 0-72C-1-109 14-134 21-125C28-109 6-83 0-72C20-102 39-99 34-87C28-76 11-73 0-72Z" fill="#65804e"/></g>
+    <path d="M-141-32Q1 18 145-35L145-23Q5 30-138-19Z" fill="#c9af7b"/>
+    <path d="M-134-29Q0 15 139-32" stroke="#e1c89c" stroke-width="3" fill="none"/>
+    <path d="M-112 68Q-3 107 123 61" fill="none" stroke="#b39867" stroke-width="6"/>
+    <path d="M-77-3L-60 90M-31 7L-25 101M20 8L18 99M70-2L59 89M113-15L97 76" stroke="#ddc392" stroke-width="3" opacity=".45"/>
+  </g>
+  <g transform="translate(552 341)" filter="url(#shadow)"><path d="M-48-4C-59-35-40-60-17-54C-3-70 17-67 29-51C57-50 67-24 54-4C38 23-28 28-48-4Z" fill="url(#pumpkin)"/><path d="M-15-53C-33-29-33-2-13 17M7-57C-6-30-5-1 9 18M28-49C40-25 36 1 23 17" fill="none" stroke="#e3c28d" stroke-width="3" opacity=".65"/><path d="M0-57L-6-77L5-83L12-60Z" fill="#77764b"/></g>
+  <g transform="translate(805 326) rotate(33)"><use href="#wheat"/><use href="#wheat" x="14" y="8" transform="rotate(8)"/><use href="#wheat" x="-13" y="10" transform="rotate(-10)"/><path d="M-12-18L22-14M-13-12L20-8" stroke="#7d8255" stroke-width="4"/></g>
+  <g fill="#9b7650"><ellipse cx="614" cy="371" rx="11" ry="5" transform="rotate(-12 614 371)"/><ellipse cx="635" cy="366" rx="9" ry="4" transform="rotate(19 635 366)"/></g>
+  <path d="M0 0H482V420H0Z" fill="#f0f2e7" opacity=".16"/>
+</svg>

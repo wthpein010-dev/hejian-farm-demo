@@ -12,7 +12,9 @@
 - **我的农场：** 切换农田／牧场，查看作物与牲畜，按次数和间隔照料。
 - **认养优选：** 前置当季推荐，比较周期、示例价格和收获参考价值，体验认养与工作人员安排。
 - **实景：** 切换农田、牧场和猪第一视角的演示镜头。
-- **福利：** 分享或复制真实 H5 链接，体验完整观看才可领的模拟广告、模拟邀请福利。
+- **农场商城：** 当季认养、8种积分物资与好礼、购物车、数量限购、优惠券和积分结算。
+- **田园活动：** 七日签到、每日农事、丰收集章、成长成就，配合原有广告与邀请福利。
+- **田园资产：** 仓库取用、累计收获、成长等级、种养图鉴和农场消息；所有界面共用同一钱包。
 - **收获到家：** 预约采收或工作人员处理，填写示例邮寄信息，查看脱敏摘要与模拟配送进展。
 
 页面采用成熟竖版、大图与清楚文字；手机内容最大宽度 480px，桌面居中展示同一页面。
@@ -38,10 +40,12 @@ python prototype/serve.py
 ## 验证与部署
 
 ```sh
-node --test tests/domain.test.cjs
+node --test
 node --check prototype/app.js
 node --check prototype/ui.js
 node --check prototype/domain.js
+node --check prototype/systems.js
+node --check prototype/expansion.js
 ```
 
 [Pages 工作流](.github/workflows/pages.yml) 在 `main` 推送或手动触发后，使用 Node.js 22 执行测试及语法检查，再将 `prototype/` 直接部署为 GitHub Pages；没有安装依赖或构建步骤。仓库 Pages 来源需配置为 GitHub Actions。

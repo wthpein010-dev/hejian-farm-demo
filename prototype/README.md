@@ -1,6 +1,6 @@
 # 禾间 · 竖版农场 H5 Demo
 
-面向 30–50 岁及中老年用户的手机竖版体验：认养农作物和牲畜、查看农田与牧场、按限制照料、看现场、参加福利，再体验实体产物收货。产品方向已确认，具体价格、周期、收益、次数和间隔均为 Demo 样本。
+面向 30–50 岁及中老年用户的手机竖版体验：种养照料、积分商城、活动、仓库成长、农场实景与收获到家。本轮将底部升级为“我的农场／商城／活动／实景／我的”；价格、库存、周期、收益、频次和奖励均为 Demo 样本。
 
 ## 本地启动
 
@@ -14,16 +14,20 @@ python prototype/serve.py
 
 ## 体验路线
 
-1. 在“我的农场”切换农田／牧场，查看自己的农作物、牲畜和生长状态。
-2. 进入“认养优选”，查看前置推荐徽标、时令理由、周期、示例收获／收益，再完成一次模拟认养。
-3. 体验浇水和投喂，查看剩余次数、间隔和忙碌原因；在设备面板体验在线、离线和无回执。
-4. 打开“实景”，切换农田、牧场和猪第一视角的演示镜头。
-5. 从右上或“我的”进入福利，分享／复制真实 H5 链接，体验完整观看才可领取的模拟广告和模拟邀请资格。
-6. 选择成熟对象，预约采收或工作人员处理，再使用示例邮寄信息查看脱敏摘要和模拟配送进展。
+1. 在“我的农场”切换农田／牧场，查看自己的作物、牲畜、生长状态、等级和每日农事。
+2. 打开“商城”的“当季认养”，比较推荐、时令理由、周期和收获参考价值；从空地选种或推荐入口进入时会直接回到当季认养，完成原模拟认养订单。
+3. 切到“农场物资／积分好礼”，查看 8 种积分商品、数量和当日库存；加入购物车，比较满 60 减 20 积分券、余额与应付积分，体验成功及余额不足等失败路径。资源发到同一钱包／仓库，没有现金支付。
+4. 进入“活动”，体验七日连续签到、每日逛商城／照料／收获三任务、丰收三印章和四个成长成就。任务先完成再领取，三项当天任务都领取后才能领集章礼，重复点击不重复发奖。
+5. 返回农场浇水或投喂，查看次数、间隔与设备忙碌原因；体验在线、离线和无回执。成功照料才计任务，福利和购买饲料不解除冷却。
+6. 打开“实景”，切换农田、牧场和猪第一视角；原广告／邀请福利及真实 H5 分享／复制入口继续可用。
+7. 收取鸡蛋或选择成熟对象预约采收／处理，再使用示例邮寄信息查看脱敏摘要和模拟履约。首次完成采收／处理才累计收获，预约和运输步骤不重复计入。
+8. 从农场或“我的”查看仓库、累计收获、等级进度、种养图鉴和消息中心；比较购物、任务奖励与原投喂所用的同一份饲料余额。
 
 ## 数据与模拟边界
 
 设备、摄像头、工作人员任务、商品金额、产量／收益、广告、邀请、订单与物流均为模拟。只有实际 H5 URL 的公开访问、系统分享或复制可真实使用；分享成功不代表产生有效拉新。
+
+积分商品、满减券、库存、经验和奖励都是演示配置。原认养展示示例金额，新增商城仅结算虚拟积分；余额、库存、用券和发资源一起成功才算结算完成，失败不扣分不发资源。签到按上海日期，同日不可重领，连续中断开新轮次，不能回退日期刷奖励。
 
 灌溉须收到模拟回执后才开始计时；无回执不显示成功、不自动重试、不增加湿度。浇水和投喂有 Demo 次数及间隔，福利不能绕过这些限制。
 
@@ -33,13 +37,26 @@ python prototype/serve.py
 
 部署地址：[打开禾间 H5 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)。公开源码：[wthpein010-dev/hejian-farm-demo](https://github.com/wthpein010-dev/hejian-farm-demo)。
 
-部署与线上验收状态见[验收记录](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/VERIFICATION.md)；此处不预先宣称发布成功。页面使用相对资源，需在独立 Pages 项目路径检查首页、资源、刷新和主要交互。
+该地址已用于初版独立发布；本轮扩展的新浏览器与部署证据见[验收记录](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/VERIFICATION.md)，不能从旧版上线推断扩展版已验收。页面使用相对资源，新增脚本、CSS 和 SVG 仍须线上核验。
 
 当前交付是 H5 网页。微信／抖音小程序 SDK、平台构建、广告接入、审核与上架另行验收，不能将 H5 分享链接描述成已上架的小程序。
 
 ## 开发入口
 
-vanilla HTML／CSS／JavaScript；`domain.js` 管理领域规则，`ui.js` 提供共享 SVG，`app.js` 管理界面和内存状态，`styles.css` 拥有运行时视觉 token，Python 仅提供本地静态服务。
+vanilla HTML／CSS／JavaScript；`domain.js` 管理原规则，`systems.js` 的 `FarmSystems` 管理商城和活动，`ui.js` 提供共享 SVG，`app.js` 拥有主状态与共享模态，`expansion.js` 接入扩展。`styles.css` 拥有运行时 token，`expansion.css` 消费这些 token，Python 仅提供本地静态服务。
+
+仓库内自动检查：
+
+```sh
+node --test
+node --check prototype/app.js
+node --check prototype/ui.js
+node --check prototype/domain.js
+node --check prototype/systems.js
+node --check prototype/expansion.js
+```
+
+本轮已执行测试记录为 43 项：18 项原领域、22 项系统规则、3 项扩展集成回归。发布前重跑和新版浏览器／部署结果由验收记录汇总，不将测试通过当作界面或平台验收。
 
 [项目首页](https://github.com/wthpein010-dev/hejian-farm-demo) · [产品说明](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/PRODUCT.md) · [验收记录](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/VERIFICATION.md) · [视觉约定](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/DESIGN.md) · [交互契约](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/UX-CONTRACT.md)
 

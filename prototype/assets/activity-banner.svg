@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc">
+  <title id="title">农庄活动礼盒插画</title>
+  <desc id="desc">原创成熟静物插画，右侧为深绿色布带包装的浅白礼盒、铜金卡片和自然枝叶，左侧留白。本图非实拍。</desc>
+  <defs>
+    <linearGradient id="paper" x2="1" y2=".8"><stop stop-color="#ebf0e6"/><stop offset="1" stop-color="#dbe5d5"/></linearGradient>
+    <linearGradient id="box" x2=".65" y2="1"><stop stop-color="#f5f1de"/><stop offset="1" stop-color="#d9cfb3"/></linearGradient>
+    <linearGradient id="side" x2=".7" y2="1"><stop stop-color="#d7cdb2"/><stop offset="1" stop-color="#b9b193"/></linearGradient>
+    <linearGradient id="ribbon" x2=".75" y2="1"><stop stop-color="#58735b"/><stop offset="1" stop-color="#294d3c"/></linearGradient>
+    <linearGradient id="gold" x2=".7" y2="1"><stop stop-color="#d1b888"/><stop offset="1" stop-color="#ab8753"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-60%" width="180%" height="220%"><feDropShadow dx="0" dy="11" stdDeviation="9" flood-color="#334c36" flood-opacity=".15"/></filter>
+    <g id="branch"><path d="M0 6C-6-45 4-103 29-154" stroke="#74865e" stroke-width="3" fill="none"/><path d="M1-27C-34-27-42-54-37-67C-10-66 2-44 1-27ZM6-60C40-59 55-83 51-99C24-99 9-80 6-60ZM15-101C-12-109-16-134-9-147C13-137 20-120 15-101ZM28-143C53-146 63-171 55-185C34-181 25-163 28-143Z" fill="#8fa07b"/><path d="M1-27L-28-58M6-60L42-90M15-101L-5-137M28-143L49-174" stroke="#bec9a4" stroke-width="1.3" fill="none"/></g>
+  </defs>
+  <path d="M0 0H900V420H0Z" fill="url(#paper)"/>
+  <path d="M476 420C546 347 638 326 742 343C809 343 863 366 900 391V420Z" fill="#bdceb3" opacity=".4"/>
+  <ellipse cx="707" cy="357" rx="152" ry="23" fill="#4d6a45" opacity=".12"/>
+  <g transform="translate(811 339) rotate(16)"><use href="#branch"/></g>
+  <g transform="translate(572 338) rotate(-24) scale(.85)"><use href="#branch"/></g>
+  <g transform="translate(699 267)" filter="url(#shadow)">
+    <path d="M-102-44L34-76L126-27V78L-11 118L-102 68Z" fill="url(#side)"/>
+    <path d="M-11 2L126-27V78L-11 118Z" fill="url(#box)"/>
+    <path d="M-109-56L35-91L134-39V-17L-12 20L-109-32Z" fill="#c9c1a5"/>
+    <path d="M-109-56L35-91L134-39L-12-1Z" fill="url(#box)"/>
+    <path d="M-57-69L-21-78L75-24L40-15Z" fill="#54715a"/>
+    <path d="M-57-69L-21-49V104L-57 84Z" fill="url(#ribbon)"/>
+    <path d="M-21-49L-21-25L75-49L75-24L40-15L40 104L72 94V-23Z" fill="url(#ribbon)"/>
+    <path d="M-21-25L-21-1L-57-20V-44Z" fill="#3f624c"/>
+    <path d="M-48-66L-40-68L55-17L48-15Z" fill="#94a083" opacity=".45"/>
+    <path d="M11-52C-35-113-74-94-58-69C-45-50-20-44 11-52Z" fill="url(#ribbon)"/>
+    <path d="M11-52C38-115 83-119 80-84C76-63 47-49 11-52Z" fill="url(#ribbon)"/>
+    <path d="M-48-75C-54-88-28-84-8-59M30-62C53-92 74-100 70-84" fill="none" stroke="#879a7c" stroke-width="5" opacity=".65" stroke-linecap="round"/>
+    <path d="M2-61L20-66L31-51L11-40L-1-49Z" fill="#47674e"/>
+    <path d="M14-47L-2-8L25-17L32-50Z" fill="#43684e"/>
+    <path d="M19-47L67-12L64-37L32-55Z" fill="#5f7a5c"/>
+    <path d="M-10 21L125-15" fill="none" stroke="#f7f4e3" stroke-width="2" opacity=".65"/>
+    <path d="M83 30L107 23V60L83 67Z" fill="url(#gold)"/><path d="M89 36L101 33M89 42L101 39M89 48L98 46" stroke="#e5d0a8" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(578 339) rotate(-11)" filter="url(#shadow)"><path d="M-47-35H43V25H-47Z" fill="url(#gold)"/><path d="M-40-28H36V18H-40Z" fill="none" stroke="#e4d1a8" stroke-width="1.5"/><path d="M-24-2C-24-19-5-22 1-9C8-22 26-18 25-4C23 8 9 13 1 16C-7 11-24 8-24-2Z" fill="#e2cd9f"/><path d="M1 12V-8M1 3L-9-5M1 0L12-8" stroke="#ac8a56" stroke-width="1.5" fill="none"/></g>
+  <g fill="#a8b392" opacity=".5"><ellipse cx="857" cy="179" rx="13" ry="29" transform="rotate(34 857 179)"/><ellipse cx="875" cy="216" rx="9" ry="23" transform="rotate(23 875 216)"/></g>
+</svg>
