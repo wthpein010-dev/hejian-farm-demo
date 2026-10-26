@@ -19,3 +19,6 @@ uni-app{max-width:480px;margin:auto;box-shadow:0 0 40px #244d3d10;background:var
 /* #endif */
 
 .balance-bar>.action,.inline-actions>.action{width:auto}
+.action.danger-outline{color:var(--danger);background:var(--paper);border:1px solid var(--danger)}
+.action.danger{background:var(--danger);color:var(--paper);border:1px solid var(--danger)}
+.deletion-confirm{border:2px solid var(--danger)}

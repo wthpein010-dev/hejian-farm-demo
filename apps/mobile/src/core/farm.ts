@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { createFarmClient } from './client.mjs';
-import type { Snapshot } from './types';
+import type { Snapshot, PrivacyReport } from './types';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : '');
 const client = createFarmClient({ baseURL, transport: (request: { url: string; method: string; headers: object; body: unknown; timeout: number }) => new Promise((resolve, reject) => {
@@ -11,6 +11,7 @@ const client = createFarmClient({ baseURL, transport: (request: { url: string; m
 
 export const farmState = reactive({
   snapshot: null as Snapshot | null, busy: false, authenticated: false,
+  privacy: null as PrivacyReport | null, deletionPrepared: false, pendingCanRetryWithoutAuth: false,
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -31,13 +32,20 @@ async function run(operation: () => Promise<unknown>, message = '') {
   catch (failure) { farmState.error = failure instanceof Error ? failure.message : '操作未完成，请稍后重试。'; return false; }
   finally {
     farmState.snapshot = client.snapshot as Snapshot | null;
+    farmState.privacy = client.privacy as PrivacyReport | null;
+    farmState.deletionPrepared = client.deletionPrepared;
+    farmState.pendingCanRetryWithoutAuth = client.pendingCanRetryWithoutAuth;
     farmState.authenticated = client.authenticated;
     farmState.pending = client.hasPending(); farmState.busy = false;
   }
 }
 export const refreshFarm = () => run(() => client.load());
 export const mutateFarm = (path: string, body: Record<string, unknown> = {}, message = '已更新，田园数据已同步。') => run(() => client.mutate(path, body), message);
-export const retryFarmOperation = () => run(() => client.retryPending(), '上次操作已核对，请查看最新资产。');
+export const retryFarmOperation = () => run(() => client.retryPending(), farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
+export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
+export const deleteFarmAccount = () => run(() => client.deleteAccount(), '账户已注销，全部登录已失效。');
+export function cancelFarmDeletion() { client.cancelAccountDeletion(); farmState.deletionPrepared = false; }
 export const loginDevelopment = (account: string) => run(async () => { await client.loginDevelopment(account); await client.load(); }, '已连接联调账户，进度由服务器保存。');
 export const loginPlatform = () => run(async () => {
   if (!platformProvider) throw new Error('请在已配置账号服务的小程序中登录。');

@@ -156,6 +156,14 @@ export function createApp(options = {}) {
           send(200, { data }); return;
         } catch (error) { store.finishPlatformCode(claimedCode, 'failed', store.serverNow()); throw error; }
       }
+      // The one-use capability also recovers a lost success response after all sessions are removed.
+      if (route === '/account/deletion/confirm') {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const body = await jsonBody(request); object(body, ['confirmationToken']);
+        if (typeof body.confirmationToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(body.confirmationToken)) throw invalid();
+        const result = store.confirmDeletion(body.confirmationToken, store.serverNow());
+        send(result.status, result.error ? { error: result.error } : { data: result.data }); return;
+      }
       const token = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(request.headers.authorization ?? '')?.[1];
       const userId = store.authenticate(token, now);
       if (!userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
@@ -167,6 +175,17 @@ export function createApp(options = {}) {
       if (route === '/bootstrap') {
         if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
         send(200, { data: store.bootstrap(userId, now) }); return;
+      }
+      if (route === '/account/privacy') {
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        send(200, { data: store.privacy(userId) }); return;
+      }
+      if (route === '/account/deletion/prepare') {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const body = await jsonBody(request); object(body, ['expectedRevision']);
+        if (!safeInt(body.expectedRevision)) throw invalid();
+        const result = store.prepareDeletion(userId, token, body.expectedRevision, store.serverNow());
+        send(result.status, result.error ? { error: result.error, ...(result.data ? { data: result.data } : {}) } : { data: result.data }); return;
       }
       if (route === '/auth/logout') {
         if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');

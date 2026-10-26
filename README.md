@@ -4,6 +4,8 @@
 
 跨端本地开发（Node≥24.15）：先按[服务端说明](services/api/README.md)启动明确的本机沙盒，再运行 `npm ci --ignore-scripts` 及根 `npm run dev:mobile`。客户端公开配置与构建说明见[移动工程](apps/mobile/README.md)。真实平台AppID／后端HTTPS域名、签名和设备联调仍待配置。
 
+跨端“我的”页已补[账户数据查阅与确认注销](docs/release/ACCOUNT-PRIVACY.md)，服务端另提供[SQLite在线备份与隔离恢复](services/api/BACKUP.md)。本轮177项测试及四端资源编译通过；这些功能位于跨端工程与API，公开Pages继续提供下方的内存H5演示。
+
 面向 30–50 岁及中老年用户的农场体验演示：认养农作物与牲畜、远程照料、看农田与牧场、参加福利，再体验收获到家。
 
 - 部署地址：[打开禾间 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)（部署与线上验收状态见[验收记录](docs/VERIFICATION.md)）。

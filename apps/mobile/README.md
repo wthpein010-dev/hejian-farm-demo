@@ -21,6 +21,8 @@
 
 ## 构建与证据边界
 
+“我的”页新增账户数据类别查阅与注销确认。准备需近期登录，默认焦点落返回；取消不删除。未知注销保留原凭证并提供无需重新登录的核对入口，只有服务端有效完成回执才显示已注销。当前无真实订单的即时删除范围及正式保留制度缺口见[账户隐私说明](../../docs/release/ACCOUNT-PRIVACY.md)。
+
 根命令：`npm run typecheck`、`npm run build:h5`、`npm run build:weixin`、`npm run build:douyin`、`npm run build:app`。编译输出在本目录 `dist/`（忽略Git）。App构建只得到离线资源，签名安装包还需HBuilderX或原生SDK及相应账号；不能称已上架。
 
 编译器版本、依赖安全修补及四端编译基线见[依赖说明](../../docs/release/DEPENDENCIES.md)，本轮实际结果见[验收记录](../../docs/VERIFICATION.md)。平台AppID、域名白名单、隐私资质、真机/签名/官方审核仍分别验收。没有用开发工具“关闭域名校验”当作生产网络通过。

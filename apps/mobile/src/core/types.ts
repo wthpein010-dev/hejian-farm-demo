@@ -14,3 +14,8 @@ export interface Snapshot {
   farm: { plots: Array<{ id: string; name: string; status: string }>; animals: Array<{ id: string; name: string; status: string }> };
   capabilities: Record<string, boolean>;
 }
+export interface PrivacyReport {
+  profile: { id: string; displayName: string };
+  createdAt: number; updatedAt: number; deletionSupported: boolean;
+  dataCategories: Array<{ id: string; title: string; description: string }>;
+}

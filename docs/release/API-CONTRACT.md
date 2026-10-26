@@ -33,6 +33,12 @@ Snapshot:
 - `POST /auth/logout` -> 注销当前token。
 - token为高熵随机值，SQLite仅存SHA256摘要及期限；过期/注销后失效。
 
+## 账户数据与注销
+
+`GET /account/privacy`查阅当前账户保存的数据类别。`POST /account/deletion/prepare {expectedRevision}`要求5分钟内有效会话和当前版本，返回仅用于POST正文的2分钟确认凭证。`POST /account/deletion/confirm {confirmationToken}`原子删除当前账户及全部会话，保存不关联用户的最小完成回执。确认可不带Bearer，以便已删除会话后用原凭证核对未知结果；不接受userId，不允许URL或storage保存凭证。
+
+准备、取消、版本变化或过期不会宣告已注销。网络错误、5xx或限流等通用4xx继续保留原凭证；只有有效完成回执或协议明确拒绝才结束核对。完整响应、错误码、备份与生产保留边界见[账户隐私契约](ACCOUNT-PRIVACY.md)。
+
 ## 查询与资产变更
 
 - `GET /bootstrap` -> Snapshot；购物车、账户和历史从DB读取。只前进上海日界。

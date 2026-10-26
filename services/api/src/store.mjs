@@ -7,6 +7,14 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
 const hash = value => createHash('sha256').update(value).digest('hex');
+const DELETION_SESSION_MAX_AGE = 5 * 60_000;
+const DELETION_CONFIRMATION_TTL = 2 * 60_000;
+const PRIVACY_CATEGORIES = [
+  { id: 'account', title: '账户资料', description: '账户标识、显示名称及创建与更新时间' },
+  { id: 'assets', title: '田园资产与活动', description: '积分、饲料、购物车、库存、签到与活动进度' },
+  { id: 'history', title: '操作记录', description: '兑换和奖励回执、用于防止重复记账的操作记录' },
+  { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
+];
 
 function initialState(sandbox, now) {
   const system = Systems.createState(now);
@@ -29,7 +37,7 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#database.prepare('PRAGMA user_version').get().user_version;
-      if (schema > 2) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      if (schema > 3) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -74,7 +82,19 @@ export class FarmStore {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
-      PRAGMA user_version = 2;
+      CREATE TABLE IF NOT EXISTS deletion_confirmations (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        session_hash TEXT NOT NULL,
+        expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
+        expires_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS deletion_confirmations_user ON deletion_confirmations(user_id);
+      CREATE TABLE IF NOT EXISTS deletion_receipts (
+        token_hash TEXT PRIMARY KEY,
+        completed_at INTEGER NOT NULL
+      );
+      PRAGMA user_version = 3;
     `);
     } catch (error) { this.#database.close(); throw error; }
   }
@@ -151,10 +171,13 @@ export class FarmStore {
 
   authenticate(token, now) {
     if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
-    const row = this.#database.prepare(`SELECT sessions.user_id FROM sessions JOIN users ON users.id = sessions.user_id
+    return this.#session(hash(token), now)?.user_id ?? null;
+  }
+
+  #session(tokenHash, now) {
+    return this.#database.prepare(`SELECT sessions.user_id, sessions.created_at FROM sessions JOIN users ON users.id = sessions.user_id
       WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND sessions.revoked_at IS NULL AND users.environment = ?`)
-      .get(hash(token), now, this.#config.mode);
-    return row?.user_id ?? null;
+      .get(tokenHash, now, this.#config.mode);
   }
 
   logout(token, now) { this.#database.prepare('UPDATE sessions SET revoked_at = ? WHERE token_hash = ?').run(now, hash(token)); }
@@ -176,6 +199,55 @@ export class FarmStore {
 
   bootstrap(userId, now) {
     return this.#transaction(() => { const row = this.#user(userId); return this.#snapshot(row, this.#sync(row, now), now); });
+  }
+
+  privacy(userId) {
+    const row = this.#user(userId);
+    return { profile: { id: row.id, displayName: row.display_name }, createdAt: row.created_at,
+      updatedAt: row.updated_at, dataCategories: PRIVACY_CATEGORIES, deletionSupported: true };
+  }
+
+  prepareDeletion(userId, token, expectedRevision, now) {
+    return this.#transaction(() => {
+      const sessionHash = hash(token), session = this.#session(sessionHash, now);
+      if (!session || session.user_id !== userId || now - session.created_at > DELETION_SESSION_MAX_AGE) {
+        return { status: 401, error: { code: 'REAUTH_REQUIRED', message: '注销账户需要近期登录，请重新登录后再核对' } };
+      }
+      const row = this.#user(userId), state = this.#sync(row, now);
+      if (row.revision !== expectedRevision) return { status: 409,
+        error: { code: 'REVISION_CONFLICT', message: '田园状态已有更新，请核对最新明细后重新确认' }, data: this.#snapshot(row, state, now) };
+      const confirmationToken = randomBytes(32).toString('base64url'), expiresAt = now + DELETION_CONFIRMATION_TTL;
+      if (!Number.isSafeInteger(expiresAt)) throw new RangeError('确认凭证期限无效');
+      this.#database.prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(userId);
+      this.#database.prepare('INSERT INTO deletion_confirmations (token_hash, user_id, session_hash, expected_revision, expires_at) VALUES (?, ?, ?, ?, ?)')
+        .run(hash(confirmationToken), userId, sessionHash, row.revision, expiresAt);
+      return { status: 200, data: { confirmationToken, expiresAt, serverTime: now } };
+    });
+  }
+
+  confirmDeletion(confirmationToken, now) {
+    return this.#transaction(() => {
+      const tokenHash = hash(confirmationToken);
+      const receipt = this.#database.prepare('SELECT completed_at FROM deletion_receipts WHERE token_hash = ?').get(tokenHash);
+      if (receipt) return { status: 200, data: { deleted: true, completedAt: receipt.completed_at } };
+      const pending = this.#database.prepare(`SELECT deletion_confirmations.* FROM deletion_confirmations
+        JOIN users ON users.id = deletion_confirmations.user_id WHERE deletion_confirmations.token_hash = ? AND users.environment = ?`)
+        .get(tokenHash, this.#config.mode);
+      const failure = (status, code, message) => ({ status, error: { code, message } });
+      if (!pending) return failure(410, 'DELETION_INVALID', '此确认凭证无效或已撤销，请返回账户页重新核对');
+      if (pending.expires_at <= now) return failure(410, 'DELETION_EXPIRED', '此确认凭证已过期，请返回账户页重新核对');
+      const session = this.#session(pending.session_hash, now);
+      if (!session || session.user_id !== pending.user_id) return failure(401, 'REAUTH_REQUIRED', '原登录已失效，账户未注销，请重新登录后再核对');
+      const row = this.#user(pending.user_id);
+      this.#sync(row, now);
+      if (row.revision !== pending.expected_revision) return failure(409, 'DELETION_STATE_CHANGED', '账户数据已有变化，账户未注销，请返回账户页刷新并重新核对');
+      this.#database.prepare('DELETE FROM sessions WHERE user_id = ?').run(row.id);
+      this.#database.prepare('DELETE FROM idempotency WHERE user_id = ?').run(row.id);
+      this.#database.prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
+      this.#database.prepare('DELETE FROM users WHERE id = ?').run(row.id);
+      this.#database.prepare('INSERT INTO deletion_receipts (token_hash, completed_at) VALUES (?, ?)').run(tokenHash, now);
+      return { status: 200, data: { deleted: true, completedAt: now } };
+    });
   }
 
   mutate(userId, key, fingerprint, expectedRevision, operation, now) {

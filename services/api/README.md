@@ -29,7 +29,7 @@ node services/api/src/server.mjs
 | `FARM_WEIXIN_APP_ID`／`FARM_WEIXIN_APP_SECRET` | 微信小程序服务端凭据；可都不配，但不能只配一项 |
 | `FARM_TOUTIAO_APP_ID`／`FARM_TOUTIAO_APP_SECRET` | 抖音小程序服务端凭据；可都不配，但不能只配一项 |
 
-当 `NODE_ENV=production` 时，不允许 `FARM_MODE=development`。production 开启开发登录、非法 CORS／端口／会话时长、未知未来数据库 schema 都会拒绝启动。
+当 `NODE_ENV=production` 时，不允许 `FARM_MODE=development`。production 开启开发登录、非法 CORS／端口／会话时长、未知未来数据库 schema 都会拒绝启动。当前schema3保留已有账户资产并增加注销准备与匿名回执。
 
 ## 使用流程
 
@@ -86,6 +86,8 @@ development 沙盒初始 80 积分、6 份饲料与样本库存，仅用于联�
 production 平台账户的积分商城和活动同样关闭，须在真实经营规则与生产履约确认后另行实现能力启用。不能仅通过切换 `FARM_MODE` 将沙盒库存或演示奖励当作真实运营。
 
 ## 嵌入与测试接口
+
+账户类别查询及近期授权注销已接入，含全会话失效、原子回滚和匿名凭证重放，见[账户契约](../../docs/release/ACCOUNT-PRIVACY.md)。备份、校验和隔离恢复命令见[BACKUP.md](BACKUP.md)；恢复会清历史会话与未使用注销确认，不能把旧备份直接切入生产。
 
 ```js
 import { createApp } from './services/api/src/server.mjs';
