@@ -68,6 +68,8 @@ H5在账户档案/schema5基线之上增加目录查找、可加/单件积分/�
 
 本切片功能提交`718672f75a834e9e6972db0232df3096af1b8adc`已推送独立main；现场身份wthpein010-dev、目标仓库ADMIN权限及远端提交已核实。[工作流40449912394](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40449912394)的verify、verify-mobile、deploy全部成功：Linux498/498、0失败/跳过、依赖0已知漏洞、四端资源编译通过。56个公网资源含25照片、manifest、影片与封面与该Git提交blob逐字节相同；视频Range206/1024字节。[公开H5](https://wthpein010-dev.github.io/hejian-farm-demo/)独立于用户其他网站。D:/farm与托管工作区已安全快进到同一功能提交；本页后续文档提交不改变上述运行资源。
 
+文档提交5289144的CI40450128412在旧环境隔离测试失败，四端资源仍通过、部署因此跳过。已本机复现：development固定04:00的模拟时钟，production连接使用真实Date.now，将共用server_clock推到04:30之后，造成development测试会话过期。仅修测试为两连接共用受控NOW，保留production拒绝开发token的401及development仍可访问的200，并新增serverTime===NOW；API26/26通过，独立复核确认隔离断言更明确。产品会话/时钟逻辑未改，失败记录不隐藏。
+
 ## 账户隐私与备份恢复补齐
 
 上一目标回合有实际进展：a8baffe及功能04addbc均已推送，120项测试、四端资源及独立Pages部署成功。本回合从该干净基线补充以下上线要求，未用重复检查替代真实功能实现。

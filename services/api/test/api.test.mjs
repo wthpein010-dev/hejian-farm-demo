@@ -316,12 +316,15 @@ test('development login rate limit ignores forged proxy headers and resets only 
 
 test('production cannot accept a previously issued development session even when sharing a database file', async t => {
   const f = await start(t), { token } = await f.login('environment-isolation');
-  const production = api.createApp({ databasePath: f.file, mode: 'production', allowedOrigins: [] });
+  // Both connections share the persisted monotonic clock. Wall time here
+  // would expire the synthetic development session once NOW + 30m passes.
+  const production = api.createApp({ databasePath: f.file, mode: 'production', allowedOrigins: [], clock: () => NOW });
   try {
     await listenOnFetchSafePort(production.server);
     const response = await fetch(`http://127.0.0.1:${production.server.address().port}/api/v1/bootstrap`, { headers: { Authorization: `Bearer ${token}` } });
     assert.equal(response.status, 401); await response.body.cancel();
-    assert.equal((await f.snapshot(token)).profile.id.length, 36);
+    const after = await f.snapshot(token);
+    assert.equal(after.profile.id.length, 36); assert.equal(after.serverTime, NOW);
   } finally { await production.close(); }
 });
 
