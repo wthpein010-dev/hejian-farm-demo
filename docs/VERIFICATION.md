@@ -10,6 +10,8 @@
 
 本机证据 `.scratch/farm-experience-5/`。查询、心愿和目标只保留本次内存，不进入API Snapshot。沿用旧24秒截图讲解，未重新录制本轮功能视频；正式SDK/硬件/履约/真机与上架依然未完成。
 
+第五轮功能提交 `d837f8a9d0df45c60b52531d9de63f4553e4c049` 已发布到独立Pages；[工作流40435970390](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40435970390)的verify、verify-mobile、deploy全部成功，Linux438/438通过、0失败/跳过，依赖审计0项已知漏洞。28个公网HTML/CSS/JS/SVG/WebP逐字节匹配该提交；公开页实测心愿80积分→签到100积分，未自动兑换，console无warn/error。当前GitHub身份现场核实为wthpein010-dev，独立仓库admin/push权限；没有接入Hub或部署生产API。
+
 ## 第四轮：商城与活动体验
 
 - 商城三种排序不改认养推荐或资产；详情与列表的可加数量/禁用状态同步，达到5件后两处均不可再加；每件物资的实际授予数量及收入去向可读。
