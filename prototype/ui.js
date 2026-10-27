@@ -44,6 +44,14 @@
   paths.video='M3 5h13v14H3V5Zm13 5 6-4v12l-6-4v-4Z';
   paths.share='M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 14a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-5 7-4m-7 8 7 4';
   paths.minus='M5 12h14';
+  paths.home='m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7';
+  paths.arrow='M4 12h16m-6-6 6 6-6 6';
+  paths.users='M15 21v-2a6 6 0 0 0-12 0v2M13 4a4 4 0 0 1 0 8M21 21v-2a6 6 0 0 0-4-5M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z';
+  paths.chat='M21 11a9 9 0 0 1-9 9H4l-2 2V11a9 9 0 1 1 19 0ZM7 10h10M7 14h6';
+  paths.message=paths.chat;
+  paths.plus='M12 4v16M4 12h16';
+  paths.flag='M5 22V3c5-5 9 5 15 0v12c-6 5-10-5-15 0';
+  paths.userPlus='M14 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM2 21v-2a8 8 0 0 1 13-6M19 13v8M15 17h8';
   const animalArt=photoArt;
   window.FarmUI={icon,cropArt,animalArt,photoArt};
 

@@ -59,7 +59,7 @@ test('wishlist and earn goal follow the same wallet and return to the same produ
 });
 
 test('task filters track reward eligibility, successful claims, and honest empty results', async()=>{
- const app=createApp(); await app.click('商城'); await app.click('活动');
+ const app=createApp(); await app.click('商城'); await app.click('打开活动中心');
  await app.click(c=>c.dataset.action==='x-task-filter'&&c.dataset.filter==='ready');
  let tasks=app.controls().filter(c=>c.dataset.action==='x-claim-task');
  assert.deepEqual(tasks.map(c=>c.dataset.task),['browse']);

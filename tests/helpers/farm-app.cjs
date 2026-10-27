@@ -11,6 +11,7 @@ const attributes = source => Object.fromEntries([...source.matchAll(/([\w-]+)="(
 // loaded from the actual scripts declared by index.html, in their real order.
 function createApp(hash = '', options = {}) {
   let clock = Date.parse('2026-10-27T04:00:00Z'), serial = 0, reloads = 0;
+  const clipboardWrites = [];
   const documentEvents = new Map(), windowEvents = new Map(), nodes = new Map();
   const timers = new Map(), intervals = new Map(), formFields = new Map();
   const listen = (map, type, fn) => map.set(type, [...(map.get(type) || []), fn]);
@@ -111,7 +112,7 @@ function createApp(hash = '', options = {}) {
     document, location, URL, URLSearchParams, Intl, Date: ClockDate,
     FormData: class { constructor() { this.values = [...formFields].map(([key, field]) => [key, field.value]); } [Symbol.iterator]() { return this.values[Symbol.iterator](); } },
     matchMedia(query) { return { media: query, matches: false, addEventListener() {}, removeEventListener() {} }; },
-    navigator: { clipboard: { async writeText() {} } },
+    navigator: { clipboard: { async writeText(value) { clipboardWrites.push(value); } } },
     history,
     window: { location, addEventListener(type, fn) { listen(windowEvents, type, fn); } },
     setTimeout(fn, delay = 0) { const id = ++serial; timers.set(id, { fn, delay, due: clock + delay }); return id; },
@@ -156,6 +157,8 @@ function createApp(hash = '', options = {}) {
     get state() { return context.__farmProbe?.state; }, get modal() { return context.__farmProbe?.modal; },
     get html() { return app.innerHTML; }, get modalHTML() { return dialogHTML; }, get dialogOpen() { return dialog.open; },
     get clock() { return clock; }, get bootStatus() { return status.textContent; }, get reloads() { return reloads; },
+    get clipboardWrites() { return [...clipboardWrites]; }, get url() { return location.href; },
+    get historyState() { return history.state; },
     controls,
     async click(name) {
       const el = controls().find(el => typeof name === 'function' ? name(el) : name instanceof RegExp ? name.test(el.name) : el.name === name);
@@ -165,6 +168,25 @@ function createApp(hash = '', options = {}) {
       await fire(documentEvents, 'click', { target: el, preventDefault() {} });
     },
     fill(name, value) { const field = formFields.get(name); assert.ok(field, `visible form field ${name}`); field.value = value; return field; },
+    async input(name, value) {
+      const field = formFields.get(name); assert.ok(field, `visible form field ${name}`);
+      field.value = value; await fire(documentEvents, 'input', { target: field });
+    },
+    async composeField(name, value) {
+      const field = formFields.get(name); assert.ok(field, `visible form field ${name}`);
+      field.focus(); await fire(documentEvents, 'compositionstart', { target: field });
+      field.value = value; await fire(documentEvents, 'input', { target: field, isComposing: true });
+    },
+    async endFieldComposition(name) {
+      const field = formFields.get(name); assert.ok(field, `visible form field ${name}`);
+      await fire(documentEvents, 'compositionend', { target: field });
+    },
+    async enterField(name, formId) {
+      const field = formFields.get(name); assert.ok(field, `visible form field ${name}`);
+      let prevented = false;
+      await fire(documentEvents, 'keydown', { target: field, key: 'Enter', keyCode: 13, isComposing: false, preventDefault() { prevented = true; } });
+      if (!prevented) await fire(documentEvents, 'submit', { target: { id: formId }, preventDefault() {} });
+    },
     async search(query, { composing = false } = {}) {
       const field = document.querySelector('#shop-query');
       field.id = 'shop-query'; field.value = query;
@@ -186,7 +208,10 @@ function createApp(hash = '', options = {}) {
       await fire(documentEvents,'keydown',{target:field,key:'Enter',keyCode:13,isComposing:false,preventDefault(){prevented=true;}});
       if(!prevented)await fire(documentEvents,'submit',{target:{id:'shop-search',querySelector:()=>field},preventDefault(){}});
     },
-    async submit() { assert.ok(dialogHTML.includes('id="shipping-form"')); await fire(documentEvents, 'submit', { target: form, preventDefault() {} }); },
+    async submit(formId = 'shipping-form', extra = {}) {
+      assert.ok(dialogHTML.includes(`id="${formId}"`), `visible form ${formId}`);
+      await fire(documentEvents, 'submit', { target: formId === 'shipping-form' ? form : { id: formId }, preventDefault() {}, ...extra });
+    },
     async popstate(route, state = null) {
       setURL('#' + route);
       historyEntries[historyIndex] = { url: location.href, state: copyHistoryState(state) };

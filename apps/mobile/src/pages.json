@@ -15,7 +15,7 @@
     {
       "path": "pages/activities/index",
       "style": {
-        "navigationBarTitleText": "田园活动"
+        "navigationBarTitleText": "田园主页"
       }
     },
     {
@@ -83,7 +83,7 @@
       },
       {
         "pagePath": "pages/activities/index",
-        "text": "活动"
+        "text": "主页"
       },
       {
         "pagePath": "pages/live/index",

@@ -52,12 +52,12 @@ test('after eight real sign-ins the ninth-day activity grid shows one claimed ce
   const app = createApp();
   for (let day = 0; day < 8; day++) {
     if (day) app.nextDay();
-    await app.click('活动');
+    await app.click('打开活动中心');
     await app.click(/^签到领取 /);
     assert.equal(app.state.system.signedDays.length, day + 1, 'the real sign-in transaction succeeds once each day');
   }
   app.nextDay();
-  await app.click('活动');
+  await app.click('打开活动中心');
   const cells = app.controls().filter(control => control.dataset.action === 'x-signin-preview');
   assert.equal(cells.length, 7, 'the rendered activity page contains seven reward cells');
   assert.deepEqual(cells.filter(cell => cell.name.includes('已领取')).map(cell => cell.dataset.day), ['1']);
@@ -92,7 +92,7 @@ test('the shop cart summary stays reachable outside the scrolling catalogue and 
 test('activity overview exposes current rewards and reaches canonical tasks and welfare screens', async () => {
   const app = createApp();
   await app.click('商城');
-  await app.click('活动');
+  await app.click('打开活动中心');
   const overview = app.html.match(/<section\b[^>]*class="activity-overview"[^>]*>([\s\S]*?)<\/section>/);
   assert.ok(overview, 'the first activity section exposes actionable reward status');
   assert.match(overview[1], /1\s*项可领/);
@@ -104,7 +104,7 @@ test('activity overview exposes current rewards and reaches canonical tasks and 
   assert.ok(claimed?.disabled, 'the overview cannot repeat a claimed sign-in');
   await app.click(el => el.dataset.action === 'tasks' && el.name.includes('1 项可领'));
   assert.equal(app.state.view, 'tasks');
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.click('新人和好友福利');
   assert.equal(app.state.view, 'welfare');
   assert.ok(app.controls().some(el => el.dataset.action === 'welcome'), 'the original reward flow is reused');
@@ -209,7 +209,7 @@ test('separate coupon history entries keep their own mine and shop return contex
   await app.click(el => el.dataset.action === 'coupons'); // First coupon entry belongs to mine.
   await app.click('商城');
   await app.click(el => el.dataset.action === 'coupons'); // Second coupon entry belongs to shop.
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.back();
   assert.equal(app.state.view, 'coupons');
   assert.ok(app.controls().some(el => el.name === '返回商城'));
@@ -228,13 +228,13 @@ test('separate coupon history entries keep their own mine and shop return contex
 });
 
 test('separate exchange history entries restore warehouse and shop return contexts without mutating assets', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await app.click('我的仓库');
   await app.click('全部记录'); // First exchange entry belongs to the warehouse.
   await app.click('商城');
   await app.click(el => el.dataset.action === 'exchanges'); // Second entry belongs to the shop.
   const assets = JSON.stringify({ wallet: app.state.wallet, system: app.state.system });
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.back();
   assert.equal(app.state.view, 'exchanges');
   assert.ok(app.controls().some(el => el.name === '返回商城'));

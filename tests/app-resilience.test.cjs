@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { createApp } = require('./helpers/farm-app.cjs');
 
 test('unavailable care actions explain resources, cooldown and quota without claiming success', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await app.click('我的牧场');
   app.state.wallet.feed = 0; app.render();
   assert.ok(app.controls().some(c => c.name === '饲料不足' && c.disabled));
@@ -40,7 +40,7 @@ function fillShipping(app, { invalid = false } = {}) {
 }
 
 test('the original wallet and farm quotas never reset when the clock returns to an older day', () => {
-  const app = createApp();
+  const app = createApp('#farm');
   app.nextDay(); app.render();
   app.state.wallet.adToday = 3;
   app.state.requests.add('A01:fertilize');
@@ -53,7 +53,7 @@ test('the original wallet and farm quotas never reset when the clock returns to 
 });
 
 test('a delayed watering timer uses elapsed time and waits for a stop ACK before updating moisture', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await startOneMinuteWater(app);
   const moisture = app.state.plots[0].moisture;
   app.advance(90000); app.tickIntervals();
@@ -66,7 +66,7 @@ test('a delayed watering timer uses elapsed time and waits for a stop ACK before
 });
 
 test('restoring a suspended active device requires reconciliation and retains its care cooldown', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await startOneMinuteWater(app);
   const moisture = app.state.plots[0].moisture;
   const lastAt = app.state.care['A01:water'].lastAt;
@@ -96,7 +96,7 @@ test('a late adoption result does not replace a newer product dialog', async () 
 });
 
 test('a completed previous crop shipment does not block a new cultivation cycle on the same plot', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await app.click('去采收'); fillShipping(app); await app.submit();
   await app.click('查看收获与配送');
   for (let i = 0; i < 3; i++) await app.click('模拟下一步履约');
@@ -116,7 +116,7 @@ test('a completed previous crop shipment does not block a new cultivation cycle 
 });
 
 test('closing a shipping dialog clears its raw draft and hidden form DOM', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await app.click('去采收'); fillShipping(app, { invalid: true }); await app.submit();
   assert.match(app.modalHTML, /13800000000/);
   const field = app.fill('phone', '13800000000');
@@ -128,7 +128,7 @@ test('closing a shipping dialog clears its raw draft and hidden form DOM', async
 });
 
 test('switching pickup and delivery preserves the in-memory shipping address until cancel', async () => {
-  const app = createApp();
+  const app = createApp('#farm');
   await app.click('去采收'); fillShipping(app);
   await app.click('农场自提'); await app.click('配送到家');
   assert.match(app.modalHTML, /浙江省杭州市示例路88号/);

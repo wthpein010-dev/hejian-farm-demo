@@ -7,7 +7,7 @@ const nextAction = app => app.controls().find(c => c.dataset.guide === 'next');
 test('activity next step moves from sign-in to a ready task without paying twice', async () => {
   const app = createApp();
   await app.click('商城');
-  await app.click('活动');
+  await app.click('打开活动中心');
   assert.equal(nextAction(app)?.dataset.action, 'x-signin');
   await app.click(c => c.dataset.guide === 'next');
   assert.equal(app.state.wallet.points, 100);
@@ -17,7 +17,7 @@ test('activity next step moves from sign-in to a ready task without paying twice
   assert.equal(app.state.wallet.points, 110);
   assert.equal(app.state.rewardHistory.length, 2);
   await app.click('我的农场');
-  await app.click('活动');
+  await app.click('打开活动中心');
   assert.equal(app.state.wallet.points, 110);
   assert.equal(app.state.rewardHistory.length, 2);
   assert.match(app.html, /最近到账/);
@@ -25,13 +25,13 @@ test('activity next step moves from sign-in to a ready task without paying twice
 
 test('reward details reflect successful task and achievement claims and preserve their entry context', async () => {
   const app = createApp();
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.click('领取今日签到');
   await app.click('全部任务');
   await app.click(c => c.dataset.action === 'x-task-go' && c.dataset.task === 'harvest');
   await app.click('收取鸡蛋 · 演示');
   await app.click(c => c.dataset.action === 'x-claim-task' && c.dataset.task === 'harvest');
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.click('成长成就');
   await app.click(c => c.dataset.action === 'x-claim-achievement' && c.dataset.achievement === 'first-harvest');
   const earned = JSON.stringify({ system: app.state.system, wallet: app.state.wallet });
@@ -64,7 +64,7 @@ test('empty reward history is honest and daily totals do not include earlier day
   await empty.click('去活动中心');
   await empty.click('领取今日签到');
   empty.nextDay();
-  await empty.click('活动');
+  await empty.click('打开活动中心');
   await empty.click('领取今日签到');
   await empty.click(c => c.dataset.action === 'rewards');
   assert.equal(empty.state.rewardHistory.length, 2);
@@ -123,7 +123,7 @@ test('the mature-object suggestion opens the actual crop or animal harvest card 
     const app = createApp('#activities');
     await app.click('领取今日签到');
     await app.click('商城');
-    await app.click('活动');
+    await app.click('打开活动中心');
     await app.click(c => c.dataset.guide === 'next');
     app.state.eggs = 0;
     for (const p of app.state.animals) app.state.care[p.id + ':feed'] = { usedToday: 2, lastAt: app.clock };
@@ -145,7 +145,7 @@ test('a completed harvest season records its mixed reward once and keeps the suc
   const app = createApp('#activities');
   await app.click('领取今日签到');
   await app.click('商城');
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.click(c => c.dataset.guide === 'next');
   await app.click('全部任务');
   await app.click(c => c.dataset.action === 'x-task-go' && c.dataset.task === 'harvest');
@@ -164,7 +164,7 @@ test('a completed harvest season records its mixed reward once and keeps the suc
   assert.equal(entry.reward.coupon.off, 20);
   assert.equal(app.state.rewardHistory.length, 5);
   assert.ok(app.controls().find(c => c.dataset.action === 'x-claim-season')?.disabled);
-  await app.click('活动');
+  await app.click('打开活动中心');
   await app.click(c => c.dataset.action === 'rewards');
   assert.match(app.html, /丰收季 · 田园三章/);
   assert.match(app.html, /张积分券/);

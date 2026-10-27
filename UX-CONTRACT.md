@@ -1,5 +1,13 @@
 # 禾间 UX Contract
 
+## 社交主页（2026-10-27）
+
+依据[社交说明](docs/SOCIAL.md)与当前用户要求，底部“活动”改为突出的大“主页”，五入口为我的农场/商城/主页/实景/我的。H5无hash进入home，旧activities完整保留为子页；community/post/friends/friend全部归home。移动端保留activities物理路由并改显示名称，生产社交未开放。
+
+FarmCommunity复用app唯一dialog/frame/toast及输入/焦点恢复，FarmSocial拥有不接钱包的纯社交规则，social.css只做token消费者。新帖/评论失败保留本次草稿并中文定位错误，取消与切换清理；IME候选确认期间不提交、不重建输入DOM。点赞/圈子/好友状态同时有文字与选中边界，示例关系/举报不冒充真实通知与审核。删除/移除/屏蔽先确认，删除后旧详情显示失效空态。
+
+分享只传白名单示例id，不传标题/正文/草稿；本页新帖仅分享社区入口并持续说明不会同步。首开按严格示例id恢复，重复/未知id不能恢复本地内容；返回按每个history entry的导航id/分类恢复，不恢复任何资产。主页签到直接复用既有领取事务，社交不产生积分或有效拉新。触控48px、主动作56px，异形装饰不裁焦点或正文；旧活动与农事回归仍须通过。
+
 ## 第五轮：商品发现、心愿与活动资格
 
 `FarmDiscovery`只拥有可加数量及目录展示投影，`FarmSystems`继续拥有购物车和经济事务；`expansion.js`拥有本页查询／筛选／心愿／目标，复用app的按钮、dialog、toast及导航。没有新增钱包或奖励入口。
@@ -54,6 +62,7 @@
 | Activity receipts | prototype/rewards.js；expansion 成功事务适配 | docs/PRODUCT.md；本文活动明细约定 | 四类活动来源、内存明细、北京时间当天汇总 | 失败不记、重复ID不记、深克隆与跨日 |
 | Farm records | shared/farm-records.mjs；API registry；mobile core/farm | docs/release/FARM-RECORDS.md；CONTEXT.md | 账户列表、对象详情、逐版本观测、明确加载更多 | 归属/环境/游标链、迟到读、跨账户、版本变化刷新 |
 | Extension adapter | prototype/expansion.js 与 app bridge | docs/PRODUCT.md | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
+| Community / Friends | prototype/social.js与community.js；app桥 | docs/SOCIAL.md | 主页、圈子、帖子评论、好友、示例举报屏蔽 | 资格/重复/转义/IME/取消/分享隐私/导航返回 |
 | Device state | prototype/app.js 唯一模拟设备状态；跨端未开放 | docs/PRODUCT.md；docs/release/READINESS.md | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
 | Privacy | H5：domain／app 示例邮寄边界；跨端：core 客户端与 API | docs/PRODUCT.md；docs/release/API-CONTRACT.md | H5 脱敏摘要；正式会话仅内存 | storage／URL／日志无秘密与原始地址 |
 | Sharing | prototype/app.js 共享链接动作 | docs/PRODUCT.md | 系统分享、复制、手动复制 | 真 H5 URL、失败诚实反馈 |

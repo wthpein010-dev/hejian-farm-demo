@@ -1,6 +1,6 @@
 # 禾间 · 竖版农场 H5 Demo
 
-日期：2026-10-27；来源：用户需求与继续迭代／独立发布授权。当前工作为商城、活动与成长扩展；Demo 中的价格、库存、农时、成熟周期、收益、次数、间隔和奖励仍是提案。
+日期：2026-10-27；来源：用户需求与继续迭代／独立发布授权。当前工作为社交主页、论坛圈子、好友与分享设计；Demo 中的价格、库存、农时、成熟周期、收益、次数、间隔和奖励仍是提案。
 
 本目录用于制作可公开分享的手机竖版 H5 Demo，后续面向微信、抖音小程序探索。真实农场和工作人员由用户确认存在；当前软件不连接真实农事设备、支付、身份、视频、广告或物流。
 
@@ -9,6 +9,7 @@
 - [公开产品上下文](docs/PRODUCT.md)与[验收记录](docs/VERIFICATION.md)：仓库内可分享的产品范围和检查证据。
 - [当前扩展规格](.scratch/farm-expansion/spec.md)：商城、活动、仓库与成长的范围、事务及验收。
 - [当前扩展计划](.scratch/farm-expansion/plan.md)：模块接口、任务顺序与验证／发布。
+- [社交主页](docs/SOCIAL.md)与[本轮规格](.scratch/social-home/spec.md)：主页、论坛、好友、分享及演示边界。
 - [初版规格](.scratch/farm-prototype/spec.md)：历史基线；其中旧四入口以本轮五入口替代。
 - [DESIGN.md](DESIGN.md)：成熟大气、图文清楚的移动视觉及 token 归属。
 - [UX-CONTRACT.md](UX-CONTRACT.md)：农田／牧场、照料限制、福利、设备回执和收货流程。
@@ -33,7 +34,7 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 ## 实现约定
 
 1. vanilla HTML／CSS／JavaScript 位于 `prototype/`。`domain.js` 负责原照料／推荐／邮寄／福利规则，`systems.js` 提供 UMD 纯模块 `FarmSystems` 的商城和活动等规则，`ui.js` 提供共享 SVG，`app.js` 拥有主状态和共享交互。`expansion.js` 通过 app bridge 接入，不复制钱包、设备或 modal；`styles.css` 拥有 canonical token，`expansion.css` 只消费这些 token 定义组合样式。
-2. 保持单一成熟竖版移动方向，底部固定“我的农场／商城／活动／实景／我的”；“商城”含当季认养／农场物资／积分好礼，“活动”前置签到、任务、丰收集章和成就。首页保留农田／牧场，仓库、等级、图鉴、消息和每日农事从所属页面进入。
+2. 保持单一成熟竖版移动方向，底部固定“我的农场／商城／主页／实景／我的”，中央主页大按钮；主页融合签到、社区圈子与好友，“商城”含当季认养／农场物资／积分好礼，原activities活动中心保留签到、任务、丰收集章和成就。我的农场保留农田／牧场，仓库、等级、图鉴、消息和每日农事从所属页面进入。
 3. 面向 30–50 岁及中老年用户：正文 16–18px，辅助小字至少 12px，触控区域至少 48px。图文结合、原生语义、可见焦点、中文名称和减少动态效果均保留。
 4. 农事限制在领域规则和界面两层执行。浇水／投喂明确剩余次数与下次可用时间；福利不绕过次数、间隔或设备忙碌限制。样本配置不能视作真实农业规则。
 5. 设备保持“确认对象 → 发送 → 等待设备回执 → 执行 → 等待停止回执”的区别；无回执不显示已执行、不自动重试、不增加湿度或照料收益，需回面板核查。
@@ -64,3 +65,7 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 ## 兑换记录实现
 
 shared/exchanges.mjs拥有严格只读历史投影、资源标签与wire校验；三账户GET接口读取原purchase，不改schema/revision/经济规则。client.mjs保留已确认checkout原key定位收据，pending协议不变；farm.ts统一账户清理、读取代际、分页聚合及导航栈复用。FarmGoodsPhoto为商城/收据/仓库照片白名单入口，微信需virtualHost/shared保持列宽。分页仅限制响应，不解决整体JSON历史容量。公开Pages仍为prototype，无生产API。
+
+## 社交主页实现
+
+prototype/social.js的FarmSocial拥有纯内存圈子/帖子/评论/好友规则；community.js适配home/community/post/friends/friend页面，复用app的唯一dialog/frame/toast及导航。social.css仅消费canonical token；所有新文字/属性转义。社交操作不改积分/设备/广告或邀请资格。示例帖子/人物只按固定ID深链；本页自发帖只分享社区入口，不把正文/草稿放URL、storage、history或网络。历史仅白名单导航id/分类；取消清理、失败留稿、IME候选确认不能误发。正式移动工程本轮同步主页命名/视觉，生产社交仍关闭，不把H5示例好友当真实关系或实际审核。
