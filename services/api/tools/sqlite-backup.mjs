@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { isDeepStrictEqual } from 'node:util';
 import { decodeReceipt } from '../src/receipt-codec.mjs';
 import { FARM_REGISTRY_TABLE_SQL, FARM_REGISTRY_INDEX_SQL, validateFarmRegistryDatabase } from '../src/farm-registry.mjs';
+import { FRIENDS_TABLE_SQL, FRIENDS_INDEX_SQL, validateFriendsDatabase } from '../src/friends.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -15,7 +16,7 @@ const Domain = require('../../../prototype/domain.js');
 const DATABASE = 'farm.sqlite';
 const MANIFEST = 'manifest.json';
 const FORMAT = 1;
-const SUPPORTED_SCHEMAS = new Set([2, 3, 4, 5]);
+const SUPPORTED_SCHEMAS = new Set([2, 3, 4, 5, 6]);
 const COLUMNS = {
   server_clock: ['singleton:INTEGER', 'last_time:INTEGER'],
   users: ['id:TEXT', 'environment:TEXT', 'identity_provider:TEXT', 'identity_subject:TEXT', 'display_name:TEXT',
@@ -28,15 +29,21 @@ const COLUMNS = {
   farm_records: ['environment:TEXT', 'id:TEXT', 'owner_id:TEXT', 'data_json:TEXT', 'version:INTEGER', 'created_at:INTEGER', 'updated_at:INTEGER'],
   farm_record_events: ['environment:TEXT', 'record_id:TEXT', 'version:INTEGER', 'data_json:TEXT', 'source:TEXT', 'recorded_at:INTEGER'],
   farm_imports: ['environment:TEXT', 'batch_id:TEXT', 'fingerprint:TEXT', 'result_json:TEXT', 'created_at:INTEGER'],
+  friends_profiles: ['owner_id:TEXT', 'environment:TEXT', 'peer_id:TEXT', 'code:TEXT', 'enabled:INTEGER', 'version:INTEGER', 'allowance_day:TEXT', 'allowance_count:INTEGER', 'created_at:INTEGER', 'updated_at:INTEGER'],
+  friends_relations: ['environment:TEXT', 'left_id:TEXT', 'right_id:TEXT', 'sender_id:TEXT', 'state:TEXT', 'created_at:INTEGER', 'updated_at:INTEGER'],
+  friends_blocks: ['environment:TEXT', 'owner_id:TEXT', 'peer_id:TEXT', 'created_at:INTEGER'],
+  friends_commands: ['environment:TEXT', 'owner_id:TEXT', 'key:TEXT', 'fingerprint:TEXT', 'result_json:TEXT', 'created_at:INTEGER'],
 };
 const PRIMARY_KEYS = { server_clock: ['singleton'], users: ['id'], sessions: ['token_hash'],
   idempotency: ['user_id', 'key'], code_claims: ['code_hash'], deletion_confirmations: ['token_hash'], deletion_receipts: ['token_hash'],
-  farm_records: ['environment', 'id'], farm_record_events: ['environment', 'record_id', 'version'], farm_imports: ['environment', 'batch_id'] };
+  farm_records: ['environment', 'id'], farm_record_events: ['environment', 'record_id', 'version'], farm_imports: ['environment', 'batch_id'],
+  friends_profiles: ['owner_id'], friends_relations: ['environment', 'left_id', 'right_id'], friends_blocks: ['environment', 'owner_id', 'peer_id'], friends_commands: ['environment', 'owner_id', 'key'] };
 // A versioned schema contract includes constraints and indexes: table_info and
 // foreign_key_check alone cannot detect removed UNIQUE/CHECK constraints or an
 // added index which changes which future application writes can succeed.
 const TABLE_SQL = {
   ...FARM_REGISTRY_TABLE_SQL,
+  ...FRIENDS_TABLE_SQL,
   server_clock: `CREATE TABLE server_clock (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), last_time INTEGER NOT NULL)`,
   users: `CREATE TABLE users (id TEXT PRIMARY KEY, environment TEXT NOT NULL, identity_provider TEXT NOT NULL,
     identity_subject TEXT NOT NULL, display_name TEXT NOT NULL, state_json TEXT NOT NULL,
@@ -78,6 +85,14 @@ function validateIndexes(db, tables) {
     sql: 'CREATE INDEX deletion_confirmations_user ON deletion_confirmations(user_id)', columns: ['user_id'], origin: 'c', unique: 0 };
   if (tables.includes('farm_records')) expected.farm_records_owner = { table: 'farm_records',
     sql: FARM_REGISTRY_INDEX_SQL.farm_records_owner, columns: ['owner_id', 'environment', 'id'], origin: 'c', unique: 0 };
+  if (tables.includes('friends_profiles')) {
+    expected.sqlite_autoindex_friends_profiles_2 = { table: 'friends_profiles', sql: null, columns: ['peer_id'], origin: 'u', unique: 1 };
+    expected.sqlite_autoindex_friends_profiles_3 = { table: 'friends_profiles', sql: null, columns: ['code'], origin: 'u', unique: 1 };
+    for (const [name, table, columns] of [['friends_relations_left', 'friends_relations', ['left_id', 'environment']],
+      ['friends_relations_right', 'friends_relations', ['right_id', 'environment']], ['friends_blocks_peer', 'friends_blocks', ['peer_id', 'environment']]]) {
+      expected[name] = { table, sql: FRIENDS_INDEX_SQL[name], columns, origin: 'c', unique: 0 };
+    }
+  }
   const indexes = db.prepare("SELECT name, tbl_name, sql FROM sqlite_schema WHERE type = 'index'").all();
   if (!isDeepStrictEqual(indexes.map(index => index.name).sort(), Object.keys(expected).sort())) fail('INVALID_APPLICATION_SCHEMA');
   for (const index of indexes) {
@@ -281,7 +296,7 @@ function validateDatabase(file, { standalone = false } = {}) {
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_CHECK_FAILED');
     if (standalone && db.prepare('PRAGMA journal_mode').get().journal_mode !== 'delete') fail('NON_STANDALONE_DATABASE');
     const expected = Object.keys(COLUMNS).filter(name => (schemaVersion >= 3 || !name.startsWith('deletion_')) &&
-      (schemaVersion >= 5 || !name.startsWith('farm_'))).sort();
+      (schemaVersion >= 5 || !name.startsWith('farm_')) && (schemaVersion >= 6 || !name.startsWith('friends_'))).sort();
     const schema = db.prepare("SELECT name, type, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' AND type != 'index'").all();
     if (schema.some(row => row.type !== 'table') || JSON.stringify(schema.map(row => row.name).sort()) !== JSON.stringify(expected)) fail('INVALID_APPLICATION_SCHEMA');
     for (const table of schema) if (normalizedSql(table.sql) !== normalizedSql(TABLE_SQL[table.name])) fail('INVALID_APPLICATION_SCHEMA');
@@ -294,9 +309,16 @@ function validateDatabase(file, { standalone = false } = {}) {
       const expectedKeys = table === 'farm_record_events'
         ? [{ table: 'farm_records', from: 'environment', to: 'environment' }, { table: 'farm_records', from: 'record_id', to: 'id' }]
         : table === 'farm_records' ? [{ table: 'users', from: 'owner_id', to: 'id' }]
-          : ['sessions', 'idempotency', 'deletion_confirmations'].includes(table) ? [{ table: 'users', from: 'user_id', to: 'id' }] : [];
-      if (!isDeepStrictEqual(foreignKeys.sort((a, b) => a.seq - b.seq).map(row => ({ table: row.table, from: row.from, to: row.to })), expectedKeys) ||
-        foreignKeys.some(row => row.id !== 0 || row.on_update !== 'NO ACTION' || row.on_delete !== 'NO ACTION' || row.match !== 'NONE')) fail('INVALID_APPLICATION_SCHEMA');
+          : ['sessions', 'idempotency', 'deletion_confirmations'].includes(table) ? [{ table: 'users', from: 'user_id', to: 'id' }]
+            : ['friends_profiles', 'friends_commands'].includes(table) ? [{ table: 'users', from: 'owner_id', to: 'id' }]
+              : table === 'friends_relations' ? [{ table: 'users', from: 'left_id', to: 'id' }, { table: 'users', from: 'right_id', to: 'id' }]
+                : table === 'friends_blocks' ? [{ table: 'users', from: 'owner_id', to: 'id' }, { table: 'users', from: 'peer_id', to: 'id' }] : [];
+      const orderKey = row => row.table + '|' + row.from + '|' + row.to;
+      const ordered = rows => rows.map(row => ({ table: row.table, from: row.from, to: row.to })).sort((a, b) => orderKey(a).localeCompare(orderKey(b)));
+      if (!isDeepStrictEqual(ordered(foreignKeys), ordered(expectedKeys)) ||
+        foreignKeys.some(row => row.on_update !== 'NO ACTION' || row.on_delete !== 'NO ACTION' || row.match !== 'NONE') ||
+        (!['friends_relations', 'friends_blocks'].includes(table) && foreignKeys.some(row => row.id !== 0)) ||
+        (table !== 'farm_record_events' && foreignKeys.some(row => row.seq !== 0))) fail('INVALID_APPLICATION_SCHEMA');
     }
     const clock = db.prepare('SELECT singleton, last_time FROM server_clock').all();
     if (clock.length !== 1 || clock[0].singleton !== 1 || !integer(clock[0].last_time)) fail('INVALID_APPLICATION_DATA');
@@ -310,6 +332,10 @@ function validateDatabase(file, { standalone = false } = {}) {
     if (db.prepare("SELECT 1 FROM code_claims WHERE status NOT IN ('pending', 'used', 'failed') LIMIT 1").get()) fail('INVALID_APPLICATION_DATA');
     if (schemaVersion >= 5) {
       try { validateFarmRegistryDatabase(db, clock[0].last_time); }
+      catch { fail('INVALID_APPLICATION_DATA'); }
+    }
+    if (schemaVersion >= 6) {
+      try { validateFriendsDatabase(db, clock[0].last_time); }
       catch { fail('INVALID_APPLICATION_DATA'); }
     }
     db.exec('ROLLBACK');

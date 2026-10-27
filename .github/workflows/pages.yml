@@ -45,6 +45,8 @@ jobs:
           node --check services/api/src/client-address.mjs
           node --check services/api/src/receipt-codec.mjs
           node --check shared/farm-records.mjs
+          node --check shared/friends.mjs
+          node --check services/api/src/friends.mjs
           node --check services/api/src/farm-registry.mjs
           node --check tools/import-farm-records.mjs
           node --check services/api/src/operations.mjs

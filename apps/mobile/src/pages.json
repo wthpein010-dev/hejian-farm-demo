@@ -55,6 +55,10 @@
       }
     },
     {
+      "path": "pages/friends/index",
+      "style": { "navigationBarTitleText": "我的农友" }
+    },
+    {
       "path": "pages/inventory/index",
       "style": {
         "navigationBarTitleText": "我的仓库"

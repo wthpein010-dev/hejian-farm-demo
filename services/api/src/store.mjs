@@ -7,6 +7,7 @@ import { encodeReceipt, decodeReceipt } from './receipt-codec.mjs';
 import { normalizeFarmBatch } from '../../../shared/farm-records.mjs';
 import { createExchangePage, createExchangeDetail } from '../../../shared/exchanges.mjs';
 import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm-registry.mjs';
+import { FRIENDS_SQL, createFriends } from './friends.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -18,6 +19,7 @@ const PRIVACY_CATEGORIES = [
   { id: 'assets', title: '田园资产与活动', description: '积分、饲料、购物车、库存、签到与活动进度' },
   { id: 'history', title: '操作记录', description: '兑换和奖励回执、用于防止重复记账的操作记录' },
   { id: 'farm-records', title: '农场归属与观测记录', description: '归属档案、种养轮次及农场来源的观测历史' },
+  { id: 'friends', title: '农友名片与关系', description: '主动开通的系统名片、双方申请及关系（合计最多200条）、主动屏蔽（最多200条）、上海日界每日20次新申请额度与防重复操作记录；关闭交友保留历史额度及最小操作确认，注销删除本人记录和双方引用' },
   { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
 ];
 
@@ -37,6 +39,7 @@ export class FarmStore {
   #closed = false;
   #statements = new Map();
   #farmRegistry;
+  #friends;
 
   constructor(config) {
     this.#config = config;
@@ -44,7 +47,7 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 5) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      if (schema > 6) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -102,9 +105,11 @@ export class FarmStore {
         completed_at INTEGER NOT NULL
       );
       ${FARM_REGISTRY_SQL}
-      PRAGMA user_version = 5;
+      ${FRIENDS_SQL}
+      PRAGMA user_version = 6;
     `);
       this.#farmRegistry = createFarmRegistry({ prepare: sql => this.#prepare(sql), environment: config.mode });
+      this.#friends = createFriends({ prepare: sql => this.#prepare(sql), environment: config.mode });
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
 
@@ -283,6 +288,14 @@ export class FarmStore {
       updatedAt: row.updated_at, dataCategories: PRIVACY_CATEGORIES, deletionSupported: true };
   }
 
+  friendsView(userId, now) {
+    return this.#transaction(() => this.#friends.view(this.#user(userId), now));
+  }
+
+  friendCommand(userId, key, input, now) {
+    return this.#transaction(() => this.#friends.command(this.#user(userId), key, input, now));
+  }
+
   prepareDeletion(userId, token, expectedRevision, now) {
     return this.#transaction(() => {
       const sessionHash = hash(token), session = this.#session(sessionHash, now);
@@ -321,6 +334,7 @@ export class FarmStore {
       this.#prepare('DELETE FROM idempotency WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
       this.#farmRegistry.deleteOwner(row.id);
+      this.#friends.deleteOwner(row.id, now);
       this.#prepare('DELETE FROM users WHERE id = ?').run(row.id);
       this.#prepare('INSERT INTO deletion_receipts (token_hash, completed_at) VALUES (?, ?)').run(tokenHash, now);
       return { status: 200, data: { deleted: true, completedAt: now } };

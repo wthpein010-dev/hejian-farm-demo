@@ -45,7 +45,7 @@ const button = await component('components/FarmButton.vue');
 async function home(overrides = {}) {
   const state = vue.reactive({ authenticated: true, snapshot: mobileSnapshot(), busy: false, pending: false, message: '', error: '', confirmedCheckout: false, ...overrides });
   const mutations = [], actions = [];
-  const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
+  const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openFriends: () => actions.push('friends'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
   const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': button, './FarmNavigation.vue': invisible });
   const empty = await component('components/EmptyPanel.vue');
   const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty });
@@ -79,17 +79,21 @@ test('Home renders a labeled photography cover and uses the existing account sig
     h.state.snapshot.signIn.todayClaimed = true; h.state.snapshot.signIn.streak = 1; await vue.nextTick();
     const claimed = h.findButton('今日已签到，明天再来'); assert.equal(claimed.props.disabled, true);
     activate(claimed); assert.equal(h.mutations.length, 1, 'confirmed sign-in is unavailable for a second tap');
-    assert.ok(h.text(h.root).includes('社交社区待接入')); assert.deepEqual(h.warnings, []);
+    assert.match(h.text(h.root), /论坛、发帖、消息及邀请奖励仍待接入/);
+    activate(h.findButton('查看我的农友')); assert.deepEqual(h.actions, ['friends']); assert.equal(h.mutations.length, 1, 'opening friends does not award points or submit a relation');
+    assert.deepEqual(h.warnings, []);
   } finally { h.close(); }
 });
 
-test('unopened production activities display no reward action or pretend social action', async () => {
+test('unopened production activities offer only friends status navigation without reward or relation writes', async () => {
   const snapshot = mobileSnapshot({ environment: 'production' }); snapshot.capabilities.activities = false;
   const h = await home({ snapshot });
   try {
     assert.match(h.text(h.root), /活动暂未开放/);
-    assert.match(h.text(h.root), /社交社区待接入/);
-    assert.equal(h.buttons().length, 0, 'no unsupported reward, publishing, friend or share button is offered');
+    assert.match(h.text(h.root), /正式服务暂未开放/);
+    assert.match(h.text(h.root), /论坛、发帖、消息及邀请奖励仍待接入/);
+    assert.equal(h.buttons().length, 1, 'only navigation to the closed friends status page is available');
+    activate(h.findButton('查看我的农友')); assert.deepEqual(h.actions, ['friends']);
     assert.deepEqual(h.mutations, []);
   } finally { h.close(); }
 });

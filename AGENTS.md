@@ -62,6 +62,14 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 
 术语见[CONTEXT.md](CONTEXT.md)，接入契约见[农场档案](docs/release/FARM-RECORDS.md)。shared/farm-records.mjs拥有字段/页面/历史与转换校验；farm-registry.mjs拥有三表DDL、事务和历史，备份共用DDL。只读账户接口不改变金融Snapshot、revision、奖励或能力开关；观测不是设备回执。CLI仅显式私有文件/既有DB，真实资料和运行库不入Git。本轮全部验证使用合成数据。
 
+## 持久农友实现
+
+来源：2026-10-27用户社交/好友需求及持续上线目标。协议见[FRIENDS](docs/release/FRIENDS.md)，本轮计划`.scratch/durable-friends/`。`prototype`仍为内存示例社区；`apps/mobile`农友使用独立账户API，production保持关闭，不能把开发沙盒当已上线社交。
+
+`shared/friends.mjs`拥有严格wire校验，`services/api/src/friends.mjs`拥有schema6四表、DDL/索引、关系和最小命令账，备份共用。先查原key回执再查独立社交expectedVersion；旧key只能恢复原命令结果，当前列表另读，不能复活后来移除的关系。别名由随机公开农友ID派生，码128bit；无公开目录/通讯录/UGC/奖励，不赋予好友私有农场/设备权限。关闭保留递增版本和当日额度，注销清双方引用并更新存活对象版本。
+
+客户端复用唯一会话/待核对槽，社交回复不进入财务Snapshot，通用4xx/429/5xx不能丢未知key。列表/申请有界但命令账仍增长，不能静默裁剪历史；正式开放前仍需容量/保留、最新撤销删除记录、生产隐私及平台/真机证据。本轮不迁移用户运行库。
+
 ## 兑换记录实现
 
 shared/exchanges.mjs拥有严格只读历史投影、资源标签与wire校验；三账户GET接口读取原purchase，不改schema/revision/经济规则。client.mjs保留已确认checkout原key定位收据，pending协议不变；farm.ts统一账户清理、读取代际、分页聚合及导航栈复用。FarmGoodsPhoto为商城/收据/仓库照片白名单入口，微信需virtualHost/shared保持列宽。分页仅限制响应，不解决整体JSON历史容量。公开Pages仍为prototype，无生产API。

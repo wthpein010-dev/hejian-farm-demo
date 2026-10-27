@@ -89,6 +89,8 @@ production 平台账户的积分商城和活动同样关闭，须在真实经营
 
 ## 嵌入与测试接口
 
+schema6新增独立农友名片/关系/屏蔽及最小命令账，`GET /friends`与`POST /friends/commands`以服务器账户、环境和独立expectedVersion为准；原回执查找优先，旧命令不能复活已清关系。仅开发身份的development沙盒开放，真实平台身份及production均关闭。它不改变金融资产/revision或授权好友访问私人农场。名片开通、限额、注销与备份及未完成的生产门槛见[FRIENDS](../../docs/release/FRIENDS.md)。
+
 账户类别查询及近期授权注销已接入，含全会话失效、原子回滚和匿名凭证重放，见[账户契约](../../docs/release/ACCOUNT-PRIVACY.md)。备份、校验和隔离恢复命令见[BACKUP.md](BACKUP.md)；恢复会清历史会话与未使用注销确认，不能把旧备份直接切入生产。
 
 ```js

@@ -40,7 +40,7 @@ test('farm imports persist independently of financial state, paginate and isolat
   assert.equal(f.store.farmPage(f.id, 'animals', 'start', NOW).items.length, 0);
   assert.throws(() => f.store.farmDetail(f.neighbor.profile.id, 'plot-unit-001', 0, NOW), { code: 'NOT_FOUND' });
   assert.throws(() => f.store.farmPage('absent-owner', 'plots', 'start', NOW));
-  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 5);
+  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 6);
   assert.ok(f.store.privacy(f.id).dataCategories.some(category => category.id === 'farm-records'));
 });
 

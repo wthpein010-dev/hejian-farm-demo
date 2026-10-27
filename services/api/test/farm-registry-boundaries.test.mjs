@@ -126,11 +126,11 @@ const schemaAlterations = [
 ];
 
 for (const [alteration, table, change] of schemaAlterations) {
-  test(`schema5 backup refuses ${alteration} after manifest size and hash are recomputed`, async t => {
+  test(`schema6 backup refuses ${alteration} after manifest size and hash are recomputed`, async t => {
     const f = await fixture(t), account = f.open('development'), backup = f.output('backup');
     account.store.importFarmBatch(account.input, NOW);
-    assert.equal((await createBackup({ databasePath: f.databasePath, outputDirectory: backup })).schemaVersion, 5);
-    assert.equal((await verifyBackup({ backupDirectory: backup })).schemaVersion, 5);
+    assert.equal((await createBackup({ databasePath: f.databasePath, outputDirectory: backup })).schemaVersion, 6);
+    assert.equal((await verifyBackup({ backupDirectory: backup })).schemaVersion, 6);
     const db = new DatabaseSync(path.join(backup, 'farm.sqlite'));
     try {
       rebuildTable(db, table, change);

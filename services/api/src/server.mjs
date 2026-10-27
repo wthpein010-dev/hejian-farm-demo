@@ -8,6 +8,7 @@ import { createOperations, createJsonLineLogger } from './operations.mjs';
 import { ClientAddressError } from './client-address.mjs';
 import { FarmRegistryError } from './farm-registry.mjs';
 import { ExchangeCursorError, isExchangeId } from '../../../shared/exchanges.mjs';
+import { isFriendCommand } from '../../../shared/friends.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -194,6 +195,18 @@ export function createApp(options = {}) {
         if (store.authenticate(token, instant) !== userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
         return instant;
       };
+      if (route === '/friends') {
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        send(200, { data: store.friendsView(userId, refreshSession()) }); return;
+      }
+      if (route === '/friends/commands') {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const key = request.headers['idempotency-key'];
+        if (typeof key !== 'string' || !SAFE_ID.test(key)) throw invalid();
+        const body = await jsonBody(request);
+        if (!isFriendCommand(body)) throw invalid();
+        send(200, { data: store.friendCommand(userId, key, body, refreshSession()) }); return;
+      }
       const exchangePage = /^\/account\/exchanges\/([^/]+)$/.exec(route);
       const exchangeDetail = /^\/account\/exchange\/([^/]+)$/.exec(route);
       if (exchangePage || exchangeDetail || route === '/account/checkout-receipt') {

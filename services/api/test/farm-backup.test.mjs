@@ -40,11 +40,11 @@ async function rewriteManifest(directory) {
   await writeFile(manifestPath, JSON.stringify(manifest));
 }
 
-test('schema5 online backup and isolated restore preserve farm pages/history while clearing old sessions and preserving financial state', async t => {
+test('schema6 online backup and isolated restore preserve farm pages/history while clearing old sessions and preserving financial state', async t => {
   const f = await fixture(t), before = f.store.bootstrap(f.auth.profile.id, NOW);
   const page = f.store.farmPage(f.auth.profile.id, 'plots', null, NOW), detail = f.store.farmDetail(f.auth.profile.id, 'plot-00000001', 0, NOW);
   const report = await createBackup({ databasePath: f.databasePath, outputDirectory: f.output('backup') });
-  assert.equal(report.schemaVersion, 5); assert.equal((await verifyBackup({ backupDirectory: f.output('backup') })).schemaVersion, 5);
+  assert.equal(report.schemaVersion, 6); assert.equal((await verifyBackup({ backupDirectory: f.output('backup') })).schemaVersion, 6);
   await restoreBackup({ backupDirectory: f.output('backup'), outputDirectory: f.output('restored') });
   const restored = new FarmStore(config(path.join(f.output('restored'), 'farm.sqlite')));
   try {
@@ -58,7 +58,7 @@ test('schema5 online backup and isolated restore preserve farm pages/history whi
 });
 
 for (const corruption of ['missing-history', 'wrong-current', 'cross-owner-event', 'future-observation', 'invalid-import-receipt', 'extra-index', 'missing-owner-index']) {
-  test(`schema5 backup refuses ${corruption} even after an operator recomputes the file hash`, async t => {
+  test(`schema6 backup refuses ${corruption} even after an operator recomputes the file hash`, async t => {
     const f = await fixture(t), backup = f.output('backup');
     await createBackup({ databasePath: f.databasePath, outputDirectory: backup });
     const db = new DatabaseSync(path.join(backup, 'farm.sqlite'));

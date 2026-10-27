@@ -4,6 +4,7 @@ const ROUTES = new Set([
   '/livez', '/readyz', '/healthz', '/api/v1/auth/development', '/api/v1/auth/platform',
   '/api/v1/auth/logout', '/api/v1/bootstrap', '/api/v1/account/privacy',
   '/api/v1/account/checkout-receipt',
+  '/api/v1/friends', '/api/v1/friends/commands',
   '/api/v1/account/deletion/prepare', '/api/v1/account/deletion/confirm', '/api/v1/cart/items',
   '/api/v1/checkout', '/api/v1/events/shop-visit', '/api/v1/activities/sign-in', '/api/v1/activities/season/claim',
 ]);

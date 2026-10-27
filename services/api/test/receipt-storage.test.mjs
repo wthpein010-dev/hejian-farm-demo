@@ -80,7 +80,7 @@ for (const schema of [2, 3]) {
   test(`legacy schema${schema} cannot claim to contain a versioned compact receipt`, async t => {
     const f = await fixture(t), source = await f.service(); await checkout(source); await source.close();
     database(f.databasePath, db => {
-      db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; ');
+      db.exec('DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; ');
       if (schema === 2) db.exec('DROP TABLE deletion_confirmations; DROP TABLE deletion_receipts');
       db.exec(`PRAGMA user_version = ${schema}`);
     });
@@ -108,10 +108,10 @@ const compact = (text, original) => {
 };
 const refusedReceipt = failure => ['INVALID_APPLICATION_RECEIPT', 'INVALID_APPLICATION_DATA'].includes(failure?.code);
 
-test('schema5 compact receipts still replay the original result after later writes and a real service restart', async t => {
+test('schema6 compact receipts still replay the original result after later writes and a real service restart', async t => {
   const f = await fixture(t), first = await f.service(), scenario = await checkout(first);
   const { auth, key, body, original } = scenario;
-  assert.equal(version(f.databasePath), 5);
+  assert.equal(version(f.databasePath), 6);
   compact(stored(f.databasePath, auth.profile.id, key), original);
   const changed = await first.request('/activities/sign-in', { token: auth.token, key: 'receipt-storage-later-signin', body: { expectedRevision: 2 } });
   assert.equal(changed.status, 200); assert.equal(changed.json.data.wallet.points, 60);
@@ -133,17 +133,17 @@ test(`a canonical schema${legacySchema} raw-receipt fixture upgrades without rew
   const f = await fixture(t), initial = await f.service(), scenario = await checkout(initial);
   await initial.close();
   const rawCart = JSON.stringify(scenario.cartSnapshot), rawCheckout = JSON.stringify(scenario.original);
-  // Remove schema5-only tables to recreate the actual previous layout.
+  // Remove later tables to recreate the actual previous layout.
   // Raw historical receipts remain byte-for-byte unchanged during upgrade.
   const before = database(f.databasePath, db => {
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCart, scenario.auth.profile.id, scenario.cartKey);
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCheckout, scenario.auth.profile.id, scenario.key);
     db.prepare('INSERT INTO code_claims VALUES (?, ?, ?, ?, ?)').run('c'.repeat(64), 'weixin', 'used', NOW, NOW);
-    db.exec(`DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = ${legacySchema}`);
+    db.exec(`DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = ${legacySchema}`);
     return { user: db.prepare('SELECT * FROM users').get(), claims: db.prepare('SELECT * FROM code_claims').all() };
   });
   const upgraded = await f.service();
-  assert.equal(version(f.databasePath), 5);
+  assert.equal(version(f.databasePath), 6);
   assert.deepEqual(database(f.databasePath, db => ({ user: db.prepare('SELECT * FROM users').get(),
     claims: db.prepare('SELECT * FROM code_claims').all() })), before);
   assert.equal(stored(f.databasePath, scenario.auth.profile.id, scenario.cartKey), rawCart);
@@ -158,7 +158,7 @@ test(`a canonical schema${legacySchema} raw-receipt fixture upgrades without rew
 
 }
 
-for (const storedSchema of [4, 5]) {
+for (const storedSchema of [4, 5, 6]) {
 test(`schema${storedSchema} backup and isolated restore preserve mixed raw/compact history while revoking sessions and deletion confirmations`, async t => {
   const f = await fixture(t), source = await f.service(), scenario = await checkout(source);
   const rawCart = JSON.stringify(scenario.cartSnapshot);
@@ -170,9 +170,13 @@ test(`schema${storedSchema} backup and isolated restore preserve mixed raw/compa
   compact(compressedCheckout, scenario.original);
   assert.equal((await source.request('/account/deletion/prepare', { token: scenario.auth.token, body: { expectedRevision: 2 } })).status, 200);
   const backupDirectory = f.output('mixed-backup'), outputDirectory = f.output('mixed-restored');
-  if (storedSchema === 4) {
+  if (storedSchema < 6) {
     await source.close();
-    database(f.databasePath, db => db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = 4'));
+    database(f.databasePath, db => {
+      db.exec('DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles');
+      if (storedSchema === 4) db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports');
+      db.exec(`PRAGMA user_version = ${storedSchema}`);
+    });
   }
   const backup = await createBackup({ databasePath: f.databasePath, outputDirectory: backupDirectory });
   assert.equal(backup.schemaVersion, storedSchema);

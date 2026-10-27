@@ -2,6 +2,7 @@
 import { isFarmSnapshot } from './snapshot.mjs';
 import { isFarmPage, isFarmDetail } from '../../../../shared/farm-records.mjs';
 import { isExchangeId, isExchangePage, isExchangeDetail } from '../../../../shared/exchanges.mjs';
+import { isFriendsView, isFriendCommandReceipt, isFriendCommand } from '../../../../shared/friends.mjs';
 export { isExchangeId };
 export class FarmApiError extends Error {
   constructor(code, message, status = 0) { super(message); this.name = 'FarmApiError'; this.code = code; this.status = status; }
@@ -43,10 +44,12 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   let farmPage = null, farmDetail = null, farmPageRead = 0, farmDetailRead = 0;
   let exchangePage = null, exchangeDetail = null, exchangePageRead = 0, exchangeDetailRead = 0;
   let confirmedCheckout = null, exchangeDetailOperationKey = '';
+  let friendsView = null, friendsRead = 0, friendsVersion = -1;
   function clearFarmRecords() {
     farmPage = null; farmDetail = null; farmPageRead++; farmDetailRead++;
     exchangePage = null; exchangeDetail = null; exchangePageRead++; exchangeDetailRead++;
     confirmedCheckout = null; exchangeDetailOperationKey = '';
+    friendsView = null; friendsRead++; friendsVersion = -1;
   }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
@@ -60,19 +63,19 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     if (!base) throw error('SERVICE_UNCONFIGURED', '农场服务尚未配置，请稍后再来。');
     if (!token) throw error('SESSION_REQUIRED', '请先登录，再查看自己的田园。');
   }
-  function responseFailure(response, authenticated, key, fallback) {
+  function responseFailure(response, authenticated, key, fallback, financial = true) {
     const code = response.data?.error?.code || 'REQUEST_REJECTED';
     const failure = error(code, response.data?.error?.message || fallback, response.status);
     // These exact Store refusals follow the successful-receipt lookup. A
     // generic gateway/status code cannot establish an earlier attempt's result.
     const afterReceiptLookup = (response.status === 409 && ['IDEMPOTENCY_CONFLICT', 'REVISION_CONFLICT'].includes(code)) ||
       (response.status === 422 && code === 'BUSINESS_RULE') || (response.status === 503 && code === 'CAPABILITY_UNAVAILABLE');
-    if (authenticated && key && afterReceiptLookup && isFarmSnapshot(response.data?.data, profile?.id)) {
+    if (financial && authenticated && key && afterReceiptLookup && isFarmSnapshot(response.data?.data, profile?.id)) {
       acceptSnapshot(response.data.data); confirmedMutationRefusals.add(failure);
     }
     return failure;
   }
-  async function send(path, method, body, authenticated = true, key = '') {
+  async function send(path, method, body, authenticated = true, key = '', financial = true) {
     if (!base) throw error('SERVICE_UNCONFIGURED', '农场服务尚未配置，请稍后再来。');
     if (authenticated) requireSession();
     const requestGeneration = generation, requestToken = token;
@@ -87,14 +90,14 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     guard();
     if (!response || !Number.isInteger(response.status) || response.status >= 500) {
       if (response?.status === 503 && response.data?.error?.code) {
-        throw responseFailure(response, authenticated, key, '这项农场服务暂未开放。');
+        throw responseFailure(response, authenticated, key, '这项农场服务暂未开放。', financial);
       }
       throw error('SERVER_UNAVAILABLE', '农场服务暂时繁忙，请稍后重试。', response?.status || 0);
     }
     if (response.status >= 400) {
       if (response.status === 401 && authenticated) { token = ''; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++; }
-      if (response.status === 409 && response.data?.data) acceptSnapshot(response.data.data);
-      throw responseFailure(response, authenticated, key, '操作未完成，请刷新后核对。');
+      if (financial && response.status === 409 && response.data?.data) acceptSnapshot(response.data.data);
+      throw responseFailure(response, authenticated, key, '操作未完成，请刷新后核对。', financial);
     }
     if (!response.data || !Object.prototype.hasOwnProperty.call(response.data, 'data')) throw error('SERVER_UNAVAILABLE', '服务回复未能确认，请稍后重试。');
     return response.data.data;
@@ -139,6 +142,23 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   function requireIdle() {
     if (pending || activeMutation || activeLogins) throw error('PENDING_OPERATION', '请先完成登录或核对上次操作的结果，再继续。');
   }
+  async function submitFriends(operation) {
+    activeMutation = true; friendsRead++;
+    try {
+      const receipt = await send('/friends/commands', 'POST', operation.body, true, operation.key, false);
+      if (!isFriendCommandReceipt(receipt, operation.accountId, operation.environment, operation.key, operation.body.action)) {
+        throw error('SERVER_UNAVAILABLE', '农友操作回执未能确认。');
+      }
+      // A historical receipt only settles its original command. Current social
+      // data is read independently; it must never enter financial state.
+      pending = null; friendsView = null; friendsRead++;
+      return receipt;
+    } catch (failure) {
+      pending = operation;
+      if (failure.status === 401) throw failure;
+      throw error('RESULT_UNKNOWN', '农友操作的结果尚未确认。请核对上次操作，避免重复申请。');
+    } finally { activeMutation = false; }
+  }
   async function submitDeletion(operation) {
     activeMutation = true;
     try {
@@ -170,6 +190,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get farmDetail() { return farmDetail; },
     get exchangePage() { return exchangePage; },
     get exchangeDetail() { return exchangeDetail; },
+    get friendsView() { return friendsView; },
+    get pendingKind() { return pending?.kind || (pending ? 'assets' : null); },
     get hasConfirmedCheckout() { return !!confirmedCheckout && !!token && confirmedCheckout.accountId === profile?.id; },
     get deletionPrepared() { return !!deletionProposal; },
     get pendingCanRetryWithoutAuth() { return pending?.kind === 'deletion'; },
@@ -180,6 +202,26 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       const requestGeneration = generation, result = await send('/bootstrap', 'GET');
       if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
       return acceptSnapshot(result);
+    },
+    async loadFriends() {
+      requireSession();
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再查看我的农友。');
+      if (activeMutation) throw error('PENDING_OPERATION', '正在核对操作，请稍后刷新农友。');
+      const read = ++friendsRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      const value = await send('/friends', 'GET', undefined, true, '', false);
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前农友。');
+      if (read !== friendsRead || value?.version < friendsVersion) throw error('READ_SUPERSEDED', '农友关系已更新，请刷新后重新核对。');
+      if (!isFriendsView(value, ownerId, environment)) throw error('SERVER_UNAVAILABLE', '农友资料未能确认，请重新加载。');
+      friendsView = value; friendsVersion = value.version; return friendsView;
+    },
+    async commandFriends(command) {
+      requireSession(); requireIdle();
+      if (!command || Object.hasOwn(command, 'expectedVersion') || !isFriendCommand({ ...command, expectedVersion: 0 })) throw error('INVALID_REQUEST', '农友操作无效，请返回重新选择。');
+      if (!friendsView || friendsView.ownerId !== profile.id) throw error('FRIENDS_VIEW_REQUIRED', '请先刷新农友资料，再重新核对操作。');
+      cancelAccountDeletion();
+      const operation = { kind: 'friends', accountId: profile.id, environment: friendsView.environment, key: generateKey(),
+        body: JSON.parse(JSON.stringify({ ...command, expectedVersion: friendsView.version })) };
+      return submitFriends(operation);
     },
     async loadFarmPage(kind, cursor = 'start') {
       requireSession();
@@ -290,6 +332,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       requireSession();
       if (!pending) throw error('NO_PENDING_OPERATION', '没有需要核对的操作。');
       if (pending.accountId !== profile.id) throw error('ACCOUNT_MISMATCH', '请登录原来的账户，再核对上次操作。');
+      if (pending.kind === 'friends') return submitFriends(pending);
       return submit(pending, true);
     },
     async logout() {

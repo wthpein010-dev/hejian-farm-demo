@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
-import { farmState as state, onFarmPageShow, mutateFarm, rewardLabel, openShop } from '../../core/farm';
+import { farmState as state, onFarmPageShow, mutateFarm, rewardLabel, openShop, openFriends } from '../../core/farm';
 const tab = ref<'today' | 'growth'>('today');
 const sign = computed(() => state.snapshot?.signIn);
 const claimed = computed(() => !sign.value ? 0 : sign.value.todayClaimed ? ((sign.value.streak - 1) % 7) + 1 : sign.value.streak % 7);
@@ -19,6 +19,7 @@ onShow(onFarmPageShow);
       <view class="home-cover-copy"><text class="home-cover-kicker">禾间 · 田园日常</text><view class="home-cover-title">把日常，过成丰收。</view><text class="home-cover-description">签到、照料、收获，慢慢积累。</text></view>
       <text class="home-cover-source">AI摄影示意 · 非实拍、非直播</text>
     </view>
+    <view class="panel home-community-note"><text class="home-section-kicker">田园会客厅</text><view class="section-heading">我的农友</view><text class="body-copy">交换农友码，双方确认后建立关系。目前仅在开发沙盒联调，正式服务暂未开放。</text><FarmButton class="action" @tap="openFriends">查看我的农友</FarmButton><text class="helper">论坛、发帖、消息及邀请奖励仍待接入。</text></view>
     <EmptyPanel v-if="!state.snapshot?.capabilities.activities" title="活动暂未开放" description="活动安排核定后，会在这里公布参与条件和奖励。" />
     <template v-else>
       <view class="tabs" role="group" aria-label="活动内容"><FarmButton :class="{ active: tab === 'today' }" :aria-pressed="tab === 'today'" @tap="tab = 'today'">今日活动</FarmButton><FarmButton :class="{ active: tab === 'growth' }" :aria-pressed="tab === 'growth'" @tap="tab = 'growth'">成长成就</FarmButton></view>
@@ -30,6 +31,5 @@ onShow(onFarmPageShow);
       </template>
       <template v-else><view class="panel"><view class="section-heading">Lv.{{ state.snapshot.level.level }} · {{ state.snapshot.level.label }}</view><text class="body-copy">成长值 {{ state.snapshot.level.xp }}</text><text class="helper">成长记录田园历程，不增加实际照料额度。</text></view><view v-for="task in state.snapshot.achievements" :key="task.id" class="task-card"><view class="section-heading">{{ task.title }}</view><text class="helper">{{ task.description }}</text><text class="reward-text">{{ rewardLabel(task.reward) }}</text><text class="helper">累计 {{ task.progress }} / {{ task.target }}</text><FarmButton class="action" :disabled="state.busy || state.pending || task.claimed || !task.ready" @tap="mutateFarm(`/activities/achievements/${task.id}/claim`, {}, '成就奖励已收入账户。')">{{ task.claimed ? '已领取' : task.ready ? '领取成就奖励' : '尚未达成' }}</FarmButton></view></template>
     </template>
-    <view class="panel home-community-note"><text class="home-section-kicker">田园会客厅</text><view class="section-heading">社交社区待接入</view><text class="body-copy">好友、发帖与互动暂未开放。当前可使用已开放的账户签到、任务和成长记录，社区开放后会在这里说明。</text></view>
   </FarmScreen>
 </template>

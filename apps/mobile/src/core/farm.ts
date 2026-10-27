@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
-import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail } from './types';
+import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail, FriendsView, FriendCommand, FriendCommandReceipt } from './types';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : '');
 const client = createFarmClient({ baseURL, transport: (request: { url: string; method: string; headers: object; body: unknown; timeout: number }) => new Promise((resolve, reject) => {
@@ -16,6 +16,7 @@ export const farmState = reactive({
   farmRegistryBusy: false, farmRegistryError: '', farmRecordBusy: false, farmRecordError: '', farmRecordMessage: '',
   exchangeHistory: null as ExchangePage | null, exchangeRecord: null as ExchangeDetail | null,
   exchangeHistoryBusy: false, exchangeHistoryError: '', exchangeRecordBusy: false, exchangeRecordError: '', confirmedCheckout: false,
+  friends: null as FriendsView | null, friendsBusy: false, friendsError: '', friendsMessage: '',
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -28,7 +29,7 @@ provider = 'weixin';
 provider = 'toutiao';
 // #endif
 export const platformProvider = provider as 'weixin' | 'toutiao' | null;
-let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRead = 0, exchangeSelection = '', synchronizedProfile: unknown = null;
+let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRead = 0, friendsRead = 0, exchangeSelection = '', synchronizedProfile: unknown = null;
 function syncClientState() {
   if (synchronizedProfile !== client.profile || !client.authenticated) {
     synchronizedProfile = client.profile; registryRead++; detailRead++;
@@ -39,6 +40,7 @@ function syncClientState() {
     farmState.exchangeHistory = null; farmState.exchangeRecord = null;
     farmState.exchangeHistoryBusy = false; farmState.exchangeRecordBusy = false;
     farmState.exchangeHistoryError = ''; farmState.exchangeRecordError = '';
+    friendsRead++; farmState.friends = null; farmState.friendsBusy = false; farmState.friendsError = ''; farmState.friendsMessage = '';
   }
   farmState.snapshot = client.snapshot as Snapshot | null;
   farmState.privacy = client.privacy as PrivacyReport | null;
@@ -50,6 +52,7 @@ function syncClientState() {
   if (!client.farmDetail) farmState.farmRegistryDetail = null;
   if (!client.exchangePage) farmState.exchangeHistory = null;
   if (!client.exchangeDetail) farmState.exchangeRecord = null;
+  if (!client.friendsView) farmState.friends = null;
 }
 
 async function run(operation: () => Promise<unknown>, message = '') {
@@ -63,7 +66,13 @@ async function run(operation: () => Promise<unknown>, message = '') {
 }
 export const refreshFarm = () => run(() => client.load());
 export const mutateFarm = (path: string, body: Record<string, unknown> = {}, message = '已更新，田园数据已同步。') => run(() => client.mutate(path, body), message);
-export const retryFarmOperation = () => run(() => client.retryPending(), farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+export const retryFarmOperation = () => {
+  const kind = client.pendingKind;
+  return run(async () => {
+    const result = await client.retryPending();
+    if (kind === 'friends') await completeFriendsCommand(result as FriendCommandReceipt);
+  }, kind === 'friends' ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+};
 export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
 export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
 export const deleteFarmAccount = () => run(() => client.deleteAccount(), '账户已注销，全部登录已失效。');
@@ -78,6 +87,45 @@ export const loginPlatform = () => run(async () => {
   await client.loginPlatform(platformProvider, code); await client.load();
 });
 export const logoutFarm = () => run(() => client.logout());
+const friendSuccess: Record<string, string> = { enable: '农友名片已开通。', disable: '农友名片已关闭，关系与申请已移除。', request: '申请已发送，等待对方接受。', accept: '已接受申请，成为农友。', decline: '已婉拒这次申请。', cancel: '申请已取消。', remove: '已移除这位农友。', block: '已屏蔽，对方无法再向你申请。', unblock: '已解除屏蔽，原关系不会恢复。' };
+const friendRefusal: Record<string, string> = {
+  FRIENDS_UNAVAILABLE: '农友功能暂未开放，请稍后再来。', FRIENDS_DISABLED: '请先开通农友名片，再发起操作。', PEER_UNAVAILABLE: '暂时无法向该农友申请，请核对农友码或稍后再试。',
+  ALREADY_PENDING: '你们之间已有待处理申请，请查看申请列表。', ALREADY_FRIENDS: '你们已经是农友，无需重复申请。', REQUEST_NOT_FOUND: '这次申请已不在列表中，请刷新后查看。',
+  RELATION_NOT_FOUND: '这段农友关系已变化，请刷新后查看。', BLOCK_NOT_FOUND: '这位农友已不在屏蔽列表中，请刷新后查看。', FRIEND_LIMIT: '活动关系已达上限，请先处理现有申请或关系。',
+  BLOCK_LIMIT: '屏蔽数量已达上限，请先整理屏蔽列表。', DAILY_REQUEST_LIMIT: '今天的新申请次数已用完，请明天再来。', IDEMPOTENCY_CONFLICT: '这次操作记录有冲突，请刷新并重新核对。',
+  FRIENDS_CHANGED: '农友关系刚刚发生变化，请查看最新列表，再重新决定。'
+};
+export async function loadFarmFriends() {
+  syncClientState(); const read = ++friendsRead, account = client.profile;
+  farmState.friendsBusy = true; farmState.friendsError = '';
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== friendsRead || account !== client.profile) return false;
+    const view = await client.loadFriends() as FriendsView;
+    if (read !== friendsRead || account !== client.profile || view !== client.friendsView) return false;
+    farmState.friends = view; return true;
+  } catch (failure) {
+    if (read === friendsRead && account === client.profile) farmState.friendsError = failure instanceof Error ? failure.message : '农友资料暂时无法读取，请重试。';
+    return false;
+  } finally { syncClientState(); if (read === friendsRead) farmState.friendsBusy = false; }
+}
+async function completeFriendsCommand(receipt: FriendCommandReceipt) {
+  syncClientState();
+  if (receipt.outcome === 'applied') farmState.friendsMessage = friendSuccess[receipt.action];
+  else farmState.friendsMessage = friendRefusal[receipt.code] || '这次操作未能完成，请刷新后核对。';
+  // Receipt confirmation is final even when the separate current-view read fails.
+  await loadFarmFriends();
+}
+export async function commandFarmFriends(command: FriendCommand) {
+  if (farmState.busy || farmState.pending) return false;
+  friendsRead++; farmState.friendsBusy = false; farmState.friendsMessage = ''; farmState.friendsError = '';
+  let applied = false;
+  const confirmed = await run(async () => {
+    const receipt = await client.commandFriends(command) as FriendCommandReceipt;
+    applied = receipt.outcome === 'applied'; await completeFriendsCommand(receipt);
+  });
+  return confirmed && applied;
+}
 export async function loadExchangeHistory(cursor = 'start') {
   syncClientState();
   const read = ++exchangeHistoryRead, account = client.profile;
@@ -116,7 +164,7 @@ export async function loadExchangeRecord(id: string) {
     syncClientState(); if (read === exchangeRecordRead) farmState.exchangeRecordBusy = false;
   }
 }
-function openAccountPage(route: 'pages/exchanges/index' | 'pages/inventory/index') {
+function openAccountPage(route: 'pages/exchanges/index' | 'pages/inventory/index' | 'pages/friends/index') {
   const pages = getCurrentPages(), position = pages.map(page => page.route).lastIndexOf(route);
   if (position === pages.length - 1) return;
   const fallback = () => uni.navigateTo({ url: `/${route}` });
@@ -129,6 +177,12 @@ export function openExchangeRecord(id: string) {
 }
 export function openConfirmedCheckout() { uni.navigateTo({ url: '/pages/exchange/index?operation=last' }); }
 export function openInventory() { openAccountPage('pages/inventory/index'); }
+export function openFriends() { openAccountPage('pages/friends/index'); }
+export function returnFromFriends() {
+  const fallback = () => uni.switchTab({ url: '/pages/activities/index' });
+  if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback });
+  else fallback();
+}
 export function returnFromExchange() {
   const fallback = () => uni.switchTab({ url: '/pages/profile/index' });
   if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback });

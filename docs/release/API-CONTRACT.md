@@ -60,6 +60,10 @@ schema4的无损回执编码及schema2/3/4备份兼容属于[内部存储契约]
 
 JSON请求最大16KiB，拒绝未知字段、错误类型及无穷数，受限CORS，禁止缓存私有响应，添加nosniff和requestId；development登录限速。数据库文件不进Git；支持同进程并发串行事务、重启保留资产。生产备份恢复、监控、TLS及多实例/数据库运维须独立验证，不因HTTP单测通过宣称上线完成。
 
+## 农友关系
+
+独立 `GET /friends` 与 `POST /friends/commands` 采用[农友协议](FRIENDS.md)，不使用金融Snapshot/revision或资产幂等表。合法命令的HTTP200响应携带最小`applied/refused`原结果，之后另读当前关系；不是资产成功模型。原key重放不能恢复后来已取消或移除的关系。仅显式开发沙盒可用，production关闭；不赋予好友任何私人田园/设备权限。
+
 ## 农场归属档案与观测
 
 新增独立Bearer只读接口：GET /farm/records/{plots|animals}/{start|cursor}、GET /farm/record/{id}/{0|beforeVersion}。每页20项，账户来自会话，暂无公开写入。字段/时间/游标与私有导入以[FARM-RECORDS](FARM-RECORDS.md)为准；账户privacy类别新增farm-records，注销一并删除归属档案与观测。financial Snapshot兼容farm空字段和原revision/幂等保持，不将档案同步计为设备执行、任务奖励或实体履约。

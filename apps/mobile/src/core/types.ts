@@ -51,3 +51,15 @@ export interface ExchangePage {
 export interface ExchangeDetail {
   exchangeFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number; exchange: Exchange;
 }
+export type FriendAction = 'enable' | 'disable' | 'request' | 'accept' | 'decline' | 'cancel' | 'remove' | 'block' | 'unblock';
+export type FriendCommand = { action: 'enable' | 'disable' } | { action: 'request'; code: string } | { action: 'accept' | 'decline' | 'cancel' | 'remove' | 'block' | 'unblock'; peerId: string };
+export interface FriendEntry { peerId: string; alias: string; createdAt: number; }
+export interface FriendsView {
+  friendsFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number; version: number;
+  available: boolean; enabled: boolean; profile: { code: string; alias: string } | null;
+  friends: FriendEntry[]; incoming: FriendEntry[]; outgoing: FriendEntry[]; blocked: FriendEntry[];
+}
+export interface FriendCommandReceipt {
+  friendsFormat: 1; ownerId: string; environment: 'development' | 'production'; operationKey: string; action: FriendAction;
+  outcome: 'applied' | 'refused'; code: string; completedAt: number;
+}
