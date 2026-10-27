@@ -66,6 +66,8 @@ H5在账户档案/schema5基线之上增加目录查找、可加/单件积分/�
 - 写实H5基线ba2d23d继续有效：35个公网资源含25张WebP、manifest、关键运行文件、影片封面及MP4与Git blob一致，实际浏览主要页/商品/图鉴/三镜头均正常，AI/非实拍/非直播标注可见。影片正常加载但本轮未完整重播。后续同提交部署结果以独立仓库GitHub Actions现场回执为准。
 - Pages仍仅部署prototype。正式账户服务没有部署到公网；App离线资源不等于签名安装包，真实平台身份、农场/设备/视频/广告支付/实体履约、真机与官方上架仍未完成。
 
+本切片功能提交`718672f75a834e9e6972db0232df3096af1b8adc`已推送独立main；现场身份wthpein010-dev、目标仓库ADMIN权限及远端提交已核实。[工作流40449912394](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40449912394)的verify、verify-mobile、deploy全部成功：Linux498/498、0失败/跳过、依赖0已知漏洞、四端资源编译通过。56个公网资源含25照片、manifest、影片与封面与该Git提交blob逐字节相同；视频Range206/1024字节。[公开H5](https://wthpein010-dev.github.io/hejian-farm-demo/)独立于用户其他网站。D:/farm与托管工作区已安全快进到同一功能提交；本页后续文档提交不改变上述运行资源。
+
 ## 账户隐私与备份恢复补齐
 
 上一目标回合有实际进展：a8baffe及功能04addbc均已推送，120项测试、四端资源及独立Pages部署成功。本回合从该干净基线补充以下上线要求，未用重复检查替代真实功能实现。
