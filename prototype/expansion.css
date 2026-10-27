@@ -46,7 +46,9 @@
 .today-track{height:6px;overflow:hidden;border-radius:6px;background:color-mix(in srgb,var(--brand) 9%,var(--paper));margin:13px 0 8px}
 .today-track>span,.today-track>.today-progress{height:100%;display:block;margin:0;background:var(--brand);border-radius:6px;transition:width .25s}
 .today-progress{font-size:13px;line-height:1.7;color:var(--secondary)}
-.today-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;margin-top:9px;border-radius:10px;padding:10px 14px;background:var(--brand);color:var(--paper);font-size:14px}
+.today-action{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;margin-top:12px;font-size:16px;color:var(--ink)}
+.today-action>p{flex:1;min-width:0;line-height:1.75;color:var(--secondary)}
+.today-action>.outline-button{flex-shrink:0;min-width:88px;font-size:16px;border-color:var(--brand);color:var(--brand)}
 .today-action .icon{width:16px;height:16px}
 
 .store-hero,.activity-hero,.growth-hero{position:relative;isolation:isolate;min-height:132px;padding:18px;border:1px solid var(--line);border-radius:12px;margin:2px 0 14px;background-color:var(--brand-soft);background-size:cover;background-position:center;overflow:hidden}
@@ -226,16 +228,16 @@
 .catalog-empty p{font-size:14px;line-height:1.9;color:var(--secondary)}
 
 button:where(:not(:disabled)){transition:background-color .16s,border-color .16s,color .16s,box-shadow .16s,transform .12s}
-:is(.shortcut,.asset-ribbon>button,.store-tab,.activity-tabs>button,.goods-add,.task-action,.claim-button,.warehouse-actions>button,.coupon-choice,.quantity-stepper>button):focus-visible{position:relative;z-index:2;outline:3px solid var(--focus);outline-offset:3px}
+:is(.shortcut,.asset-ribbon>button,.store-tab,.activity-tabs>button,.goods-add,.task-action>button,.claim-button,.warehouse-actions>button,.coupon-choice,.quantity-stepper>button):focus-visible{position:relative;z-index:2;outline:3px solid var(--focus);outline-offset:3px}
 .asset-ribbon>button:focus-visible,.quantity-stepper>button:focus-visible{outline-offset:-3px}
 @media(hover:hover){
   .asset-ribbon>button:hover:not(:disabled),.shortcut:hover:not(:disabled){background:var(--brand-soft)}
   .goods-card:hover,.product-card:hover{border-color:color-mix(in srgb,var(--brand) 30%,var(--line));box-shadow:0 5px 15px color-mix(in srgb,var(--brand) 5%,transparent)}
   .coupon-choice:hover:not(:disabled),.store-wallet>button:hover:not(:disabled),.quantity-stepper>button:hover:not(:disabled),.warehouse-actions>button:hover:not(:disabled){background:var(--brand-soft);border-color:color-mix(in srgb,var(--brand) 30%,var(--line))}
-  .goods-add:hover:not(:disabled),.claim-button:hover:not(:disabled),.task-action:hover:not(:disabled),.today-action:hover:not(:disabled){box-shadow:inset 0 0 0 30px color-mix(in srgb,var(--ink) 13%,transparent)}
+  .goods-add:hover:not(:disabled),.claim-button:hover:not(:disabled),.task-action>button:hover:not(:disabled){box-shadow:inset 0 0 0 30px color-mix(in srgb,var(--ink) 13%,transparent)}
   .nav-item:hover:not(:disabled){background:var(--brand-soft)}
 }
-:is(.goods-add,.claim-button,.task-action,.today-action,.warehouse-actions>button,.coupon-choice,.shortcut,.asset-ribbon>button):active:not(:disabled){transform:translateY(1px)}
+:is(.goods-add,.claim-button,.task-action>button,.warehouse-actions>button,.coupon-choice,.shortcut,.asset-ribbon>button):active:not(:disabled){transform:translateY(1px)}
 .app-scroll>:is(.store-hero,.activity-hero,.growth-hero,.goods-grid,.checkin-card,.season-card,.warehouse-grid,.album-grid,.reward-panel){animation:field-enter .22s ease-out both}
 @keyframes field-enter{from{opacity:.94;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes reward-settle{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
@@ -266,7 +268,8 @@ button:where(:not(:disabled)){transition:background-color .16s,border-color .16s
 .store-wallet>div:first-child>span{display:block;font-size:13px}.store-wallet>div:first-child>strong{display:block;margin:3px 0 0;font-size:25px}.store-wallet>div:last-child:not(:first-child){display:flex;align-items:center;gap:10px}.store-wallet .link-button{gap:4px}.store-wallet .outline-button{font-size:14px;padding:9px 12px}
 .recommend-note{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--secondary);padding:8px 0;margin-bottom:9px}.recommend-note>span{flex:1}.recommend-note>.link-button{white-space:nowrap}
 .task-progress-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--secondary);margin-top:9px}.task-progress{margin:6px 0 0}.achievement-progress-label{font-size:12px;color:var(--secondary);margin-top:9px}.achievement-progress{margin-top:5px}
-.task-card .task-action{padding:0;min-width:0;min-height:48px;background:transparent;color:inherit;border-radius:0;display:block}.task-card .task-action>button{min-height:48px;min-width:100px;font-size:14px}.achievement-card .primary-button,.achievement-card .outline-button{font-size:14px;min-width:82px;padding:10px}
+.task-card .task-action{padding:0;min-width:0;min-height:48px;background:transparent;color:inherit;border-radius:0;display:block}.task-card .task-action>button{min-height:48px;min-width:100px;font-size:16px}.achievement-card .primary-button,.achievement-card .outline-button{font-size:14px;min-width:82px;padding:10px}
+.task-card .task-action>button:disabled{background:var(--brand-soft);color:var(--secondary);border-color:var(--line);opacity:1}
 .hero-decor-label{left:14px;top:48px;right:auto;bottom:auto;writing-mode:horizontal-tb;max-height:none;padding:4px 8px;background:color-mix(in srgb,var(--accent) 16%,var(--paper));border-color:color-mix(in srgb,var(--accent) 45%,var(--line));letter-spacing:1px}
 @media(min-width:400px){.task-card{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}.task-icon{width:40px;height:40px}.task-card>.task-action{grid-column:3;grid-row:1;align-self:center}.task-card .task-action>button{min-width:82px;padding:10px}.achievement-card{grid-template-columns:50px minmax(0,1fr) auto}}
 @media(max-width:360px){.store-wallet{padding:12px;gap:8px}.store-wallet>div:first-child>span{font-size:12px}.store-wallet>div:last-child:not(:first-child){gap:6px}.store-wallet .link-button{font-size:12px;gap:3px}.store-wallet .link-button>.icon{width:18px;height:18px}.store-wallet .outline-button{padding:8px;gap:4px}.store-wallet .outline-button>.icon{width:19px;height:19px}.store-wallet .cart-badge{min-width:20px;width:20px}.recommend-note{gap:6px}.asset-ribbon>button{min-height:62px}}
