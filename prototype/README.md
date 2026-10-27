@@ -1,4 +1,4 @@
-# 禾间 · 竖版农场 H5 Demo
+# 合耕小舍 · 竖版农场 H5 Demo
 
 本轮新增田园会客厅：底栏中央“主页”大按钮，聚合签到、论坛圈子、好友与动态。社区可发帖配图、点赞评论、分享示例内容；好友可申请/接受/取消/移除、查看示例个人田园。所有社交只保留本页，刷新重置，不上传或向真人发送；[完整说明](../docs/SOCIAL.md)。旧activities仍能进入完整活动中心。
 
@@ -14,7 +14,7 @@
 python prototype/serve.py
 ```
 
-打开 [禾间本地 Demo](http://127.0.0.1:4173/)，按 `Ctrl+C` 结束服务。无需前端依赖或登录。当前为单一成熟竖版方向，不再提供旧三种首页链接。
+打开 [合耕小舍本地 Demo](http://127.0.0.1:4173/)，按 `Ctrl+C` 结束服务。无需前端依赖或登录。当前为单一成熟竖版方向，不再提供旧三种首页链接。
 
 ## 体验路线
 
@@ -39,7 +39,7 @@ python prototype/serve.py
 
 ## 独立发布
 
-部署地址：[打开禾间 H5 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)。公开源码：[wthpein010-dev/hejian-farm-demo](https://github.com/wthpein010-dev/hejian-farm-demo)。
+部署地址：[打开合耕小舍 H5 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)。公开源码：[wthpein010-dev/hejian-farm-demo](https://github.com/wthpein010-dev/hejian-farm-demo)。
 
 该地址已用于初版独立发布；本轮扩展的新浏览器与部署证据见[验收记录](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/VERIFICATION.md)，不能从旧版上线推断扩展版已验收。页面使用相对资源，新增脚本、CSS 和 SVG 仍须线上核验。
 

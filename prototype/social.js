@@ -41,7 +41,7 @@
     posts[0].comments.push({ id: 'seed-comment-tomato', authorId: 'chen', body: '这份小收获，看着就让人开心。', createdAt: Math.max(0, now - 12 * 60000) });
     posts[1].comments.push({ id: 'seed-comment-water', authorId: 'lin', body: '先观察，再参考农场工作人员的照料建议。', createdAt: Math.max(0, now - 30 * 60000) });
     return {
-      viewer: { id: 'me', name: '我的田园', art: 'lettuce', bio: '在禾间，记录自己的田园时光。', farmName: '我的小田园' },
+      viewer: { id: 'me', name: '我的田园', art: 'lettuce', bio: '在合耕小舍，记录自己的田园时光。', farmName: '我的小田园' },
       people: copy(PEOPLE), posts, friends: ['lin', 'chen'], incoming: ['qiu'], outgoing: [], joined: ['harvest'], likes: [], blocked: [], reports: [], serial: 0
     };
   }

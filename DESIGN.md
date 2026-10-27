@@ -1,33 +1,33 @@
 ---
 version: alpha
-name: "禾间 · 竖版农场 H5 Demo"
+name: "合耕小舍 · 竖版农场 H5 Demo"
 description: "面向中年及中老年用户的真实农场种养体验提案，以大图大字连接农田、商城、活动、成长和实体收获。"
 status: "产品方向已确认；Demo 视觉与参数待验证"
 updated: "2026-10-27"
 colors:
-  canvas: "#f4f6f2"
+  canvas: "#f5f6fa"
   paper: "#ffffff"
-  ink: "#1d3329"
-  secondary: "#596c60"
-  primary: "#244d3d"
-  brand-soft: "#e8eee5"
-  accent: "#b98c4b"
-  line: "#dfe6dd"
-  danger: "#9e4536"
-  warning: "#7d5927"
-  focus: "#3b7756"
-  muted: "#78857d"
-  scroll-thumb: "#a5b5a7"
-  scroll-hover: "#708b77"
+  ink: "#1f2633"
+  secondary: "#5d6675"
+  primary: "#006cd9"
+  brand-soft: "#eaf3ff"
+  accent: "#b57c28"
+  line: "#e6e9f0"
+  danger: "#b33e3e"
+  warning: "#805b24"
+  focus: "#006cd9"
+  muted: "#727c8b"
+  scroll-thumb: "#b0bac8"
+  scroll-hover: "#7c8b9f"
 typography:
   display:
-    fontFamily: '"STZhongsong", "SimSun", "Microsoft YaHei", serif'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif'
   body:
-    fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif'
   numeric:
-    fontFamily: '"Consolas", monospace'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif'
 rounded:
-  DEFAULT: "18px"
+  DEFAULT: "12px"
 omitted:
   - section: spacing
     reason: "间距由移动共享布局 CSS 拥有，本文保留可阅读和可触控的约束。"
@@ -73,13 +73,13 @@ components:
     backgroundColor: "{colors.scroll-hover}"
 ---
 
-# 禾间 Design System
+# 合耕小舍 Design System
 
 ## Overview
 
 ### Creative North Star
 
-像一家认真经营的农场寄来的种养手册：看得清的田和牲畜、看得懂的种养进展、清楚的照料与收货步骤。画面表达田野的真实感和收获感，操作保留成熟、稳妥的服务工具感。
+参考手机 QQ 的轻盈、简洁和熟悉的社交结构：普通顶栏、圆头像、清楚的列表与动态，蓝色只强调主要操作和当前状态。写实农场照片提供对象识别，界面采用自然中文与系统无衬线字体，面向30–50岁及中老年用户。
 
 本轮已确认单一成熟竖版方向，替代此前三种首页比较。用户与业务方向见[产品说明](docs/PRODUCT.md)，具体视觉、样本及运营参数仍是 Demo 提案，不作为已批准的生产设计系统。
 
@@ -123,17 +123,17 @@ components:
 
 ## Colors
 
-浅田野底色、白纸表面、浓绿色主操作和深色文字传达成熟稳妥。金色对应成熟与收获，只作有限强调。农田、牧场、商城、活动、成长和邮寄使用同一语义。`expansion.css` 消费现有 token，不复制本文件或 `styles.css` 的 root 色板，不以新页面另造主题。
+浅灰底色、白色表面、蓝色主操作和深色文字建立熟悉的社交产品层级。金色对应成熟与收获，只作有限强调。农田、牧场、商城、活动、成长和邮寄使用同一语义。`expansion.css` 消费现有 token，不另造主题。
 
-必要文字用 `ink` 或 `secondary`。白字在 `brand` 上约 9.53:1；`secondary` 在白／canvas／brand-soft 上分别约 5.62:1、5.17:1、4.76:1，可用于这些表面的普通字号必要信息。
+必要文字用 `ink` 或 `secondary`。白字在 `brand` 上约 5.06:1；`secondary` 在白／canvas／brand-soft 上分别约 5.80:1、5.37:1、5.18:1，可用于这些表面的普通字号必要信息。
 
-`ink` 在 `accent` 上约 4.44:1，白字在 `accent` 上约 3.04:1，均不作为普通字号文字组合。金色用作装饰、边线或无文字图形；推荐徽标文字用 `ink` 放在 `paper`／`brand-soft` 上。若新增金底文字方案，须先定义并检查更深的文字色。
+`ink` 在 `accent` 上约 4.25:1，白字在 `accent` 上约 3.57:1，均不作为普通字号文字组合。金色用作装饰、边线或无文字图形；推荐徽标文字用 `ink` 放在 `paper`／`brand-soft` 上。若新增金底文字方案，须先定义并检查更深的文字色。
 
-状态同时提供文字和图标，不能只靠绿／灰／红区分。`muted` 在白底约 3.85:1，只作非必要辅助或装饰，不承载小号必要文字。`line` 是静态分隔，不单独承担需要辨认的输入边界。本轮只支持浅色；系统强制颜色下保留可见焦点和原生可操作性。
+状态同时提供文字和图标，不能只靠绿／灰／红区分。`muted` 在白底约 4.22:1，只作非必要辅助或装饰，不承载小号必要文字。`line` 是静态分隔，不单独承担需要辨认的输入边界。本轮只支持浅色；系统强制颜色下保留可见焦点和原生可操作性。
 
 ## Typography
 
-品牌与少量展示标题可用系统 `STZhongsong`／`SimSun`，回退到 `Microsoft YaHei`。正文以 `Segoe UI`、`Microsoft YaHei`、sans-serif 保证中文可读；数字使用等宽字体或等宽数字。使用系统字体，不依赖远程下载。
+品牌、标题、正文与数字统一使用系统无衬线字体：Apple系统字体、Segoe UI、Microsoft YaHei及sans-serif回退；数值使用tabular-nums保持稳定。不使用宋体展示字或装饰字距，不依赖远程字体。
 
 正文 16–18px，辅助小字至少 12px，关键状态和主动作优先使用正文级字号；标题通过 22px 及以上字号、字重与留白形成层级。中文自然换行，保持约 1.5–1.7 行高，不以细字重或很浅的灰字表达必要信息。
 
@@ -143,7 +143,7 @@ components:
 
 移动内容最大宽度 480px，桌面居中呈现同一个竖版页面。以手机任务为主，不保留旧三变体、周围方案比较卡片或额外后台面板。
 
-底部五入口为“我的农场／商城／主页／实景／我的”。中央主页以72px列宽、78px高的深绿大按钮突出，其余保留14px文字、图标和至少48px触控区；320px也不通过缩小页面解决拥挤。我的农场保留农田／牧场切换，商城前置三分类与推荐；主页聚合签到与社交，旧活动页保持独立子页。原福利和订单从所属入口仍可到达。
+底部五入口为“我的农场／商城／主页／实景／我的”。中央主页以66px列宽、66px高的蓝色按钮突出，其余保留14px文字、图标和至少48px触控区；320px也不通过缩小页面解决拥挤。我的农场保留农田／牧场切换，商城前置三分类与推荐；主页聚合签到与社交，旧活动页保持独立子页。原福利和订单从所属入口仍可到达。
 
 本轮组合层级由 `expansion.css` 拥有：商城使用横幅、分类、商品与购物车摘要；活动使用签到主卡、任务列表、三枚印章和成就；农场／我的用等级、每日农事和仓库摘要串联。每组信息先有标题和一项主要动作，再展开说明，不把所有系统挤进首屏。金币和积分为可读数值，不以持续飘动吸引注意。
 
@@ -167,7 +167,7 @@ components:
 
 ### Buttons and actions
 
-主操作绿色实底，次操作弱底或轮廓；高影响确认列明对象与结果。停止动作可辨但不与启动混用。认养、收获、邮寄、领取福利用明确动词；在不满足资格时不只把按钮变灰，旁边给出原因。
+主操作蓝色实底，次操作弱底或轮廓；高影响确认列明对象与结果。停止动作可辨但不与启动混用。认养、收获、邮寄、领取福利用明确动词；在不满足资格时不只把按钮变灰，旁边给出原因。
 
 ### Navigation and data display
 
@@ -222,6 +222,8 @@ components:
 
 ## 田园会客厅与社交（2026-10-27）
 
-主视觉采用既有田园摄影封面、深色遮罩与白字，配合向内错位的签到/好友双卡，形成有层次的会客厅入口。异形只用于不对称圆角、照片卡片与中央主页按钮，不裁正文、操作或焦点；圈子用照片、名称、说明和加入状态，帖子以作者/圈子/正文/照片/社交动作排序。social.css统一拥有H5组合样式，继续使用原14色与字体token，不新增主题色。普通控件至少48px、主动作至少56px；布局在320px自然换行，正文16–18px。
+用户2026-10-27明确更名“合耕小舍”，要求减少AI模板感并参考QQ。当前采用手机QQ式简洁社交方向：系统无衬线、蓝白灰色系、12px默认圆角；去除英文眉题、错位票券和大面积暗色营销横幅。主页由身份行、小幅田园照片、单行签到、四个快捷入口与农友动态组成；好友使用普通列表。中央主页保持较大48px以上触控区，仅保留轻微抬升；照片/少数对象卡允许局部非对称轮廓，不复制QQ商标或企鹅素材。social.css拥有社交组合，styles.css继续拥有canonical token，移动token由工具生成。普通控件至少48px、主动作至少56px；320px自然换行。
 
 示例头像使用作物照片与昵称，不冒充真人。模拟属性持续可见；圈子加入/点赞用文字+选中边界，好友区分申请/已友/已屏蔽，不用虚假在线人数、未读红点或收益诱导。表单复用原dialog、label、错误与焦点恢复，中文输入期间合并重绘。手机H5/微信抖音共享中央大主页样式；App此轮仅改原生底栏名称，凸起与真实社交需另验。
+
+视觉参考：腾讯ISUX《设计故事｜QQ9轻松做自己》https://cloud.tencent.com/developer/news/1288723 （2024设计原则）；具体颜色、尺寸及适老约束以本项目token为准，不视作QQ官方参数。

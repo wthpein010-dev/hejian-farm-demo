@@ -14,7 +14,7 @@ defineProps<{ title: string; subtitle?: string; allowGuest?: boolean; id?: strin
     <view v-if="state.message" class="success-note" role="status">{{ state.message }}</view>
     <view v-if="state.confirmedCheckout && state.authenticated && !state.pending && !hideCheckoutReceipt" class="confirmed-checkout"><FarmButton class="action secondary" :disabled="state.busy" @tap="openConfirmedCheckout">查看最近确认的兑换收据</FarmButton></view>
     <template v-if="allowGuest || (state.authenticated && state.snapshot)"><slot /></template>
-    <view v-else-if="!state.authenticated" class="panel empty-panel"><view class="empty-mark">田</view><view class="section-heading">一方田园，属于自己的日常</view><text class="body-copy">登录后查看认养、物资和收获进度。</text><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></view>
+    <view v-else-if="!state.authenticated" class="panel empty-panel"><view class="empty-mark">田</view><view class="section-heading">登录后查看我的农场</view><text class="body-copy">登录后查看认养、物资和收获进度。</text><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></view>
     <view v-else class="panel empty-panel"><text>暂未取得田园数据，请检查网络后重试。</text><FarmButton class="action" :disabled="state.busy" @tap="refreshFarm">重新加载</FarmButton></view>
   </view>
   <!-- #ifndef APP-PLUS -->

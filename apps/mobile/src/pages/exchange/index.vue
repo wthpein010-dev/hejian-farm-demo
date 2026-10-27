@@ -34,7 +34,7 @@ onLoad(query => {
 onShow(() => { if (state.authenticated) void load(); });
 </script>
 <template>
-  <FarmScreen title="积分兑换收据" subtitle="核对这一笔，心中有数。" allow-guest hide-checkout-receipt>
+  <FarmScreen title="兑换收据" allow-guest hide-checkout-receipt>
     <FarmButton class="text-action" @tap="returnFromExchange">返回上一页</FarmButton>
     <view v-if="routeError" class="notice error" role="alert"><text>{{ routeError }}</text><FarmButton class="action secondary" @tap="openExchangeHistory">查看全部兑换记录</FarmButton></view>
     <EmptyPanel v-else-if="!state.authenticated" title="登录后查看自己的收据" description="收据只属于当前田园账户。登录后请从兑换记录中重新选择。"><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></EmptyPanel>

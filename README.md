@@ -1,4 +1,4 @@
-# 禾间农场 · 竖版 H5 Demo
+# 合耕小舍 · 竖版 H5 Demo
 
 > 正式App／微信／抖音小程序工程正在推进，尚未达到全量上线验收。新增 `apps/mobile` 跨端客户端与 `services/api` 持久账户/资产服务；现有公开Pages仍是 `prototype/` H5演示。两者验证边界见[上线矩阵](docs/release/READINESS.md)，不能把演示发布或跨端编译写成正式上架。
 
@@ -10,7 +10,7 @@
 
 面向 30–50 岁及中老年用户的农场体验演示：认养农作物与牲畜、远程照料、看农田与牧场、参加福利，再体验收获到家。
 
-- 部署地址：[打开禾间 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)（部署与线上验收状态见[验收记录](docs/VERIFICATION.md)）。
+- 部署地址：[打开合耕小舍 Demo](https://wthpein010-dev.github.io/hejian-farm-demo/)（部署与线上验收状态见[验收记录](docs/VERIFICATION.md)）。
 - 公开源代码：[wthpein010-dev/hejian-farm-demo](https://github.com/wthpein010-dev/hejian-farm-demo)。
 
 这是 H5 网页，后续可探索微信、抖音小程序；当前不代表小程序已接入 SDK、通过审核或上架。

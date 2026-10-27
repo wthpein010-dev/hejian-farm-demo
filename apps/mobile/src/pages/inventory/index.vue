@@ -11,7 +11,7 @@ const harvested = [{ key: 'eggs', title: '累计鸡蛋' }, { key: 'crops', title
 onShow(onFarmPageShow);
 </script>
 <template>
-  <FarmScreen title="我的仓库" subtitle="备好日常所需，照料心中的田园。">
+  <FarmScreen title="我的仓库">
     <FarmButton class="text-action" @tap="openProfile">返回我的田园</FarmButton>
     <template v-if="state.snapshot">
       <view class="panel exchange-intro"><view class="section-heading" role="heading" aria-level="2">当前可用物资</view><text class="body-copy">以下数量来自最近同步的账户余额，与单笔兑换收据中的“本笔发放”分开核对。</text><FarmButton class="action secondary" :disabled="state.busy" :loading="state.busy" @tap="refreshFarm">同步最新仓库</FarmButton></view>

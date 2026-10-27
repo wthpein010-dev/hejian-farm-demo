@@ -43,8 +43,8 @@ function maximum(id: string, limit: number) { return Math.min(5, limit - (state.
 onShow(onFarmPageShow);
 </script>
 <template>
-  <FarmScreen title="积分购物车" subtitle="核对日常所需，刚刚好就好。">
-    <EmptyPanel v-if="!count" title="还没有装进田园心意" description="去挑选饲料、肥料和一份丰收好礼。"><FarmButton id="cart-empty-action" class="action" @tap="openShop">逛逛农场商城</FarmButton></EmptyPanel>
+  <FarmScreen title="购物车">
+    <EmptyPanel v-if="!count" title="购物车还是空的" description="去商城挑选需要的饲料、肥料和物资。"><FarmButton id="cart-empty-action" class="action" @tap="openShop">逛逛农场商城</FarmButton></EmptyPanel>
     <template v-else>
       <view v-for="item in items" :key="item.id" class="panel"><view class="section-heading">{{ item.title }}</view><text class="helper">{{ item.cost }} 积分 / 件</text><view class="quantity" :aria-label="`${item.title}数量`"><FarmButton :disabled="state.busy || state.pending" :aria-label="`减少${item.title}`" @tap="mutateFarm('/cart/items', { sku: item.id, delta: -1 }, '')">−</FarmButton><text aria-live="polite">{{ item.quantity }}</text><FarmButton :disabled="state.busy || state.pending || item.quantity >= maximum(item.id, item.limit)" :aria-label="`增加${item.title}`" @tap="mutateFarm('/cart/items', { sku: item.id, delta: 1 }, '')">＋</FarmButton></view><text class="body-copy">小计 {{ item.cost * item.quantity }} 积分</text></view>
       <view class="panel"><view class="section-heading">积分优惠券</view><FarmButton class="coupon" :class="{ selected: !selectedCoupon }" :aria-pressed="!selectedCoupon" :disabled="state.busy || state.pending" @tap="selectedCoupon = ''; confirmation = null">不使用优惠券</FarmButton><FarmButton v-for="c in coupons" :key="c.id" class="coupon" :class="{ selected: selectedCoupon === c.id }" :aria-pressed="selectedCoupon === c.id" :disabled="state.busy || state.pending || subtotal < c.min" @tap="selectedCoupon = c.id; confirmation = null"><text>{{ c.title }}</text><text class="helper">{{ subtotal >= c.min ? `抵${c.off}积分` : `还差${c.min - subtotal}积分` }}</text></FarmButton></view>

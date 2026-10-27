@@ -5,11 +5,11 @@ import FarmButton from './FarmButton.vue';
 import { requestNavigation } from '../core/navigation.mjs';
 const route = ref('pages/farm/index');
 const entries = [
-  { path: 'pages/farm/index', title: '我的农场', mark: '田' },
-  { path: 'pages/shop/index', title: '商城', mark: '集' },
-  { path: 'pages/activities/index', title: '主页', mark: '禾' },
-  { path: 'pages/live/index', title: '实景', mark: '景' },
-  { path: 'pages/profile/index', title: '我的', mark: '我' }
+  { path: 'pages/farm/index', title: '我的农场', icon: 'farm' },
+  { path: 'pages/shop/index', title: '商城', icon: 'shop' },
+  { path: 'pages/activities/index', title: '主页', icon: 'home' },
+  { path: 'pages/live/index', title: '实景', icon: 'live' },
+  { path: 'pages/profile/index', title: '我的', icon: 'profile' }
 ];
 function syncRoute() { const pages = getCurrentPages(); route.value = pages[pages.length - 1]?.route || 'pages/farm/index'; }
 function prepareNavigation() {
@@ -25,4 +25,4 @@ onMounted(prepareNavigation);
 const selected = computed(() => ['pages/friends/index', 'pages/community/index', 'pages/forum-post/index'].includes(route.value) ? 'pages/activities/index' : route.value === 'pages/cart/index' ? 'pages/shop/index' : route.value === 'pages/farm-record/index' ? 'pages/farm/index' : ['pages/exchanges/index', 'pages/exchange/index', 'pages/inventory/index'].includes(route.value) ? 'pages/profile/index' : route.value);
 function navigate(path: string) { if (path !== route.value) requestNavigation(() => uni.switchTab({ url: '/' + path })); }
 </script>
-<template><view class="farm-navigation" role="navigation" aria-label="主导航"><FarmButton v-for="entry in entries" :key="entry.path" class="farm-nav-item" :class="{ active: selected === entry.path, 'farm-nav-home': entry.path === 'pages/activities/index' }" :aria-current="selected === entry.path ? 'page' : undefined" @tap="navigate(entry.path)"><text class="farm-nav-mark" aria-hidden="true">{{ entry.mark }}</text><text>{{ entry.title }}</text></FarmButton></view></template>
+<template><view class="farm-navigation" role="navigation" aria-label="主导航"><FarmButton v-for="entry in entries" :key="entry.path" class="farm-nav-item" :class="{ active: selected === entry.path, 'farm-nav-home': entry.path === 'pages/activities/index' }" :aria-current="selected === entry.path ? 'page' : undefined" @tap="navigate(entry.path)"><view class="farm-nav-mark" aria-hidden="true"><view class="farm-nav-icon" :class="'nav-' + entry.icon" /></view><text>{{ entry.title }}</text></FarmButton></view></template>

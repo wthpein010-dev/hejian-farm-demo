@@ -51,7 +51,7 @@ async function home(overrides = {}) {
   const empty = await component('components/EmptyPanel.vue');
   const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty });
   const ui = mount(page);
-  return { ...ui, state, mutations, actions, findButton: match => ui.buttons().find(node => typeof match === 'string' ? ui.text(node) === match : match.test(ui.text(node))) };
+  return { ...ui, state, mutations, actions, findButton: match => ui.buttons().find(node => { const name = node.props['aria-label'] || ui.text(node); return typeof match === 'string' ? name === match : match.test(name); }) };
 }
 function activate(node) { assert.ok(node, 'action exists'); node.props.onClick?.({ currentTarget: node }); }
 
@@ -70,11 +70,11 @@ test('central Home navigation keeps the account activity route and does not re-e
   } finally { ui.close(); }
 });
 
-test('Home renders a labeled photography cover and uses the existing account sign-in transaction once', async () => {
+test('Home renders its brand and a labeled example avatar, and uses the existing account sign-in transaction once', async () => {
   const h = await home();
   try {
-    assert.equal(h.nodes().find(node => node.props?.['aria-level'] === '1')?.text, '田园主页');
-    assert.ok(h.nodes().some(node => node.type === 'image' && node.props.src === '/static/photos/farm-estate.webp' && /非实拍/.test(node.props['aria-label'])));
+    assert.equal(h.nodes().find(node => node.props?.['aria-level'] === '1')?.text, '合耕小舍');
+    assert.ok(h.nodes().some(node => node.type === 'image' && node.props.src === '/static/photos/farm-estate.webp' && /AI生成.*示意头像.*非实拍/.test(node.props['aria-label'])));
     activate(h.findButton(/^签到领取 /));
     assert.deepEqual(h.mutations.map(args => [args[0], args[1]]), [['/activities/sign-in', {}]]);
     h.state.snapshot.signIn.todayClaimed = true; h.state.snapshot.signIn.streak = 1; await vue.nextTick();

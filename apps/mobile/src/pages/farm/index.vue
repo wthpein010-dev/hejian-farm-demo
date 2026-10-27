@@ -18,9 +18,9 @@ onShow(() => {
 });
 </script>
 <template>
-  <FarmScreen title="我的田园" subtitle="一方菜园，一份牵挂。" allow-guest>
+  <FarmScreen title="我的农场" allow-guest>
     <image class="hero-image" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="AI生成的农庄静态示意，非实拍、非直播" />
-    <view class="hero-caption"><view class="section-heading">身在城市，心有一亩田。</view><text class="helper">AI生成静态示意 · 非实拍、非直播</text><text class="helper">认养与作业以农场记录为准</text></view>
+    <view class="hero-caption"><text class="helper">AI生成静态示意 · 非实拍、非直播</text><text class="helper">认养与作业以农场记录为准</text></view>
     <template v-if="state.snapshot">
       <view class="asset-row"><view class="asset-cell"><text class="asset-number">Lv.{{ state.snapshot.level.level }}</text><text class="asset-label">{{ state.snapshot.level.label }}</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.points }}</text><text class="asset-label">田园积分</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.feed }}</text><text class="asset-label">饲料份数</text></view></view>
       <view class="tabs" role="group" aria-label="切换菜园与牧场"><FarmButton :class="{ active: area === 'plots' }" :aria-pressed="area === 'plots'" @tap="selectArea('plots')">我的菜园</FarmButton><FarmButton :class="{ active: area === 'animals' }" :aria-pressed="area === 'animals'" @tap="selectArea('animals')">我的牧场</FarmButton></view>
@@ -39,7 +39,7 @@ onShow(() => {
       </view>
       <FarmButton v-if="page?.nextCursor" class="action secondary" :disabled="state.farmRegistryBusy" :loading="state.farmRegistryBusy" @tap="load(page.nextCursor)">加载更多档案</FarmButton>
       <text v-if="page?.items.length" class="helper registry-footnote">资料同步：{{ farmRecordDate(page.serverTime) }}（北京时间）</text>
-      <view class="panel"><view class="section-heading">照料要刚刚好</view><text class="body-copy">浇水与投喂遵循农场的次数、间隔和设备确认。补充物资不会增加照料额度。</text></view>
+      <view class="panel"><view class="section-heading">照料说明</view><text class="body-copy">浇水与投喂遵循农场的次数、间隔和设备确认。补充物资不会增加照料额度。</text></view>
     </template>
     <EmptyPanel v-else title="把自己的田园带在身边" description="登录后，认养记录、物资与收获进度会随账户保存。"><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></EmptyPanel>
   </FarmScreen>

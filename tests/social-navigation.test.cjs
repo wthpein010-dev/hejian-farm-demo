@@ -9,7 +9,7 @@ test('the default landing is the social home and its centre tab retains five cle
   assert.equal((nav.match(/data-route=/g) || []).length, 5);
   assert.match(nav, /href="#home"[^>]*aria-current="page"/);
   assert.match(nav, /主页/); assert.doesNotMatch(nav, /href="#activities"/);
-  assert.match(app.html, /田园会客厅/);
+  assert.match(app.html, /田园动态/);
 });
 
 test('old activity links still expose all original rewards while selecting Home in the bottom navigation', () => {
@@ -74,7 +74,7 @@ test('the shared header follows the current public post instead of losing it at 
 
 test('community sharing has a visual invitation preview with the same clean demonstration destination', async () => {
   const app = createApp('#home'); await app.click(control => control.dataset.action === 'share');
-  assert.match(app.modalHTML, /social-share-preview/); assert.match(app.modalHTML, /田园会客厅/);
+  assert.match(app.modalHTML, /social-share-preview/); assert.match(app.modalHTML, /合耕小舍/);
   await app.click('复制链接'); const link = new URL(app.clipboardWrites.at(-1));
   assert.equal(link.hash, '#home'); assert.equal(link.search, ''); assert.equal(app.state.wallet.points, 80);
 });

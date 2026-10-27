@@ -76,7 +76,7 @@ async function act(action: Exclude<FriendAction, 'enable' | 'disable' | 'request
 }
 </script>
 <template>
-  <FarmScreen title="我的农友" subtitle="交换农友码，彼此确认再相伴。">
+  <FarmScreen title="我的农友">
     <FarmButton class="action secondary" @tap="returnFromFriends">返回田园主页</FarmButton>
     <view class="notice"><text>当前仅在开发沙盒联调农友关系，正式服务暂未开放。不会读取通讯录、发送平台消息或发放邀请奖励。</text></view>
     <view id="friends-feedback" tabindex="-1" class="friends-feedback">

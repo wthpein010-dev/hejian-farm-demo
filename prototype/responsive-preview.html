@@ -3,32 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>禾间 · 手机尺寸预览</title>
+  <title>合耕小舍 · 手机尺寸预览</title>
+  <link rel="stylesheet" href="styles.css?v=20261027-hegeng1">
   <style>
-    :root { --preview-width:390px; font-family:'Segoe UI','Microsoft YaHei',sans-serif; color:#20372d; background:#eaf0eb; }
+    :root { --preview-width:390px; --preview-height:844px; font-family:'Segoe UI','Microsoft YaHei',sans-serif; color:var(--ink); background:var(--canvas); }
     * { box-sizing:border-box; }
-    body { margin:0; min-width:320px; padding:19px 12px; height:100dvh; display:flex; flex-direction:column; gap:16px; }
+    body { margin:0; min-width:320px; padding:19px 12px; min-height:100dvh; display:flex; flex-direction:column; gap:16px; }
     header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; width:100%; max-width:650px; margin:0 auto; gap:12px; flex-shrink:0; }
     h1 { font-size:16px; margin:0 0 5px; font-weight:550; }
-    p { font-size:12px; line-height:1.6; color:#5e705f; margin:0; }
+    p { font-size:12px; line-height:1.6; color:var(--secondary); margin:0; }
     nav { display:flex; gap:5px; }
-    button { font:inherit; font-size:14px; min-width:48px; min-height:48px; padding:9px 11px; border:1px solid #c8d6c6; border-radius:9px; cursor:pointer; background:#f6f8f5; color:#365840; }
-    button[aria-pressed="true"] { background:#245c43; color:white; border-color:#245c43; }
-    button:hover { filter:brightness(.96); } button:focus-visible { outline:3px solid #447c59; outline-offset:2px; }
-    .frame { width:calc(var(--preview-width) + 16px); max-width:100%; min-height:0; flex:1; margin:0 auto; border:8px solid #fbfcf9; border-radius:29px; overflow:hidden; box-shadow:0 0 0 1px #d1dcd1,0 15px 60px #26403118; }
-    iframe { display:block; border:0; width:100%; height:100%; min-height:0; background:#f6f8f5; }
+    button { font:inherit; font-size:14px; min-width:48px; min-height:48px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; cursor:pointer; background:var(--paper); color:var(--ink); }
+    button[aria-pressed="true"] { background:var(--brand); color:white; border-color:var(--brand); }
+    button:hover { filter:brightness(.96); } button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .frame { width:calc(var(--preview-width) + 16px); max-width:100%; height:var(--preview-height); min-height:0; flex:none; margin:0 auto; border:8px solid var(--paper); border-radius:29px; overflow:hidden; box-shadow:0 0 0 1px var(--line); }
+    iframe { display:block; border:0; width:100%; height:100%; min-height:0; background:var(--canvas); }
+    body.capture {padding:0;gap:0;min-height:0;} body.capture>header{display:none;} body.capture .frame{width:var(--preview-width);border:0;border-radius:0;box-shadow:none;}
     @media(max-width:500px) { body { padding:10px 0 0; gap:12px; } header { padding:0 12px; } h1 { font-size:16px; } button { padding:8px; } .frame { width:var(--preview-width); border:0; border-radius:0; box-shadow:none; } }
     @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto; } }
   </style>
 </head>
 <body>
-  <header><div><h1>禾间 · 手机体验</h1><p>切换预览宽度；窄窗口按可用宽度显示。</p></div><nav aria-label="预览屏幕宽度"><button type="button" aria-pressed="false" onclick="resizePreview(320,this)">320</button><button type="button" aria-pressed="true" onclick="resizePreview(390,this)">390</button><button type="button" aria-pressed="false" onclick="resizePreview(430,this)">430</button></nav></header>
-  <main class="frame"><iframe src="index.html" title="禾间手机端可点击原型"></iframe></main>
+  <header><div><h1>合耕小舍 · 手机体验</h1><p>切换预览宽度；窄窗口按可用宽度显示。</p></div><nav aria-label="预览屏幕宽度"><button type="button" aria-pressed="false" data-width="320" onclick="resizePreview(320,this)">320</button><button type="button" aria-pressed="true" data-width="390" onclick="resizePreview(390,this)">390</button><button type="button" aria-pressed="false" data-width="430" onclick="resizePreview(430,this)">430</button></nav><nav aria-label="预览屏幕高度"><button type="button" data-height="844" aria-pressed="true" onclick="resizeHeight(844,this)">标准</button><button type="button" data-height="640" aria-pressed="false" onclick="resizeHeight(640,this)">小屏</button><button type="button" data-height="320" aria-pressed="false" onclick="resizeHeight(320,this)">短屏</button></nav></header>
+  <main class="frame"><iframe src="index.html" title="合耕小舍手机端可点击原型"></iframe></main>
   <script>
     function resizePreview(width,button) {
       document.documentElement.style.setProperty('--preview-width',width+'px');
-      document.querySelectorAll('nav button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      document.querySelectorAll('[data-width]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     }
+    function resizeHeight(height,button) {
+      document.documentElement.style.setProperty('--preview-height',height+'px');
+      document.querySelectorAll('[data-height]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    }
+    const params=new URLSearchParams(location.search),width=Number(params.get('width')),height=Number(params.get('height'));
+    if([320,390,430].includes(width))resizePreview(width,document.querySelector('[data-width="'+width+'"]'));
+    if([320,640,844].includes(height))resizeHeight(height,document.querySelector('[data-height="'+height+'"]'));
+    if(params.get('capture')==='1')document.body.classList.add('capture');
+    const view=params.get('view');
+    if(['home','farm','shop','activities','community','friends','live','warehouse'].includes(view))document.querySelector('iframe').src='index.html#'+view;
   </script>
 </body>
 </html>

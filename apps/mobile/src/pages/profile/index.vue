@@ -26,17 +26,17 @@ onHide(cancelFarmDeletion);
 onShow(onFarmPageShow);
 </script>
 <template>
-  <FarmScreen title="我的田园" subtitle="有一方田，有一份安心。" allow-guest>
+  <FarmScreen title="我的" allow-guest>
     <view v-if="!state.authenticated && !state.pendingCanRetryWithoutAuth" class="panel">
-      <view id="account-login-title" class="section-heading" tabindex="-1">登录，找回自己的田园</view><text class="body-copy">田园资产和兑换记录随账户保存，换页或刷新不会重新发放奖励。</text>
+      <view id="account-login-title" class="section-heading" tabindex="-1">登录合耕小舍</view><text class="body-copy">田园资产和兑换记录随账户保存，换页或刷新不会重新发放奖励。</text>
       <FarmButton v-if="platformProvider" class="action" style="margin-top:20px" :disabled="state.busy || !state.configured" @tap="loginPlatform">{{ platformProvider === 'weixin' ? '微信登录' : '抖音登录' }}</FarmButton>
       <text v-else-if="!sandboxLoginEnabled" class="helper" style="margin-top:16px">账户服务准备中，请从已开放的小程序进入。</text>
       <template v-if="sandboxLoginEnabled"><view class="notice" style="margin-top:20px"><text>本机联调入口，仅用于测试示例账户，不是正式用户登录。</text></view><label class="form-label" for="review-account">联调账户名称</label><input id="review-account" v-model="account" class="text-input" maxlength="40" confirm-type="done" :disabled="state.busy" aria-label="联调账户名称" @confirm="connect" /><text class="helper">3–40位英文字母、数字、下划线或连字符；请勿填写真实手机号、地址或密码。</text><FarmButton class="action" style="margin-top:16px" :disabled="state.busy || !accountValid || !state.configured" @tap="connect">连接联调账户</FarmButton></template>
       <text v-if="!state.configured" class="helper" style="margin-top:18px">农场账户服务尚未配置，目前无法登录。</text>
     </view>
     <template v-if="state.snapshot && state.authenticated && !state.pendingCanRetryWithoutAuth">
-      <view class="panel"><view class="section-heading">{{ state.snapshot.profile.displayName }}</view><text class="helper">Lv.{{ state.snapshot.level.level }} · {{ state.snapshot.level.label }}</text><view class="asset-row"><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.points }}</text><text class="asset-label">田园积分</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.feed }}</text><text class="asset-label">饲料份数</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.system.purchases.length }}</text><text class="asset-label">积分兑换</text></view></view><FarmButton class="action secondary" :disabled="state.busy" @tap="refreshFarm">同步最新田园数据</FarmButton></view>
-      <view class="panel"><view class="section-heading">我的仓库与兑换</view><text class="body-copy">核对当前物资余额，也能逐笔查看兑换时的商品、优惠和积分。</text><FarmButton class="action" style="margin-top:16px" @tap="openInventory">查看当前仓库</FarmButton><FarmButton class="action secondary" @tap="openExchangeHistory">查看全部兑换记录</FarmButton></view>
+      <view class="panel"><view class="profile-identity"><image class="home-avatar" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="AI生成的农庄示意头像，非实拍" /><view><view class="section-heading">{{ state.snapshot.profile.displayName }}</view><text class="helper">Lv.{{ state.snapshot.level.level }} · {{ state.snapshot.level.label }}</text><text class="helper">农庄头像为AI摄影示意</text></view></view><view class="asset-row"><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.points }}</text><text class="asset-label">田园积分</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.feed }}</text><text class="asset-label">饲料份数</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.system.purchases.length }}</text><text class="asset-label">积分兑换</text></view></view><FarmButton class="action secondary" :disabled="state.busy" @tap="refreshFarm">同步最新田园数据</FarmButton></view>
+      <view class="panel profile-menu"><FarmButton class="text-action" @tap="openInventory"><text>查看当前仓库</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton><FarmButton class="text-action" @tap="openExchangeHistory"><text>查看全部兑换记录</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton></view>
             <view class="panel">
         <view class="section-heading">账户与隐私</view>
         <text class="body-copy">登录凭证只在当前运行内存中保留。退出后需重新登录，服务器保存的田园资产仍属于该账户。</text>

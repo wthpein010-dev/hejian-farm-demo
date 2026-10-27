@@ -23,8 +23,7 @@ function remaining(p: CatalogItem) { return Math.max(0, p.limit - (state.snapsho
 function canAdd(p: CatalogItem) { return !state.busy && !state.pending && !!state.snapshot?.capabilities.pointShop && (state.snapshot.system.cart[p.id] || 0) < Math.min(5, remaining(p)); }
 </script>
 <template>
-  <FarmScreen title="农场商城" subtitle="选当季，备物资，收一份田园好礼。">
-    <view class="banner photo-banner"><image class="banner-photo" src="/static/photos/shop-banner.webp" mode="aspectFill" aria-hidden="true" /><view class="banner-wash" aria-hidden="true" /><view class="banner-copy"><text class="banner-kicker">HEJIAN FARM STORE</text><view class="banner-title"><view>把田园所需，</view><view>好好备齐。</view></view><text class="helper">按需取用，适量照料。</text><text class="helper">AI生成物资示意 · 非实拍</text></view></view>
+  <FarmScreen title="商城">
     <view class="balance-bar"><view><text class="helper">可用田园积分</text><text class="balance-number">{{ state.snapshot?.wallet.points }}</text></view><FarmButton class="action secondary" @tap="openCart">购物车{{ count ? ` · ${count}` : '' }}</FarmButton></view>
     <view class="exchange-links"><FarmButton class="text-action" @tap="openExchangeHistory">兑换记录</FarmButton><FarmButton class="text-action" @tap="openInventory">当前仓库</FarmButton></view>
     <view class="tabs" role="group" aria-label="商城专区"><FarmButton :class="{ active: section === 'adopt' }" :aria-pressed="section === 'adopt'" @tap="section = 'adopt'">当季认养</FarmButton><FarmButton :class="{ active: section === 'supplies' }" :aria-pressed="section === 'supplies'" @tap="section = 'supplies'">农场物资</FarmButton><FarmButton :class="{ active: section === 'gifts' }" :aria-pressed="section === 'gifts'" @tap="section = 'gifts'">积分好礼</FarmButton></view>

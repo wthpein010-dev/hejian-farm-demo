@@ -26,7 +26,7 @@ async function load(cursor = 'start', event?: unknown) {
 onShow(() => { if (state.authenticated && !state.exchangeHistory) load(); });
 </script>
 <template>
-  <FarmScreen title="积分兑换记录" subtitle="每一笔所需，都有据可查。" allow-guest>
+  <FarmScreen title="兑换记录" allow-guest>
     <FarmButton class="text-action" @tap="openProfile">返回我的田园</FarmButton>
     <EmptyPanel v-if="!state.authenticated" title="登录后查看自己的兑换记录" description="记录只属于当前田园账户，登录后可查看。"><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></EmptyPanel>
     <template v-else>

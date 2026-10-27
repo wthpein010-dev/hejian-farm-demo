@@ -30,7 +30,7 @@ onLoad(options => { const value = options?.id; id.value = typeof value === 'stri
 onShow(() => { if (id.value && state.authenticated && !state.busy && !state.pending) void refresh(); });
 </script>
 <template>
-  <FarmScreen title="圈子帖子" subtitle="读一段田园日常，留一句交流。">
+  <FarmScreen title="帖子详情">
     <FarmButton class="action secondary" @tap="requestNavigation(returnFromForumPost)">返回田园圈子</FarmButton>
     <FarmDraftNotice v-if="leaving" :busy="state.busy" @cancel="cancelLeave" @discard="discardLeave" />
     <view v-if="state.forumDetailBusy" class="status-line" role="status">正在读取帖子与评论…</view><view v-if="state.forumMessage" class="success-note" role="status">{{ state.forumMessage }}</view><view v-if="state.forumDetailError" class="notice error" role="alert">{{ state.forumDetailError }}</view>

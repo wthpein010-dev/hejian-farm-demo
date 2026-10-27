@@ -15,7 +15,7 @@ async function publish(app, title = '我家的第一篮番茄', body = '今天�
 test('home uses the same sign-in transaction and reaches the full activity calendar', async () => {
   const app = createApp();
   assert.equal(app.state.view, 'home');
-  assert.match(app.html, /田园会客厅/);
+  assert.match(app.html, /田园动态/);
   assert.match(app.html, /示例社区/);
   const before = app.state.wallet.points;
   await app.click(action('x-signin'));

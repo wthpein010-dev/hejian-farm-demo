@@ -9,13 +9,13 @@
     {
       "path": "pages/shop/index",
       "style": {
-        "navigationBarTitleText": "农场商城"
+        "navigationBarTitleText": "商城"
       }
     },
     {
       "path": "pages/activities/index",
       "style": {
-        "navigationBarTitleText": "田园主页"
+        "navigationBarTitleText": "合耕小舍"
       }
     },
     {
@@ -27,7 +27,7 @@
     {
       "path": "pages/profile/index",
       "style": {
-        "navigationBarTitleText": "我的田园"
+        "navigationBarTitleText": "我的"
       }
     },
     {
@@ -56,15 +56,21 @@
     },
     {
       "path": "pages/friends/index",
-      "style": { "navigationBarTitleText": "我的农友" }
+      "style": {
+        "navigationBarTitleText": "我的农友"
+      }
     },
     {
       "path": "pages/community/index",
-      "style": { "navigationBarTitleText": "田园圈子" }
+      "style": {
+        "navigationBarTitleText": "田园圈子"
+      }
     },
     {
       "path": "pages/forum-post/index",
-      "style": { "navigationBarTitleText": "圈子帖子" }
+      "style": {
+        "navigationBarTitleText": "圈子帖子"
+      }
     },
     {
       "path": "pages/inventory/index",
@@ -75,13 +81,13 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#f4f6f2",
-    "backgroundColor": "#f4f6f2",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f6fa",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#596c60",
-    "selectedColor": "#244d3d",
+    "color": "#5d6675",
+    "selectedColor": "#006cd9",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [

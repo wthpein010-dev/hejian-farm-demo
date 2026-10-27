@@ -17,16 +17,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 WIDTH, HEIGHT = 720, 1280
 FPS = 24
 SECONDS_PER_SCENE = 4
-BACKGROUND = "#e8eee5"
-INK = "#1d3329"
+BACKGROUND = "#f5f6fa"
+INK = "#1f2633"
 FONT_PATH = Path("C:/Windows/Fonts/msyh.ttc")
 SCENES = (
-    ("01-home.png", "我的农场：日常照料与田园成长"),
-    ("02-shop.png", "农场商城：物资好礼与当季认养"),
-    ("03-cart.png", "积分购物车：用券兑换，物资入仓"),
-    ("04-activities.png", "田园活动：七日签到与丰收集章"),
-    ("05-warehouse.png", "我的仓库：按需取用，刚好照料"),
-    ("06-pig-pov.png", "猪的第一视角：换个角度看农场"),
+    ("01-farm.png", "我的农场：查看种养，按需照料"),
+    ("02-shop.png", "农场商城：当季认养与积分物资"),
+    ("03-home.png", "合耕小舍：每日签到与田园动态"),
+    ("04-community.png", "田园社区：发帖、交流与分享"),
+    ("05-friends.png", "田园好友：申请好友与个人田园"),
+    ("06-pig-pov.png", "猪的第一视角：AI静态场景示意"),
 )
 
 
@@ -37,8 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--screenshots",
         type=Path,
-        default=PROJECT_ROOT / ".scratch" / "farm-expansion" / "screenshots",
-        help="六张 PNG 截图所在目录。默认：项目 .scratch/farm-expansion/screenshots",
+        default=PROJECT_ROOT / ".scratch" / "qq-refresh" / "screenshots",
+        help="六张 PNG 截图所在目录。默认：项目 .scratch/qq-refresh/screenshots",
     )
     parser.add_argument(
         "--output",
@@ -70,7 +70,7 @@ def make_frame(screenshot: Path, caption: str) -> Image.Image:
 
     draw = ImageDraw.Draw(frame)
     font = fit_caption(draw, caption)
-    draw.line((40, 1194, WIDTH - 40, 1194), fill="#cbd7c7", width=1)
+    draw.line((40, 1194, WIDTH - 40, 1194), fill="#e6e9f0", width=1)
     # One line of added text is present in each frame; no stacked labels or counters.
     draw.text((WIDTH // 2, 1230), caption, font=font, fill=INK, anchor="mm")
     return frame

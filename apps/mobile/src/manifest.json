@@ -1,6 +1,6 @@
 {
-  "name": "禾间农场",
-  "description": "连接一方田园，照料一份日常",
+  "name": "合耕小舍",
+  "description": "查看农场、交流种养、管理物资和收获",
   "versionName": "0.2.0",
   "versionCode": "20",
   "transformPx": false,
@@ -15,7 +15,7 @@
     }
   },
   "h5": {
-    "title": "禾间农场",
+    "title": "合耕小舍",
     "router": {
       "mode": "hash"
     }

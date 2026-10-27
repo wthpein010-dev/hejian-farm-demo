@@ -19,7 +19,7 @@ onLoad(query => {
 onShow(() => { if (recordId.value && state.authenticated) load(); });
 </script>
 <template>
-  <FarmScreen title="种养档案" subtitle="一轮种养，留下一路记录。" allow-guest>
+  <FarmScreen title="种养档案" allow-guest>
     <FarmButton class="text-action" @tap="openFarmRegistry">返回我的农场</FarmButton>
     <view v-if="routeError" class="notice error" role="alert">{{ routeError }}</view>
     <EmptyPanel v-else-if="!state.authenticated" title="请登录后查看自己的档案" description="档案按田园账户归属。登录后，请回到我的农场选择种养对象。"><FarmButton class="action" @tap="openProfile">登录我的田园</FarmButton></EmptyPanel>

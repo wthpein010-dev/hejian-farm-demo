@@ -9,7 +9,7 @@ const camera = ref<'field' | 'livestock' | 'pig'>('field');
 onShow(onFarmPageShow);
 </script>
 <template>
-  <FarmScreen title="看看我的农场" subtitle="地里的菜，圈里的它，都有惦记。">
+  <FarmScreen title="农场实景">
     <view class="tabs" role="group" aria-label="镜头分类"><FarmButton :class="{ active: camera === 'field' }" :aria-pressed="camera === 'field'" @tap="camera = 'field'">菜园</FarmButton><FarmButton :class="{ active: camera === 'livestock' }" :aria-pressed="camera === 'livestock'" @tap="camera = 'livestock'">圈舍</FarmButton><FarmButton :class="{ active: camera === 'pig' }" :aria-pressed="camera === 'pig'" @tap="camera = 'pig'">猪的视角</FarmButton></view>
     <image class="hero-image" :src="camera === 'pig' ? '/static/photos/pig-pov.webp' : camera === 'livestock' ? '/static/photos/livestock.webp' : '/static/photos/farm-estate.webp'" mode="aspectFill" aria-label="AI生成的镜头静态示意，非实拍、非直播" />
     <text class="helper" style="margin-top:10px">AI生成静态示意 · 非实拍、非直播</text>

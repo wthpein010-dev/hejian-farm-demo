@@ -1,4 +1,6 @@
-# 禾间截图讲解
+# 合耕小舍截图讲解
+
+2026-10-27本轮使用“合耕小舍”蓝白社交版实际390×640 iframe截图重制影片与封面，包含农场、商城、主页签到、社区、好友和猪视角。
 
 2026-10-27已用写实摄影示意版六张实际页面截图重制影片和封面。素材为AI生成摄影风格示意，非农场实拍；截图讲解仍非连续录屏。
 
@@ -15,7 +17,7 @@ python tools/make_walkthrough.py
 也可明确指定输入和输出：
 
 ```powershell
-python tools/make_walkthrough.py --screenshots .scratch/farm-expansion/screenshots --output prototype/video/walkthrough.mp4
+python tools/make_walkthrough.py --screenshots .scratch/qq-refresh/screenshots --output prototype/video/walkthrough.mp4
 ```
 
 依赖使用当前机器已安装的 Pillow 与 imageio_ffmpeg。脚本通过 `imageio_ffmpeg.get_ffmpeg_exe()` 查找现有 FFmpeg，不下载软件；中文字幕使用 `C:/Windows/Fonts/msyh.ttc`。
@@ -24,14 +26,14 @@ python tools/make_walkthrough.py --screenshots .scratch/farm-expansion/screensho
 
 | 截图 | 时间 | 单行字幕 |
 | --- | --- | --- |
-| `01-home.png` | 00:00–00:04 | 我的农场：日常照料与田园成长 |
-| `02-shop.png` | 00:04–00:08 | 农场商城：物资好礼与当季认养 |
-| `03-cart.png` | 00:08–00:12 | 积分购物车：用券兑换，物资入仓 |
-| `04-activities.png` | 00:12–00:16 | 田园活动：七日签到与丰收集章 |
-| `05-warehouse.png` | 00:16–00:20 | 我的仓库：按需取用，刚好照料 |
-| `06-pig-pov.png` | 00:20–00:24 | 猪的第一视角：换个角度看农场 |
+| `01-farm.png` | 00:00–00:04 | 我的农场：查看种养，按需照料 |
+| `02-shop.png` | 00:04–00:08 | 农场商城：当季认养与积分物资 |
+| `03-home.png` | 00:08–00:12 | 合耕小舍：每日签到与田园动态 |
+| `04-community.png` | 00:12–00:16 | 田园社区：发帖、交流与分享 |
+| `05-friends.png` | 00:16–00:20 | 田园好友：申请好友与个人田园 |
+| `06-pig-pov.png` | 00:20–00:24 | 猪的第一视角：AI静态场景示意 |
 
-默认输入目录为 `.scratch/farm-expansion/screenshots`。脚本先检查六张截图是否齐全，缺图直接退出，不轮询、不自行截图。输入保持完整 UI，等比缩放置于浅绿底中，四周按需要补边；每一时刻只新增一行底部字幕，不缩放裁切 UI。构建用的临时帧在输出目录内创建并自动清理；`.scratch` 截图不属于发布包。
+默认输入目录为 `.scratch/qq-refresh/screenshots`。脚本先检查六张截图是否齐全，缺图直接退出，不轮询、不自行截图。输入保持完整 UI，等比缩放置于浅灰底中，四周按需要补边；每一时刻只新增一行底部字幕，不缩放裁切 UI。构建用的临时帧在输出目录内创建并自动清理；`.scratch` 截图不属于发布包。
 
 ## 输出与播放
 

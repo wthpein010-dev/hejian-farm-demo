@@ -1,4 +1,4 @@
-"""Local-only, dependency-free server for the throwaway Hejian prototype."""
+"""合耕小舍演示的本地无依赖静态服务器。"""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -17,7 +17,7 @@ class PrototypeHandler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     root = Path(__file__).resolve().parent
     server = ThreadingHTTPServer(("127.0.0.1", 4173), partial(PrototypeHandler, directory=str(root)))
-    print("Hejian prototype: http://127.0.0.1:4173/", flush=True)
+    print("合耕小舍本地 Demo: http://127.0.0.1:4173/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

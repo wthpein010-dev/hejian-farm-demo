@@ -49,11 +49,11 @@
 .today-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;margin-top:9px;border-radius:10px;padding:10px 14px;background:var(--brand);color:var(--paper);font-size:14px}
 .today-action .icon{width:16px;height:16px}
 
-.store-hero,.activity-hero,.growth-hero{position:relative;isolation:isolate;min-height:181px;padding:22px 18px;border:1px solid var(--line);border-radius:20px;margin:2px 0 16px;background-color:var(--brand-soft);background-size:cover;background-position:center;overflow:hidden}
+.store-hero,.activity-hero,.growth-hero{position:relative;isolation:isolate;min-height:132px;padding:18px;border:1px solid var(--line);border-radius:12px;margin:2px 0 14px;background-color:var(--brand-soft);background-size:cover;background-position:center;overflow:hidden}
 .store-hero{background-image:url("assets/photos/shop-banner.webp")}
 .activity-hero{background-image:url("assets/photos/activity-banner.webp")}
 .growth-hero{background-image:url("assets/photos/season-banner.webp")}
-.store-hero h1,.store-hero h2,.activity-hero h1,.activity-hero h2,.growth-hero h1,.growth-hero h2{font:27px/1.45 var(--font-display);font-weight:500;letter-spacing:.5px;max-width:61%;margin:6px 0 8px;color:var(--ink)}
+.store-hero h1,.store-hero h2,.activity-hero h1,.activity-hero h2,.growth-hero h1,.growth-hero h2{font:600 24px/1.45 var(--font-body);letter-spacing:0;max-width:70%;margin:4px 0 7px;color:var(--ink)}
 .store-hero p,.activity-hero p,.growth-hero p{max-width:58%;font-size:13px;line-height:1.8;color:var(--secondary)}
 .store-hero .section-kicker,.activity-hero .section-kicker,.growth-hero .section-kicker{font-size:12px;letter-spacing:1px;max-width:62%}
 .store-hero .primary-button,.activity-hero .primary-button,.growth-hero .primary-button{min-height:48px;font-size:14px;margin-top:12px;padding:9px 13px}
