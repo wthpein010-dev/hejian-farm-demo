@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
@@ -28,7 +29,7 @@ async function wrapper() {
     navigateTo: options => navigation.push(options.url), navigateBack() {}, switchTab: options => navigation.push(options.url)
   }, () => []);
   async function login(id = 'member-a') {
-    replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-account');
+    replies.push(ok(syntheticSession({ environment: 'development', token: `token-${id}`, profile: { id } }))); await client.loginDevelopment('synthetic-account');
     replies.push(ok(mobileSnapshot({ profile: { id } }))); await client.load();
   }
   return { core, client, calls, replies, navigation, login };

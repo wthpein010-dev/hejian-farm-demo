@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { createFarmClient } from '../apps/mobile/src/core/client.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
@@ -12,16 +13,16 @@ const intent = (phase = 'prepared', extra = {}) => ({ id, audience: 'customer', 
 const result = (operation, target, extra = {}) => ({ ...scope, operation, code: 'OK', epoch, version: target.version, currentIntentId: target.closedAt === null ? id : null, intent: target, attempt: null, ...extra });
 function harness(open = null) {
   let current = open, ownerId = 'member-a', revision = 3, slotVersion = open ? open.version : 0;
-  const calls = [], overrides = [];
+  const calls = [], overrides = [], loginReplies = [];
   const client = createFarmClient({ baseURL: 'http://127.0.0.1:8787', transport: async request => {
     calls.push(request); const path = request.url.split('/api/v1')[1];
-    if (path === '/auth/development') return ok({ token: 'token', environment: 'development', profile: { id: ownerId } });
+    if (path === '/auth/development') return loginReplies.length ? loginReplies.shift() : ok(syntheticSession({ token: 'token', environment: 'development', profile: { id: ownerId } }));
     if (path === '/bootstrap') { const custom = overrides[0]?.bootstrap; if (custom) { overrides.shift(); return custom(); } return ok(mobileSnapshot({ revision, profile: { id: ownerId } })); }
     const handler = overrides.shift(); if (handler) return handler(request);
     if (path === '/account/recovery') return ok({ ...scope, ownerId, available: true, epoch, version: slotVersion, intent: current });
     throw Error('Unexpected route');
   } });
-  return { client, calls, overrides, setOpen(value) { current = value; slotVersion = Math.max(slotVersion, value ? value.version : 3); }, setRevision(value) { revision = value; }, setOwner(value) { ownerId = value; } };
+  return { client, calls, overrides, loginReplies, setOpen(value) { current = value; slotVersion = Math.max(slotVersion, value ? value.version : 3); }, setRevision(value) { revision = value; }, setOwner(value) { ownerId = value; } };
 }
 test('eggs uses the one recovery prepare execute slot and retains the original collect receipt', async () => {
   const h = harness(); await h.client.loginDevelopment('synthetic'); await h.client.load();
@@ -51,6 +52,21 @@ test('ack and lost GET keep known asset floor across same account re-login and c
   await assert.rejects(h.client.load(), { code: 'ASSET_SYNC_REQUIRED' });
   h.setOwner('member-b'); await h.client.loginDevelopment('synthetic-b'); await h.client.load();
   assert.equal(h.client.minimumConfirmedRevision, 0); assert.equal(h.client.assetSyncRequired, false);
+});
+
+test('a malformed different-account login cannot reset a confirmed egg asset revision floor', async () => {
+  const h = harness(intent('settled')); await h.client.loginDevelopment('synthetic');
+  h.setOpen(null); h.overrides.push(() => ok(result('ack', intent('settled', { version: 3, closedAt: now }))));
+  await h.client.acknowledgeRecovery(id);
+  const profile = h.client.profile;
+  const invalid = syntheticSession({ token: 'different-synthetic-token', profile: { id: 'member-b' } }); delete invalid.expiresAt;
+  h.loginReplies.push(ok(invalid));
+  await assert.rejects(h.client.loginDevelopment('synthetic-b'), { code: 'INVALID_SESSION' });
+  assert.equal(h.client.profile, profile); assert.equal(h.client.minimumConfirmedRevision, 4);
+  assert.equal(h.client.assetSyncRequired, true); assert.equal(h.client.mutationBlocked, true);
+  await assert.rejects(h.client.load(), { code: 'ASSET_SYNC_REQUIRED' });
+  h.setRevision(4); await h.client.load();
+  assert.equal(h.client.minimumConfirmedRevision, 4); assert.equal(h.client.mutationBlocked, false);
 });
 test('old financial success below confirmed egg floor settles its key without rolling assets back or becoming unknown', async () => {
   const h = harness(); await h.client.loginDevelopment('synthetic'); await h.client.load();

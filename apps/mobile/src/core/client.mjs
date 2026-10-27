@@ -7,6 +7,7 @@ import { isForumStatus, isForumPage, isForumDetail, isForumReports, isForumComma
 import { isPlantingStatus, isPlantingRecord, isPlantingPage, isPlantingDetail, isPlantingReceipt, isPlantingCommand, isPlantingId } from '../../../../shared/planting.mjs';
 import { isRecoveryView, isRecoveryDetail, isRecoveryResult, isRecoveryCommand } from '../../../../shared/recovery.mjs';
 import { isEggsId, isEggsStatus, isEggsRecord, isEggsRecordsPage, isEggsPage, isEggsDetail } from '../../../../shared/eggs.mjs';
+import { parseSession } from '../../../../shared/session.mjs';
 export { isEggsId };
 export { isPlantingId };
 export { isForumId };
@@ -142,9 +143,11 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     const attempt = ++loginAttempt;
     activeLogins++;
     try {
-      const result = await send(path, 'POST', body, false);
+      const raw = await send(path, 'POST', body, false);
       if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
-      if (typeof result?.token !== 'string' || !result?.profile?.id || !['development', 'production'].includes(result.environment)) throw error('INVALID_SESSION', '登录回复不完整，请重试。');
+      let result;
+      try { result = parseSession(raw); }
+      catch { throw error('INVALID_SESSION', '登录回复不完整，请重试。'); }
       if (pending && (pending.accountId !== result.profile.id || (pending.environment && pending.environment !== result.environment))) throw error('ACCOUNT_MISMATCH', '上次操作仍待核对，请登录操作时的原账户，再核对结果。');
       if (confirmedAccountId !== result.profile.id || confirmedEnvironment !== result.environment) minimumConfirmedRevision = 0;
       confirmedAccountId = result.profile.id; confirmedEnvironment = result.environment;

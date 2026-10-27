@@ -28,10 +28,14 @@ Snapshot:
 
 ## 身份
 
-- `POST /auth/development {account: string}` -> `data:{token,expiresAt,profile}`。account 3–40字符，只允许ASCII字母/数字/下划线/连字符；仅显式allowDevelopmentAuth并且mode=development允许。production必须拒绝启用此配置。相同account跨会话及重启仍对应相同账户，不能提交资产覆盖值。
+- `POST /auth/development {account: string}` -> `data:{token,expiresAt,environment,profile:{id,displayName}}`。account 3–40字符，只允许ASCII字母/数字/下划线/连字符；仅显式allowDevelopmentAuth并且mode=development允许。production必须拒绝启用此配置。相同account跨会话及重启仍对应相同账户，不能提交资产覆盖值。
 - `POST /auth/platform {platform:'weixin'|'toutiao',code:string}`。平台服务端code换身份尚未配置时503，不伪造openid或fallback开发登录。未对接的provider使用显式不可用响应，不能宣称生产登录已完成。
 - `POST /auth/logout` -> 注销当前token。
 - token为高熵随机值，SQLite仅存SHA256摘要及期限；过期/注销后失效。
+
+登录成功的 `data` 仅含上述四项，profile仅含id/displayName；token是32字节随机数的43字符base64url编码，expiresAt是正安全整数时间戳，environment为development/production。客户端通过共享会话契约完整校验后才接受新的账户状态；畸形成功回复不替换原会话、资产或待核对操作。期限由服务端鉴权，登录回复没有serverTime，客户端不以设备时钟自行判定过期。会话、原回复及凭据均不持久化，不进入日志或URL。
+
+当前weixin/toutiao提供方都是**小程序**code2Session，不能接收原生App OAuth code。App正式登录及跨平台账户绑定尚未实现；目前按environment/provider/AppID身份隔离，不自动把微信小程序、抖音与未来App资产合并。未核定正式提供方和绑定协议前不能用开发入口替代。
 
 ## 账户数据与注销
 

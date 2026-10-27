@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
 const createFarmClient = options => actualCreateFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
@@ -18,7 +19,7 @@ function harness() {
   return { client, calls, replies };
 }
 async function login(h, id = 'member-a') {
-  h.replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id } })); await h.client.loginDevelopment('synthetic-account');
+  h.replies.push(ok(syntheticSession({ environment: 'development', token: `token-${id}`, profile: { id } }))); await h.client.loginDevelopment('synthetic-account');
   h.replies.push(ok(mobileSnapshot({ profile: { id } }))); await h.client.load();
   h.replies.push(ok(view({ ownerId: id }))); await h.client.loadFriends();
 }
@@ -67,7 +68,7 @@ test('expired friends recovery clears private views and only the original accoun
   h.replies.push({ status: 401, data: { error: { code: 'UNAUTHENTICATED', message: '重新登录原账户' } } });
   await assert.rejects(h.client.retryPending(), { code: 'UNAUTHENTICATED' });
   assert.equal(h.client.authenticated, false); assert.equal(h.client.friendsView, null); assert.equal(h.client.hasPending(), true);
-  h.replies.push(ok({ environment: 'development', token: 'other-token', profile: { id: 'member-b' } }));
+  h.replies.push(ok(syntheticSession({ environment: 'development', token: 'other-token', profile: { id: 'member-b' } })));
   await assert.rejects(h.client.loginDevelopment('other-account'), { code: 'ACCOUNT_MISMATCH' });
   await login(h); h.replies.push(ok(receipt())); await h.client.retryPending();
   assert.equal(h.client.hasPending(), false); assert.equal(h.calls.at(-1).headers['Idempotency-Key'], 'friends-operation-1');

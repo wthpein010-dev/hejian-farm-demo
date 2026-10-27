@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import * as farmClient from '../apps/mobile/src/core/client.mjs';
 import { createExchangePage, createExchangeDetail } from '../shared/exchanges.mjs';
@@ -13,7 +14,7 @@ function purchase(n=1){const receiptId='api-'+n.toString(16).padStart(64,'0');re
 const detail=(n=1)=>createExchangeDetail(purchase(n),scope);
 const page=(items=[purchase(1)],cursor='start')=>createExchangePage(items,{...scope,cursor});
 function fixture(){const calls=[],replies=[];let serial=0;const client=createFarmClient({baseURL:'http://127.0.0.1:8787',generateKey:()=>`checkout-operation-${++serial}`,transport:async r=>{calls.push(structuredClone(r));const reply=replies.shift();assert.ok(reply,'explicit response required');if(reply instanceof Error)throw reply;return await reply;}});return {client,calls,replies};}
-async function login(h,owner='member-a'){h.replies.push(ok({environment:'development',token:'token-'+owner,profile:{id:owner,displayName:'合成账户'}}));await h.client.loginDevelopment('synthetic-account');h.replies.push(ok(mobileSnapshot({profile:{id:owner}})));await h.client.load();}
+async function login(h,owner='member-a'){h.replies.push(ok(syntheticSession({environment:'development',token:'token-'+owner,profile:{id:owner,displayName:'合成账户'}})));await h.client.loginDevelopment('synthetic-account');h.replies.push(ok(mobileSnapshot({profile:{id:owner}})));await h.client.load();}
 
 test('exchange reads require a scoped snapshot and reject malformed or different-owner data',async()=>{
  const h=fixture();assert.equal(typeof h.client.loadExchangePage,'function');

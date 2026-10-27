@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
@@ -30,7 +31,7 @@ async function harness() {
     navigateTo: options => navigation.push(['to', options.url]), navigateBack: options => navigation.push(['back', options.delta]), switchTab: options => navigation.push(['tab', options.url])
   }, () => pages);
   async function login(id = 'member-a', bootstrap = true) {
-    replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-member');
+    replies.push(ok(syntheticSession({ environment: 'development', token: `token-${id}`, profile: { id } }))); await client.loginDevelopment('synthetic-member');
     if (bootstrap) { replies.push(ok(mobileSnapshot({ profile: { id } }))); await client.load(); }
   }
   return { client, core, calls, replies, navigation, login, setPages(value) { pages = value; } };

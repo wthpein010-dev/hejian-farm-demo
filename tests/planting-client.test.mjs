@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
@@ -20,7 +21,7 @@ function harness() {
   return { client, calls, replies };
 }
 async function login(h, ownerId = 'member-a') {
-  h.replies.push(ok({ environment: 'development', token: 'token-' + ownerId, profile: { id: ownerId } })); await h.client.loginDevelopment('synthetic');
+  h.replies.push(ok(syntheticSession({ environment: 'development', token: 'token-' + ownerId, profile: { id: ownerId } }))); await h.client.loginDevelopment('synthetic');
   h.replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await h.client.load();
 }
 test('planting client exposes account-scoped reads and settles receipts separately from financial state', async () => {

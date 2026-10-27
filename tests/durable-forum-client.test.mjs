@@ -1,5 +1,6 @@
 import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
+import { syntheticSession } from './helpers/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
 const createFarmClient = options => actualCreateFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
@@ -23,7 +24,7 @@ function harness() {
   return { client, calls, replies };
 }
 async function login(h, ownerId = 'member-a') {
-  h.replies.push(ok({ environment: 'development', token: `token-${ownerId}`, profile: { id: ownerId } })); await h.client.loginDevelopment('synthetic');
+  h.replies.push(ok(syntheticSession({ environment: 'development', token: `token-${ownerId}`, profile: { id: ownerId } }))); await h.client.loginDevelopment('synthetic');
   h.replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await h.client.load();
 }
 test('forum reads strict account DTO and commands settle separately from financial snapshots', async () => {
@@ -45,7 +46,7 @@ test('expired forum recovery clears all content and only the original account ca
   const h = harness(); await login(h); h.replies.push(ok(page()), new Error('lost')); await h.client.loadForumPage(); await assert.rejects(h.client.commandForum(command));
   h.replies.push({ status: 401, data: { error: { code: 'UNAUTHENTICATED', message: '重新登录' } } }); await assert.rejects(h.client.retryPending(), { status: 401 });
   assert.equal(h.client.forumPage, null); assert.equal(h.client.hasPending(), true);
-  h.replies.push(ok({ environment: 'development', token: 'other', profile: { id: 'member-b' } })); await assert.rejects(h.client.loginDevelopment('other'), { code: 'ACCOUNT_MISMATCH' });
+  h.replies.push(ok(syntheticSession({ environment: 'development', token: 'other', profile: { id: 'member-b' } }))); await assert.rejects(h.client.loginDevelopment('other'), { code: 'ACCOUNT_MISMATCH' });
   await login(h); h.replies.push(ok(receipt())); await h.client.retryPending(); assert.equal(h.client.hasPending(), false);
 });
 test('old forum reads are invalidated by commands, newer selections and account changes', async () => {

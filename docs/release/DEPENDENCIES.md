@@ -1,6 +1,6 @@
 # 移动端依赖修补与兼容边界
 
-日期：2026-10-27。范围：uni-app 503 系列的 H5、微信、抖音和 App 资源编译链。依赖审计通过不代表真实平台登录、支付、设备控制、签名包或上架审核已经通过。
+日期：2026-10-28。范围：uni-app 503 系列的 H5、微信、抖音和 App 资源编译链。依赖审计通过不代表真实平台登录、支付、设备控制、签名包或上架审核已经通过。
 
 ## 保留的框架边界
 
@@ -9,6 +9,14 @@
 - 原生 App 编译产物是待签名、联调和打包的资源，不是已验收的 APK／IPA。当前入口使用 uni-app 要求的 `createSSRApp`，不等于产品提供了服务端渲染。
 
 ## 必要兼容修补
+
+### qs安全更新（2026-10-28）
+
+本次新审计发现`qs@6.16.0`受[GHSA-6pq8-jhm2-2vcw](https://github.com/advisories/GHSA-6pq8-jhm2-2vcw)影响：comma数组格式序列化遇到不可调用的自有toString可能抛出未捕获异常。它由移动开发工具链的Express/body-parser间接引入；不将公告扩大为当前API已经受到实际攻击的证据。
+
+根override与锁文件仅把qs升级到修复版6.16.1，其余框架/peer边界不变。`npm install --package-lock-only`最初没有更新解析，显式`npm update qs --package-lock-only --ignore-scripts`后才取得正确锁；随后普通安装仍保留旧的本机6.16.0，因此以`npm ci --ignore-scripts`重新安装，再实际读取包版本为6.16.1。不能只凭锁文件审计为0就宣称本机依赖已经更新。
+
+新安装后`verify:dependencies`通过，`npm audit --json`退出0、已知漏洞0；原始中危报告与最终结果留在本机`.scratch/session-contract/`。安装仍有vue-i18n/phin维护提示，按本文持续维护处理；此检查不等于完整安全或生产容量验收。
 
 ### 官方 peer 声明的明确例外
 
