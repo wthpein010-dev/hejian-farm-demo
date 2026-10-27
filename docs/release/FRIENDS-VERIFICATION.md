@@ -33,3 +33,5 @@ schema6固定DDL/索引/外键、图关系/时间/回执校验、重算哈希仍
 ## 发布
 
 仍仅发布独立`wthpein010-dev/hejian-farm-demo`及Pages，不接Hub或其他网站。本机已核验身份wthpein010-dev、push/admin权限和main基线；本轮提交/CI/线上结果按实际回执补记。Pages只部署prototype，论坛/好友仍是内存演示；本账户API未部署公网。
+
+功能提交`726c6ccb360ce00775a0cc81aa445f9efc6ebf35`已推送独立main。[工作流40458103669](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40458103669)的verify、verify-mobile、deploy全成功，Linux602/602、0失败/跳过，四端编译与0已知漏洞通过。部署后59个公网HTML/CSS/JS/图片/影片等资源与该提交Git blob逐字节一致，视频Range206/1024字节。H5运行资源本切片未改变，沿用此前24秒摄影截图讲解视频，不称新版社交视频。原D:/farm和托管工作区已安全快进至同一功能提交。
