@@ -179,7 +179,8 @@ function renderInMemory(component, props = {}, warnings) {
 test('the actual receipt template suppresses its own confirmed-receipt entry while the shared screen still offers it elsewhere', async () => {
   const current = state({ confirmedCheckout: true, exchangeRecord: receipt(2) });
   const farm = { farmState: current, openProfile() {}, refreshFarm() {}, retryFarmOperation() {}, openConfirmedCheckout() {}, loadExchangeRecord: async () => false };
-  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub, './FarmNavigation.vue': invisibleStub });
+  const recovery = await component('components/FarmRecoveryNotice.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub });
+  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub, './FarmNavigation.vue': invisibleStub, './FarmRecoveryNotice.vue': recovery });
   const regular = renderInMemory(screen, { title: '商城', allowGuest: true });
   assert.match(regular, /查看最近确认的兑换收据/);
   const detail = await component('pages/exchange/index.vue', {
@@ -194,7 +195,8 @@ test('the actual receipt template suppresses its own confirmed-receipt entry whi
 test('uni route query attrs are consumed by the receipt page rather than falling through to the fragment screen', async () => {
   const current = state(), warnings = [];
   const farm = { farmState: current, openProfile() {}, refreshFarm() {}, retryFarmOperation() {}, openConfirmedCheckout() {}, loadExchangeRecord: async () => false };
-  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub, './FarmNavigation.vue': invisibleStub });
+  const recovery = await component('components/FarmRecoveryNotice.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub });
+  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': buttonStub, './FarmNavigation.vue': invisibleStub, './FarmRecoveryNotice.vue': recovery });
   const detail = await component('pages/exchange/index.vue', {
     '@dcloudio/uni-app': { onLoad: fn => fn({ operation: 'last' }), onShow: fn => fn() }, '../../core/farm': farm,
     '../../../../../shared/exchanges.mjs': exchanges, '../../components/FarmScreen.vue': screen, '../../components/FarmButton.vue': buttonStub,

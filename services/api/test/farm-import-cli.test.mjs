@@ -5,6 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { DatabaseSync } from 'node:sqlite';
+import { RECOVERY_SQL } from '../src/recovery.mjs';
 
 const CLI = fileURLToPath(new URL('../../../tools/import-farm-records.mjs', import.meta.url));
 const NOW = Date.now() - 60000;
@@ -92,6 +94,8 @@ test('apply only targets an existing SQLite service database and cannot create u
   const database = path.join(f.directory, 'service.sqlite');
   const config = normalizeConfig({ databasePath: database, mode: 'development', clock: () => NOW });
   let store = new FarmStore(config); const owner = store.createIdentity('development', 'synthetic-cli', store.serverNow()); store.close();
+  const db = new DatabaseSync(database);
+  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9"); db.close();
   chmodSync(database, 0o600); f.save(input(owner.profile.id));
   const applied = f.run(...args(database)); assert.equal(applied.status, 0, applied.output);
   assert.deepEqual(JSON.parse(applied.stdout), { ok: true, operation: 'farm-import', created: 1, updated: 0, replayed: false });
@@ -118,6 +122,22 @@ test('apply refuses linked database files and unsafe SQLite companion files', as
   linkSync(companionSource, database + '-wal');
   assert.equal(JSON.parse(f.run(...args(database)).stderr).code, 'UNSAFE_FILE');
   rmSync(database + '-wal');
+});
+
+test('farm import retains its explicit apply upgrade contract for an existing schema8 service database', async t => {
+  const f = fixture(t), { FarmStore } = await import('../src/store.mjs'), { normalizeConfig } = await import('../src/config.mjs');
+  const database = path.join(f.directory, 'legacy-service.sqlite'), store = new FarmStore(normalizeConfig({ databasePath: database, mode: 'development', clock: () => NOW }));
+  const owner = store.createIdentity('development', 'synthetic-legacy-import', store.serverNow()); store.close(); f.save(input(owner.profile.id));
+  const legacy = new DatabaseSync(database);
+  legacy.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); legacy.close();
+  const applied = f.run('--input', f.file, '--environment', 'development', '--apply', '--database', database);
+  assert.equal(applied.status, 0, applied.output);
+  const checked = new DatabaseSync(database, { readOnly: true });
+  try {
+    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 9);
+    assert.equal(checked.prepare('SELECT COUNT(*) n FROM recovery_epoch').get().n, 1);
+    assert.equal(checked.prepare('SELECT COUNT(*) n FROM farm_records').get().n, 1);
+  } finally { checked.close(); }
 });
 
 test('input identity is rechecked after a file is exchanged during reading', t => {

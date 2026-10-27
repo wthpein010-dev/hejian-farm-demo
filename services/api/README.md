@@ -93,6 +93,8 @@ production 平台账户的积分商城和活动同样关闭，须在真实经营
 
 schema8新增[播种申请与授权农务](../../docs/release/PLANTING.md)：本人planned地块申请、按档案dispatch/execute权限、接单/指派/开工/完成及人工核实停工，实际SQLite事务与HTTP幂等。生产和非开发身份关闭，不是付费认养。`tools/provision-planting.mjs --environment development --database <absolute-private-existing-schema8-db> --input <absolute-private-json>`只读严格检查后按当前版本原子配置；输入及所在目录必须私有，命令参数不含JSON正文或账户名单。开工前客户可取消，已开工人工停工须dispatch明确核实；恢复禁用全部计划/人员权限。active作业保护档案导入和账户注销；回执与当前详情分开，不改变金融资产/奖励。
 
+当前HTTP启动升级schema9，[播种操作恢复](../../docs/release/RECOVERY.md)提供账户current/prepare/execute/ack/abandon和精确intent详情。登录回复明确environment；新客户端必须检查恢复状态，不能缺字段默认开发或回退旧单步。服务端保存原planting固定字段及原key/回执，不存UGC正文。prepare代际墓碑、保留key、同事务执行、精确旧ack和恢复epoch隔离保持原结果与当前槽分开。此协议仅新planting，不改变其他域历史账/拒绝语义；production继续关闭。私有moderation明确保留7/8，provision接受8/9并保留8，不用工具偷偷迁移旧库。
+
 schema6新增独立农友名片/关系/屏蔽及最小命令账，`GET /friends`与`POST /friends/commands`以服务器账户、环境和独立expectedVersion为准；原回执查找优先，旧命令不能复活已清关系。仅开发身份的development沙盒开放，真实平台身份及production均关闭。它不改变金融资产/revision或授权好友访问私人农场。名片开通、限额、注销与备份及未完成的生产门槛见[FRIENDS](../../docs/release/FRIENDS.md)。
 
 账户类别查询及近期授权注销已接入，含全会话失效、原子回滚和匿名凭证重放，见[账户契约](../../docs/release/ACCOUNT-PRIVACY.md)。备份、校验和隔离恢复命令见[BACKUP.md](BACKUP.md)；恢复会清历史会话与未使用注销确认，不能把旧备份直接切入生产。

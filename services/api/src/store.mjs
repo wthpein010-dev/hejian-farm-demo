@@ -9,7 +9,8 @@ import { createExchangePage, createExchangeDetail } from '../../../shared/exchan
 import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm-registry.mjs';
 import { FRIENDS_SQL, createFriends } from './friends.mjs';
 import { FORUM_SQL, createForum } from './forum.mjs';
-import { PLANTING_SQL, createPlanting } from './planting.mjs';
+import { PLANTING_SQL, createPlanting, PlantingError } from './planting.mjs';
+import { RECOVERY_SQL, createRecovery, RecoveryError } from './recovery.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -24,6 +25,7 @@ const PRIVACY_CATEGORIES = [
   { id: 'friends', title: '农友名片与关系', description: '主动开通的系统名片、双方申请及关系（合计最多200条）、主动屏蔽（最多200条）、上海日界每日20次新申请额度与防重复操作记录；关闭交友保留历史额度及最小操作确认，注销删除本人记录和双方引用' },
   { id: 'forum', title: '社区内容与举报', description: '本人提交审核的帖子和评论、固定理由举报、每日额度与最小操作确认；关闭农友名片不撤回已发内容，本人可单独撤回，注销删除本人内容、子评论和相关举报' },
   { id: 'planting', title: '播种申请与作业', description: '本人地块的播种申请、处理时间线、当前授权和最小操作确认；尚有待办或指派作业时先处理后注销，结束后删除本人订单及档案，其他人员最小回执不含本人资料' },
+  { id: 'recovery', title: '操作恢复记录', description: '播种固定操作参数、原操作编号和回执、准备代际与核对状态；支持重新登录后核对原操作，不保存会话明文或社区正文；待核对操作先处理再注销' },
   { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
 ];
 
@@ -46,6 +48,7 @@ export class FarmStore {
   #friends;
   #forum;
   #planting;
+  #recovery;
 
   constructor(config, options = {}) {
     this.#config = config;
@@ -53,13 +56,15 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 8) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
-      // Only the private moderation tool may retain an already-validated
-      // schema7 database. HTTP startup never supplies this compatibility flag.
+      if (schema > 9) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      // Private tools may retain an already-validated schema7/8 database.
+      // HTTP startup never supplies this compatibility flag.
       const preserveSchema7 = options.preserveSchemaVersion === 7;
+      const preserveSchema8 = options.preserveSchemaVersion === 8;
+      const preserveLegacy = preserveSchema7 || preserveSchema8;
       if (Object.keys(options).some(key => key !== 'preserveSchemaVersion') ||
-          (options.preserveSchemaVersion !== undefined && !preserveSchema7) ||
-          (preserveSchema7 && (schema !== 7 || config.mode !== 'development'))) {
+          (options.preserveSchemaVersion !== undefined && !preserveLegacy) ||
+          (preserveLegacy && (schema !== options.preserveSchemaVersion || config.mode !== 'development'))) {
         throw new TypeError('数据库兼容模式不可用');
       }
       this.#database.exec(`
@@ -122,14 +127,27 @@ export class FarmStore {
       ${FRIENDS_SQL}
       ${FORUM_SQL}
       ${preserveSchema7 ? '' : PLANTING_SQL}
-      PRAGMA user_version = ${preserveSchema7 ? 7 : 8};
+      ${preserveLegacy ? '' : RECOVERY_SQL}
+      PRAGMA user_version = ${preserveLegacy ? options.preserveSchemaVersion : 9};
     `);
       this.#farmRegistry = createFarmRegistry({ prepare: sql => this.#prepare(sql), environment: config.mode });
       this.#friends = createFriends({ prepare: sql => this.#prepare(sql), environment: config.mode });
       this.#forum = createForum({ prepare: sql => this.#prepare(sql), environment: config.mode,
         blockFromForum: (ownerId, peerOwnerId, now) => this.#friends.blockFromForum(ownerId, peerOwnerId, now) });
       if (!preserveSchema7) this.#planting = createPlanting({ prepare: sql => this.#prepare(sql),
-        environment: config.mode, farmRegistry: this.#farmRegistry });
+        environment: config.mode, farmRegistry: this.#farmRegistry,
+        beforeNewCommand: (user, audience, key, input, now, intentId) => {
+          if (!this.#recovery) return null;
+          if (intentId !== null) {
+            if (this.#recovery.allowCommand(user, audience, key, input, intentId)) return null;
+            throw new RecoveryError('INVALID_RECOVERY_STATE');
+          }
+          // A public raw request must never poison an intent's first receipt.
+          if (/^intent-[a-f0-9]{32}$/.test(key)) throw new PlantingError('RESERVED_OPERATION_KEY');
+          return this.#recovery.hasOpen(user.id) ? 'INTENT_PENDING' : null;
+        } });
+      if (!preserveLegacy) this.#recovery = createRecovery({ prepare: sql => this.#prepare(sql), environment: config.mode,
+        executePlanting: (user, audience, key, input, now, intentId) => this.#planting.command(user, audience, key, input, now, intentId) });
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
 
@@ -225,7 +243,7 @@ export class FarmStore {
       this.#prepare('DELETE FROM sessions WHERE expires_at <= ? OR revoked_at IS NOT NULL').run(now);
       this.#prepare('INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
         .run(hash(token), row.id, now, expiresAt);
-      return { token, expiresAt, profile: { id: row.id, displayName: row.display_name } };
+      return { token, expiresAt, environment: row.environment, profile: { id: row.id, displayName: row.display_name } };
     });
   }
 
@@ -339,6 +357,13 @@ export class FarmStore {
   }
   provisionPlanting(input, now) { return this.#transaction(() => this.#planting.provision(input, now)); }
 
+  recoveryCurrent(userId, now) { return this.#transaction(() => this.#recovery.current(this.#user(userId), now)); }
+  recoveryDetail(userId, id, now) { return this.#transaction(() => this.#recovery.detail(this.#user(userId), id, now)); }
+  recoveryPrepare(userId, input, now) { return this.#transaction(() => this.#recovery.prepareIntent(this.#user(userId), input, now)); }
+  recoveryExecute(userId, id, now) { return this.#transaction(() => this.#recovery.execute(this.#user(userId), id, now)); }
+  recoveryAck(userId, id, now) { return this.#transaction(() => this.#recovery.acknowledge(this.#user(userId), id, now)); }
+  recoveryAbandon(userId, id, now) { return this.#transaction(() => this.#recovery.abandon(this.#user(userId), id, now)); }
+
   prepareDeletion(userId, token, expectedRevision, now) {
     return this.#transaction(() => {
       const sessionHash = hash(token), session = this.#session(sessionHash, now);
@@ -346,6 +371,8 @@ export class FarmStore {
         return { status: 401, error: { code: 'REAUTH_REQUIRED', message: '注销账户需要近期登录，请重新登录后再核对' } };
       }
       const row = this.#user(userId), state = this.#sync(row, now);
+      if (this.#recovery?.hasOpen(userId)) return { status: 409,
+        error: { code: 'RECOVERY_PENDING', message: '仍有待核对操作，请先查看原操作结果或处理恢复提示，再注销账户' } };
       if (this.#planting?.hasActiveWork(userId)) return { status: 409,
         error: { code: 'ACTIVE_PLANTING_WORK', message: '仍有待处理或指派给你的播种作业，请先完成、取消或联系农场核对，再注销账户' } };
       if (row.revision !== expectedRevision) return { status: 409,
@@ -375,10 +402,12 @@ export class FarmStore {
       const row = this.#user(pending.user_id);
       this.#sync(row, now);
       if (row.revision !== pending.expected_revision) return failure(409, 'DELETION_STATE_CHANGED', '账户数据已有变化，账户未注销，请返回账户页刷新并重新核对');
+      if (this.#recovery?.hasOpen(row.id)) return failure(409, 'DELETION_STATE_CHANGED', '仍有待核对操作，账户未注销，请先处理恢复提示');
       if (this.#planting?.hasActiveWork(row.id)) return failure(409, 'DELETION_STATE_CHANGED', '仍有播种作业需要处理，账户未注销，请先联系农场核对');
       this.#prepare('DELETE FROM sessions WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM idempotency WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
+      this.#recovery?.deleteOwner(row.id);
       this.#planting?.deleteOwner(row.id, now);
       this.#farmRegistry.deleteOwner(row.id);
       this.#forum.deleteOwner(row.id);

@@ -12,7 +12,7 @@ const items = computed(() => state.snapshot?.catalog.filter(p => p.category === 
 const count = computed(() => Object.values(state.snapshot?.system.cart || {}).reduce((a, b) => a + b, 0));
 let active = false, visitAttempted = false;
 function visit() {
-  if (!active || visitAttempted || state.busy || state.pending || !state.snapshot?.capabilities.activities) return;
+  if (!active || visitAttempted || state.busy || state.pending || state.mutationBlocked || !state.snapshot?.capabilities.activities) return;
   if (!state.snapshot.tasks.some(t => t.id === 'browse' && t.progress === 0)) return;
   visitAttempted = true; void mutateFarm('/events/shop-visit', {}, '');
 }

@@ -12,7 +12,7 @@ const codeFocused = ref(false);
 let privateInputGeneration = 0;
 const confirmation = ref<{ action: 'remove' | 'block' | 'disable'; peer?: FriendEntry; version: number } | null>(null);
 const current = computed(() => state.friends);
-const blocked = computed(() => state.busy || state.pending || state.friendsBusy || !current.value);
+const blocked = computed(() => state.busy || state.pending || state.mutationBlocked || state.friendsBusy || !current.value);
 const canUse = computed(() => !blocked.value && current.value?.available && current.value.enabled);
 const groups = computed(() => [
   { key: 'incoming', title: '收到的申请', empty: '还没有收到申请。将自己的农友码交给认识的人，由你决定是否接受。', items: current.value?.incoming || [] },

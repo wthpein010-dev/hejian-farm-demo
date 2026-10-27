@@ -1,6 +1,8 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFarmClient } from '../apps/mobile/src/core/client.mjs';
+import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
+const createFarmClient = options => actualCreateFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 
 function harness() {
@@ -17,7 +19,7 @@ function harness() {
 }
 const success = (data) => ({ status: 200, data: { data: data?.revision !== undefined ? mobileSnapshot(data) : data } });
 async function login(h, id = 'member-a') {
-  h.replies.push(success({ token: 'private-session-token', expiresAt: 9999999999999, profile: { id, displayName: '田园新友' } }));
+  h.replies.push(success({ environment: 'development', token: 'private-session-token', expiresAt: 9999999999999, profile: { id, displayName: '田园新友' } }));
   await h.client.loginDevelopment('reviewer');
   h.replies.push(success({ revision: 3, wallet: { points: 80 }, profile: { id } }));
   await h.client.load();
@@ -146,7 +148,7 @@ test('an uncertain operation rejects an account switch before replacing the reco
   const h = harness(); await login(h);
   h.replies.push(new Error('lost response'));
   await assert.rejects(() => h.client.mutate('/checkout'));
-  h.replies.push(success({ token: 'second-token', expiresAt: 9999999999999, profile: { id: 'member-b', displayName: '另一用户' } }));
+  h.replies.push(success({ environment: 'development', token: 'second-token', expiresAt: 9999999999999, profile: { id: 'member-b', displayName: '另一用户' } }));
   await assert.rejects(() => h.client.loginDevelopment('second-reviewer'), { code: 'ACCOUNT_MISMATCH' });
   assert.equal(h.client.profile.id, 'member-a');
   assert.equal(h.client.snapshot.wallet.points, 80);
@@ -194,8 +196,8 @@ test('a previous account 401 arriving late cannot revoke the new account session
 test('out-of-order login replies preserve the last requested account', async () => {
   const h = harness(); let finish;
   h.replies.push(new Promise(resolve => { finish = resolve; })); const old = h.client.loginDevelopment('member-first');
-  h.replies.push(success({ token: 'new-token', profile: { id: 'member-b' } })); await h.client.loginDevelopment('member-last');
-  finish(success({ token: 'old-token', profile: { id: 'member-a' } }));
+  h.replies.push(success({ environment: 'development', token: 'new-token', profile: { id: 'member-b' } })); await h.client.loginDevelopment('member-last');
+  finish(success({ environment: 'development', token: 'old-token', profile: { id: 'member-a' } }));
   await assert.rejects(() => old, { code: 'SESSION_CHANGED' });
   assert.equal(h.client.profile.id, 'member-b');
 });
@@ -217,7 +219,7 @@ test('a transaction cannot start under an old account while a new login is in fl
   h.replies.push(new Promise(resolve => { finish = resolve; })); const switching = h.client.loginDevelopment('next-account');
   await assert.rejects(() => h.client.mutate('/checkout'), { code: 'PENDING_OPERATION' });
   assert.equal(h.calls.length, 3);
-  finish(success({ token: 'next-token', profile: { id: 'member-b' } })); await switching;
+  finish(success({ environment: 'development', token: 'next-token', profile: { id: 'member-b' } })); await switching;
 });
 test('an obsolete login rejection cannot clear a newer authenticated account', async () => {
   const h = harness(); let finish;

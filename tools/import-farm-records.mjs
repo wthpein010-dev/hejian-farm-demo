@@ -128,7 +128,7 @@ function verifyServiceDatabase(file, held) {
     assertHeld(held); safeCompanions(file);
     db = new DatabaseSync(file, { readOnly: true });
     assertHeld(held); safeCompanions(file);
-    if (![2, 3, 4, 5, 6, 7, 8].includes(db.prepare('PRAGMA user_version').get().user_version) ||
+    if (![2, 3, 4, 5, 6, 7, 8, 9].includes(db.prepare('PRAGMA user_version').get().user_version) ||
         db.prepare("SELECT COUNT(*) AS n FROM sqlite_schema WHERE type = 'table' AND name IN ('users', 'server_clock')").get().n !== 2) fail('DATABASE_UNAVAILABLE');
   } catch (error) {
     if (error instanceof FarmImportCliError) throw error;

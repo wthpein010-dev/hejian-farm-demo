@@ -47,7 +47,8 @@ async function home(overrides = {}) {
   const state = vue.reactive({ authenticated: true, snapshot: mobileSnapshot(), busy: false, pending: false, message: '', error: '', confirmedCheckout: false, ...overrides });
   const mutations = [], actions = [];
   const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openFriends: () => actions.push('friends'), openCommunity: () => actions.push('community'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
-  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': button, './FarmNavigation.vue': invisible });
+  const recovery = await component('components/FarmRecoveryNotice.vue', { '../core/farm': farm, './FarmButton.vue': button });
+  const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': button, './FarmNavigation.vue': invisible, './FarmRecoveryNotice.vue': recovery });
   const signIn = await component('components/FarmSignIn.vue', { '../core/farm': farm, './FarmButton.vue': button });
   const empty = await component('components/EmptyPanel.vue');
   const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty, '../../components/FarmSignIn.vue': signIn });

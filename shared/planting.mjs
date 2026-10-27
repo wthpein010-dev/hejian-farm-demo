@@ -13,6 +13,7 @@ export const PLANTING_CODES = Object.freeze([
   'INVALID_PERFORMED_AT',
   'EVENT_LIMIT',
   'IDEMPOTENCY_CONFLICT',
+  'INTENT_PENDING',
 ]);
 export const PLANTING_ACTIONS = Object.freeze([
   'request',

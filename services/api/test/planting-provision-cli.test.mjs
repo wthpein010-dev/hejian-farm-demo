@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { FarmStore } from '../src/store.mjs';
 import { normalizeConfig } from '../src/config.mjs';
+import { RECOVERY_SQL } from '../src/recovery.mjs';
 
 const CLI = fileURLToPath(new URL('../../../tools/provision-planting.mjs', import.meta.url));
 const NOW = Date.now() - 60000;
@@ -88,6 +89,27 @@ test('private provisioning installs and replaces the complete grant list without
   fixedFailure(f.run(), 'PLAN_CHANGED');
 });
 
+test('private provisioning preserves a fully verified schema8 rather than silently adding recovery tables', t => {
+  const f = fixture(t), db = new DatabaseSync(f.database);
+  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); db.close();
+  const result = f.run(); assert.equal(result.status, 0, result.output);
+  const checked = new DatabaseSync(f.database, { readOnly: true });
+  try {
+    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(checked.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name LIKE 'recovery_%' OR name='planting_intents'").get().n, 0);
+    assert.deepEqual({ ...checked.prepare('SELECT enabled,version FROM planting_plans').get() }, { enabled: 1, version: 1 });
+  } finally { checked.close(); }
+});
+
+test('private provisioning accepts a verified schema9 and preserves its recovery epoch', t => {
+  const f = fixture(t), db = new DatabaseSync(f.database);
+  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9");
+  const epoch = db.prepare('SELECT epoch FROM recovery_epoch').get().epoch; db.close();
+  const result = f.run(); assert.equal(result.status, 0, result.output);
+  const checked = new DatabaseSync(f.database, { readOnly: true });
+  try { assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 9); assert.equal(checked.prepare('SELECT epoch FROM recovery_epoch').get().epoch, epoch); } finally { checked.close(); }
+});
+
 test('malformed oversized and unknown-field input leaves the database unchanged and never echoes private JSON', t => {
   const f = fixture(t), before = readFileSync(f.database), secret = 'SYNTHETIC PRIVATE STAFF LIST';
   for (const value of ['{"secret":"' + secret, { ...f.provision, secret }, { ...f.provision, staff: [...f.provision.staff, f.provision.staff[0]] }]) {
@@ -141,7 +163,7 @@ test('a private JSON file in a public directory cannot be used to grant authorit
 
 test('a complete legacy schema7 is refused without adding schema8 tables or changing any bytes', t => {
   const f = fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
   const before=readFileSync(f.database); fixedFailure(f.run(), 'DATABASE_UNAVAILABLE'); assert.deepEqual(readFileSync(f.database), before);
 });
 

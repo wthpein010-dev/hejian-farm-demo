@@ -31,8 +31,10 @@ function verifyServiceDatabase(file, held) {
     assertPrivateHeld(held); assertSafeSqliteCompanions(file);
     // Never create or upgrade a database from an offline authorization command.
     // The same exact schema and content verifier guards backup and provisioning.
-    if (inspectApplicationDatabase(file) !== 8) fail('DATABASE_UNAVAILABLE');
+    const schema = inspectApplicationDatabase(file);
+    if (![8, 9].includes(schema)) fail('DATABASE_UNAVAILABLE');
     assertPrivateHeld(held); assertSafeSqliteCompanions(file);
+    return schema;
   } catch (error) { if (error instanceof PrivateFileError) throw error; fail('DATABASE_UNAVAILABLE'); }
 }
 
@@ -49,8 +51,9 @@ export function runPlantingProvision(args) {
   const held = holdPrivateFile(options.database, true); let store;
   const verifyHeld = () => { assertPrivateHeld(held); assertSafeSqliteCompanions(options.database); };
   try {
-    verifyServiceDatabase(options.database, held); verifyHeld();
-    store = new FarmStore(normalizeConfig({ mode: 'development', databasePath: options.database })); verifyHeld();
+    const schema = verifyServiceDatabase(options.database, held); verifyHeld();
+    store = new FarmStore(normalizeConfig({ mode: 'development', databasePath: options.database }),
+      schema === 8 ? { preserveSchemaVersion: 8 } : undefined); verifyHeld();
     const now = store.serverNow(); verifyHeld();
     const result = store.provisionPlanting(input, now); verifyHeld();
     if (result?.ok !== true || result.operation !== 'planting-provision' || !Number.isSafeInteger(result.version) || result.version < 1 ||

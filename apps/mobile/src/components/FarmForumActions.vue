@@ -8,7 +8,7 @@ import { requestNavigation } from '../core/navigation.mjs';
 const props = defineProps<{ content: ForumContent }>();
 const controlId = 'forum-action-' + getCurrentInstance()!.uid;
 const choice = ref<'withdraw' | 'block-author' | 'report' | null>(null), reason = ref<ForumReason>('spam');
-const blocked = computed(() => state.busy || state.pending || !state.forumStatus?.available);
+const blocked = computed(() => state.busy || state.pending || state.mutationBlocked || !state.forumStatus?.available);
 const canParticipate = computed(() => !blocked.value && state.forumStatus?.canPost);
 const target = ref<ForumContent | null>(null);
 let previousFocus: HTMLElement | null = null;

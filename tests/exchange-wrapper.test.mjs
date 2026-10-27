@@ -1,10 +1,12 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import * as vue from 'vue';
 import * as appNavigation from '../apps/mobile/src/core/navigation.mjs';
-import * as clientModule from '../apps/mobile/src/core/client.mjs';
+import * as actualClientModule from '../apps/mobile/src/core/client.mjs';
+const clientModule = { ...actualClientModule, createFarmClient: options => actualClientModule.createFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) }) };
 import { createExchangePage, createExchangeDetail } from '../shared/exchanges.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 
@@ -28,7 +30,7 @@ async function harness() {
     navigateTo: options => navigation.push(['to', options.url]), navigateBack: options => navigation.push(['back', options.delta]), switchTab: options => navigation.push(['tab', options.url])
   }, () => pages);
   async function login(id = 'member-a', bootstrap = true) {
-    replies.push(ok({ token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-member');
+    replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-member');
     if (bootstrap) { replies.push(ok(mobileSnapshot({ profile: { id } }))); await client.load(); }
   }
   return { client, core, calls, replies, navigation, login, setPages(value) { pages = value; } };

@@ -33,7 +33,7 @@ async function rewriteManifest(directory) {
   Object.assign(manifest, { bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
   await writeFile(filename, JSON.stringify(manifest));
 }
-test('schema8 online backup and restore retain relations and command receipts but revoke old sessions', async t => {
+test('schema9 online backup and restore retain relations and command receipts but revoke old sessions', async t => {
   const f = await fixture(t);
   f.command(f.a, { action: 'enable' }); f.command(f.b, { action: 'enable' });
   const body = { action: 'request', code: f.view(f.b).profile.code, expectedVersion: 1 };
@@ -42,7 +42,7 @@ test('schema8 online backup and restore retain relations and command receipts bu
   f.command(f.b, { action: 'accept', peerId });
   const before = f.store.bootstrap(f.a.profile.id, NOW), friends = f.view(f.a);
   const backup = f.output('backup');
-  assert.equal((await createBackup({ databasePath: f.databasePath, outputDirectory: backup })).schemaVersion, 8);
+  assert.equal((await createBackup({ databasePath: f.databasePath, outputDirectory: backup })).schemaVersion, 9);
   await restoreBackup({ backupDirectory: backup, outputDirectory: f.output('restored') });
   const restored = new FarmStore(config(path.join(f.output('restored'), 'farm.sqlite')));
   try {
@@ -72,7 +72,7 @@ test('account deletion removes both-sided social references and an old request c
 });
 
 for (const kind of ['extra-index', 'missing-index', 'cross-environment', 'unsafe-receipt', 'foreign-receipt', 'blocked-relation', 'invalid-code', 'invalid-allowance', 'relation-newer-than-profile', 'block-newer-than-profile']) {
-  test(`schema8 verifier refuses ${kind} despite a recomputed backup hash`, async t => {
+  test(`schema9 verifier refuses ${kind} despite a recomputed backup hash`, async t => {
     const f = await fixture(t); f.command(f.a, { action: 'enable' }); f.command(f.b, { action: 'enable' });
     f.command(f.a, { action: 'request', code: f.view(f.b).profile.code });
     const backup = f.output('backup'); await createBackup({ databasePath: f.databasePath, outputDirectory: backup });
@@ -103,13 +103,13 @@ for (const kind of ['extra-index', 'missing-index', 'cross-environment', 'unsafe
   });
 }
 
-test('schema5 migration preserves accounts and financial receipts; schema8 refuses future startup before changing bytes', async t => {
+test('schema5 migration preserves accounts and financial receipts; schema9 refuses future startup before changing bytes', async t => {
   const f = await fixture(t), before = f.store.bootstrap(f.a.profile.id, NOW);
   f.store.close();
-  f.db(db => { db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; PRAGMA user_version = 5'); });
+  f.db(db => { db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; PRAGMA user_version = 5'); });
   f.reopen(); assert.deepEqual(f.store.bootstrap(f.a.profile.id, NOW), before);
   assert.equal(f.view(f.a).enabled, false);
-  f.store.close(); f.db(db => db.exec('PRAGMA user_version = 9'));
+  f.store.close(); f.db(db => db.exec('PRAGMA user_version = 10'));
   const bytes = await readFile(f.databasePath);
   assert.throws(() => new FarmStore(config(f.databasePath)), /schema/);
   assert.deepEqual(await readFile(f.databasePath), bytes);

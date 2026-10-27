@@ -1,11 +1,13 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import * as vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
-import * as clientModule from '../apps/mobile/src/core/client.mjs';
+import * as actualClientModule from '../apps/mobile/src/core/client.mjs';
 import * as contract from '../shared/forum.mjs';
+const clientModule = { ...actualClientModule, createFarmClient: options => actualClientModule.createFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport, { planting: false }) }) };
 import * as navigation from '../apps/mobile/src/core/navigation.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 
@@ -25,7 +27,7 @@ async function bridge() {
   const client = clientModule.createFarmClient({ baseURL: 'http://127.0.0.1:8787', generateKey: () => 'forum-ui-operation', transport: async request => { calls.push(structuredClone(request)); const response = replies.shift(); assert.ok(response, 'explicit response required'); if (response instanceof Error) throw response; return await response; } });
   const source = (await readFile(new URL('../apps/mobile/src/core/farm.ts', import.meta.url), 'utf8')).replaceAll('import.meta.env', '__env');
   const core = evaluate(source, { vue, './client.mjs': { ...clientModule, createFarmClient: () => client }, './navigation.mjs': navigation }, { __env: { DEV: true }, uni: { navigateTo: options => destinations.push(options.url), switchTab: options => destinations.push(options.url) }, getCurrentPages: () => [] });
-  async function login(ownerId = 'member-a') { replies.push(ok({ token: 'token-' + ownerId, profile: { id: ownerId } })); await client.loginDevelopment('synthetic'); replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await client.load(); }
+  async function login(ownerId = 'member-a') { replies.push(ok({ environment: 'development', token: 'token-' + ownerId, profile: { id: ownerId } })); await client.loginDevelopment('synthetic'); replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await client.load(); }
   return { core, client, calls, replies, login, destinations };
 }
 test('forum bridge confirms before current reads and never resends after a failed refresh', async () => {
@@ -83,6 +85,7 @@ async function ui(path, state, extra = {}) {
     return evaluate(content, shared, globals).default;
   }
   shared['./FarmButton.vue'] = shared['../../components/FarmButton.vue'] = await component('components/FarmButton.vue');
+  shared['./FarmRecoveryNotice.vue'] = await component('components/FarmRecoveryNotice.vue');
   shared['./FarmNavigation.vue'] = vue.defineComponent({ setup: () => () => null });
   shared['../../components/FarmScreen.vue'] = extra.realScreen ? await component('components/FarmScreen.vue') : shell;
   for (const name of ['FarmTextField', 'FarmDraftNotice', 'FarmForumActions']) shared[`../../components/${name}.vue`] = await component(`components/${name}.vue`);

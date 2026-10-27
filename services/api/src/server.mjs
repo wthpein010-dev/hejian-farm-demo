@@ -13,6 +13,8 @@ import { isForumCommand, isForumId } from '../../../shared/forum.mjs';
 import { ForumError } from './forum.mjs';
 import { isPlantingCommand, isPlantingId } from '../../../shared/planting.mjs';
 import { PlantingError } from './planting.mjs';
+import { isRecoveryPrepare, isRecoveryId } from '../../../shared/recovery.mjs';
+import { RecoveryError } from './recovery.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -199,6 +201,25 @@ export function createApp(options = {}) {
         if (store.authenticate(token, instant) !== userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
         return instant;
       };
+      const recoveryCommand = /^\/account\/recovery\/(prepare|execute|ack|abandon)$/.exec(route);
+      if (recoveryCommand) {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const action = recoveryCommand[1], body = await jsonBody(request);
+        if (action === 'prepare') { if (!isRecoveryPrepare(body)) throw invalid(); }
+        else { object(body, ['intentId']); if (!isRecoveryId(body.intentId)) throw invalid(); }
+        const instant = refreshSession();
+        const data = action === 'prepare' ? store.recoveryPrepare(userId, body, instant)
+          : action === 'execute' ? store.recoveryExecute(userId, body.intentId, instant)
+            : action === 'ack' ? store.recoveryAck(userId, body.intentId, instant)
+              : store.recoveryAbandon(userId, body.intentId, instant);
+        send(200, { data }); return;
+      }
+      const recoveryDetail = /^\/account\/recovery\/intent\/([^/]+)$/.exec(route);
+      if (route === '/account/recovery' || recoveryDetail) {
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        if (recoveryDetail && !isRecoveryId(recoveryDetail[1])) throw invalid();
+        send(200, { data: recoveryDetail ? store.recoveryDetail(userId, recoveryDetail[1], refreshSession()) : store.recoveryCurrent(userId, refreshSession()) }); return;
+      }
       const plantingCommands = /^\/(staff\/)?planting\/commands$/.exec(route);
       if (plantingCommands) {
         if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
@@ -348,6 +369,15 @@ export function createApp(options = {}) {
       else if (error instanceof ForumError && error.code === 'INVALID_CURSOR') send(400, { error: { code: 'INVALID_REQUEST', message: '社区请求无效，请刷新后重试' } });
       else if (error instanceof PlantingError && error.code === 'NOT_FOUND') send(404, { error: { code: 'NOT_FOUND', message: '未找到此播种记录' } });
       else if (error instanceof PlantingError && error.code === 'PLANTING_UNAVAILABLE') send(503, { error: { code: error.code, message: '播种作业尚未开放，请稍后再来' } });
+      else if (error instanceof PlantingError && error.code === 'RESERVED_OPERATION_KEY') send(409, { error: { code: error.code, message: '此操作编号由恢复流程使用，请先核对原操作' } });
+      else if (error instanceof RecoveryError) {
+        const status = error.code === 'NOT_FOUND' ? 404 : error.code === 'RECOVERY_UNAVAILABLE' ? 503
+          : ['RESERVED_OPERATION_KEY', 'RECOVERY_QUARANTINED', 'INVALID_RECOVERY_STATE', 'RECOVERY_PENDING'].includes(error.code) ? 409 : 500;
+        const message = error.code === 'NOT_FOUND' ? '未找到此操作记录' : error.code === 'RECOVERY_QUARANTINED' ? '此操作来自恢复备份，需由农场人工核查，暂不可继续提交'
+          : error.code === 'RESERVED_OPERATION_KEY' ? '此操作编号由恢复流程使用，请先核对原操作' : error.code === 'RECOVERY_UNAVAILABLE' ? '操作恢复服务尚未开放'
+            : '原操作状态未能确认，请刷新恢复提示后核对';
+        send(status, { error: { code: error.code, message } });
+      }
       else if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });
     }

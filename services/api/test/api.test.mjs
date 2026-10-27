@@ -427,10 +427,10 @@ test('schema v1 upgrades preserve existing assets and sessions while creating th
   await f.getApp().close();
   const old = new DatabaseSync(f.file);
   old.prepare('UPDATE idempotency SET success_json = ?').run(JSON.stringify(original.json.data));
-  old.exec('DROP TABLE planting_commands; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
+  old.exec('DROP TABLE recovery_slots; DROP TABLE planting_intents; DROP TABLE recovery_epoch; DROP TABLE planting_commands; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
   await f.restart();
   assert.equal((await f.snapshot(token)).wallet.points, 100);
   const upgraded = new DatabaseSync(f.file, { readOnly: true });
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 8);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 9);
   assert.equal(upgraded.prepare('SELECT COUNT(*) AS count FROM code_claims').get().count, 0); upgraded.close();
 });

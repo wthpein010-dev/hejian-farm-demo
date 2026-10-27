@@ -38,6 +38,7 @@ FarmCommunity复用app唯一dialog/frame/toast及输入/焦点恢复，FarmSocia
 | 仓库与消息 | 产品说明“仓库、图鉴与每日农事” | 同源资源、累计收获和事件结果；不新增真实推送 |
 | 农事限制 | 产品说明“照料与设备” | 领域与界面双层限制，原因可读，福利不能绕过 |
 | 设备回执 | 同上 | 发送、确认、执行、停止分态；结果未知可核查 |
+| 播种操作恢复 | docs/release/RECOVERY.md；当前仅开发沙盒 | 登录先检查、原动作/结果与当前进展分开、精确确认；失败锁写但保留安全读取 |
 | 福利 | 产品说明“福利与分享” | 真链接分享；广告／邀请资格模拟且防重复 |
 | 邮寄与隐私 | 产品说明“收获与实体收货” | 示例信息、本地校验、仅内存脱敏摘要，无外发 |
 | 发布与平台 | 产品说明“实现与发布” | 原独立 Pages 授权延续；本轮重新验收 |
@@ -61,6 +62,7 @@ FarmCommunity复用app唯一dialog/frame/toast及输入/焦点恢复，FarmSocia
 | FarmSystems | prototype/systems.js；正式资产由服务事务调用 | docs/release/API-CONTRACT.md | 积分购物、活动、库存与等级 | 原子提交、日界、事件和领取幂等 |
 | Activity receipts | prototype/rewards.js；expansion 成功事务适配 | docs/PRODUCT.md；本文活动明细约定 | 四类活动来源、内存明细、北京时间当天汇总 | 失败不记、重复ID不记、深克隆与跨日 |
 | Farm records | shared/farm-records.mjs；API registry；mobile core/farm | docs/release/FARM-RECORDS.md；CONTEXT.md | 账户列表、对象详情、逐版本观测、明确加载更多 | 归属/环境/游标链、迟到读、跨账户、版本变化刷新 |
+| Operation recovery | shared/recovery.mjs；api/recovery；client唯一pending；FarmScreen/FarmRecoveryNotice | docs/release/RECOVERY.md | prepared、原回执、确认未知、检查失败、隔离 | 冷新client/服务重启、原key、精确ack、跨会话、读写guard与窄屏 |
 | Extension adapter | prototype/expansion.js 与 app bridge | docs/PRODUCT.md | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
 | Community / Friends | prototype/social.js与community.js；app桥 | docs/SOCIAL.md | 主页、圈子、帖子评论、好友、示例举报屏蔽 | 资格/重复/转义/IME/取消/分享隐私/导航返回 |
 | Device state | prototype/app.js 唯一模拟设备状态；跨端未开放 | docs/PRODUCT.md；docs/release/READINESS.md | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
@@ -234,3 +236,13 @@ Canonical Form为FarmTextField：H5原生label/input/textarea，非H5平台焦�
 FarmWorkflow拥有纯状态与严格日历，FarmWorkbench拥有订单/工作台组合，app拥有唯一订单/地块/动物提交。客户订单不提供直接完成；示例接单、分组、T+1、开工与确认依次推进，取消/重复/旧轮次不误改对象。明日体验仅改变作业演示日。工作台归属我的，复用frame/toast/导航；生产人员身份/API仍未开放。
 
 输入占位由原生placeholder拥有，空白可见、非空隐藏、清空恢复；灰字消费secondary色。placeholder不代替label/帮助/错误，不作为value，不参与提交；H5与小程序共享字段语义，IME和草稿守卫不变。
+
+## 跨端播种操作恢复（2026-10-27）
+
+业务来源为[PLANTING](docs/release/PLANTING.md)与[RECOVERY](docs/release/RECOVERY.md)。FarmScreen内唯一FarmRecoveryNotice拥有全局恢复提示与操作，core/client拥有唯一pending/恢复检查，farm桥拥有原结果呈现与精确确认；不在各页复制第二套队列/回执/模态。
+
+登录环境明确且强制恢复检查；失败只阻止新业务提交，账户/隐私/作业列表、详情、分页和刷新仍按只读busy状态可用。读写guard分开，读取失败能原地重试；新写不能绕过检查。发现open却暂未取得对象时也提供重新检查入口，不能只显示锁定而无操作。
+
+原回执与当前进展分开显示。prepared冷启动明确继续/放弃，核对本身不自动执行；settled只确认精确原id，确认未知不重发业务。其他域原pending先保留，得到原成功或明确终结拒绝后继续发现恢复项；原拒绝反馈不丢，未知结果不覆盖。来自备份的quarantined只说明需人工核查，不伪造结果或自助解除。
+
+采用既有暖黄/灰白token、16px正文/48px按钮和可见焦点；提示在页面slot和Snapshot缺失态之前全局可达。普通确认复用品牌确认区，不用危险边框包装常规动作。申请页隐藏/卸载/换账户/换档案作废迟到导航，原操作由全局入口继续核对。

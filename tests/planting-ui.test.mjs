@@ -1,10 +1,12 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import * as vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
-import * as clientModule from '../apps/mobile/src/core/client.mjs';
+import * as actualClientModule from '../apps/mobile/src/core/client.mjs';
+const clientModule = { ...actualClientModule, createFarmClient: options => actualClientModule.createFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport, { planting: true }) }) };
 import * as navigation from '../apps/mobile/src/core/navigation.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 const now = 1793044800000, id = 'a'.repeat(32), ref = 'b'.repeat(32), recordId = 'record-001';
@@ -25,7 +27,7 @@ async function bridge() {
   const client = clientModule.createFarmClient({ baseURL: 'http://127.0.0.1:8787', generateKey: () => 'planting-ui-operation', transport: async request => { calls.push(structuredClone(request)); const response = replies.shift(); assert.ok(response, 'explicit response required'); if (response instanceof Error) throw response; return await response; } });
   const source = (await readFile(new URL('../apps/mobile/src/core/farm.ts', import.meta.url), 'utf8')).replaceAll('import.meta.env', '__env');
   const core = evaluate(source, { vue, './client.mjs': { ...clientModule, createFarmClient: () => client }, './navigation.mjs': navigation }, { __env: { DEV: true }, uni: { navigateTo() {}, switchTab() {} }, getCurrentPages: () => [] });
-  async function login(ownerId = 'member-a') { replies.push(ok({ token: 'token-' + ownerId, profile: { id: ownerId } })); await client.loginDevelopment('synthetic'); replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await client.load(); }
+  async function login(ownerId = 'member-a') { replies.push(ok({ environment: 'development', token: 'token-' + ownerId, profile: { id: ownerId } })); await client.loginDevelopment('synthetic'); replies.push(ok(mobileSnapshot({ profile: { id: ownerId } }))); await client.load(); }
   return { core, client, calls, replies, login };
 }
 test('planting bridge removes permissions immediately; confirmed command survives independent GET failure without resending', async () => {
@@ -34,12 +36,12 @@ test('planting bridge removes permissions immediately; confirmed command survive
   let finish; h.replies.push(new Promise(resolve => { finish = resolve; })); const writing = h.core.commandFarmPlanting({ action: 'cancel', orderId: id, expectedOrderVersion: 1 });
   assert.equal(h.core.farmState.plantingDetail, null); h.replies.push(new Error('offline'), new Error('offline')); finish(ok(receipt())); assert.equal(await writing, true);
   assert.equal(h.core.farmState.pending, false); assert.ok(h.core.farmState.plantingError); assert.match(h.core.farmState.plantingMessage, /取消/);
-  h.replies.push(ok(status()), ok(detail())); await h.core.loadFarmPlantingOrder(id); assert.equal(h.calls.filter(call => call.url.endsWith('/planting/commands')).length, 1);
+  h.replies.push(ok(status()), ok(detail())); await h.core.loadFarmPlantingOrder(id); assert.equal(h.calls.filter(call => call.url.endsWith('/account/recovery/execute')).length, 1);
 });
 test('planting bridge invalidates prior account reads and retry settles original planting operation', async () => {
   const h = await bridge(); await h.login(); assert.equal(typeof h.core.loadFarmPlantingOrders, 'function');
   h.replies.push(ok(status()), ok(page())); await h.core.loadFarmPlantingOrders(); h.replies.push(new Error('lost')); await h.core.commandFarmPlanting({ action: 'cancel', orderId: id, expectedOrderVersion: 1 });
-  h.replies.push(ok(receipt()), ok(status()), ok(page())); await h.core.retryFarmOperation(); assert.equal(h.core.farmState.pending, false); assert.doesNotMatch(h.core.farmState.message, /资产/);
+  h.replies.push(ok(receipt()), ok(status()), ok(page())); await h.core.retryFarmOperation(); await h.core.acknowledgeFarmPlanting(); assert.equal(h.core.farmState.pending, false); assert.doesNotMatch(h.core.farmState.message, /资产/);
   let finish; h.replies.push(new Promise(resolve => { finish = resolve; })); const reading = h.core.loadFarmPlantingOrders(); await h.login('member-b'); h.replies.push(ok({ ...status(), ownerId: 'member-b' }), ok({ ...page(), ownerId: 'member-b' })); await h.core.loadFarmPlantingOrders(); finish(ok(status()));
   assert.equal(await reading, false); assert.equal(h.core.farmState.plantingStatus.ownerId, 'member-b'); assert.equal(h.core.farmState.plantingMessage, '');
 });
@@ -87,7 +89,7 @@ test('record entry requests only eligible matching planned record; existing acti
 });
 test('list shows current audience only, recovery limitations, staff entry comes from explicit status authorization', async () => {
   const state = initial(), h = await ui('pages/planting/index.vue', state);
-  try { h.loads.forEach(fn => fn({ audience: 'customer' })); await vue.nextTick(); assert.ok(h.button('进入农务工作台')); assert.match(h.text(), /原操作回执不能自动恢复/); state.plantingStatus = { ...status(), hasStaffAccess: false }; await vue.nextTick(); assert.equal(h.button('进入农务工作台'), undefined); state.plantingAudience = 'staff'; state.plantingPage = { ...page(), items: [order()] }; await vue.nextTick(); assert.equal(h.button('查看作业进展'), undefined); } finally { h.close(); }
+  try { h.loads.forEach(fn => fn({ audience: 'customer' })); await vue.nextTick(); assert.ok(h.button('进入农务工作台')); assert.match(h.text(), /旧操作回执不能自动恢复/); state.plantingStatus = { ...status(), hasStaffAccess: false }; await vue.nextTick(); assert.equal(h.button('进入农务工作台'), undefined); state.plantingAudience = 'staff'; state.plantingPage = { ...page(), items: [order()] }; await vue.nextTick(); assert.equal(h.button('查看作业进展'), undefined); } finally { h.close(); }
 });
 test('framework route attributes do not leak into the fragment screen or emit Vue warnings', async () => {
   for (const path of ['pages/planting/index.vue', 'pages/planting-order/index.vue']) {
@@ -98,4 +100,39 @@ test('framework route attributes do not leak into the fragment screen or emit Vu
 test('cancelling an inline action restores keyboard focus to its surviving original trigger', async () => {
   const h = await ui('pages/planting-order/index.vue', initial());
   try { h.loads.forEach(fn => fn({ id })); await vue.nextTick(); const trigger = h.button('取消播种申请'); await h.click('取消播种申请'); await h.click('返回，暂不操作'); await vue.nextTick(); assert.equal(h.document.activeElement, trigger); assert.equal(trigger.isConnected, true); } finally { h.close(); }
+});
+
+test('leaving the record while its confirmed request is pending never navigates back on late success', async () => {
+  const state = initial({ plantingRecord: { ...scope, recordId, recordVersion: 1, enabled: true, notBefore: now, currentOrderId: null }, plantingRecordBusy: false }), opened = [];
+  let finish;
+  const h = await ui('components/FarmPlantingRequest.vue', state, { props: { record: farmRecord }, commandFarmPlanting: () => new Promise(resolve => { finish = resolve; }), openPlantingOrder: value => opened.push(value) });
+  try { await h.click('申请本轮播种'); await h.click('确认申请播种'); h.hides.forEach(fn => fn()); state.plantingConfirmedOrderId = id; finish(true); await vue.nextTick(); await vue.nextTick(); assert.deepEqual(opened, []); } finally { h.close(); }
+});
+
+for (const recovery of [{ recoveryDiscovery: 'error', pending: false }, { recoveryDiscovery: 'open', pending: true }]) test(`planting safe reads stay available while ${recovery.recoveryDiscovery} blocks new writes`, async () => {
+  const reads = [], opened = [], state = initial({ ...recovery, mutationBlocked: true, plantingPage: { ...page(), items: [order()], nextCursor: 'c'.repeat(32) } });
+  const h = await ui('pages/planting/index.vue', state, { loadFarmPlantingOrders: async (...args) => { reads.push(args); return true; }, openPlantingOrder: (...args) => opened.push(args) });
+  try {
+    h.loads.forEach(fn => fn({ audience: 'customer' })); await vue.nextTick();
+    for (const label of ['刷新作业列表', '查看作业进展', '加载更多作业']) assert.equal(h.button(label).props.disabled, false, label);
+    await h.click('刷新作业列表'); await h.click('查看作业进展'); await h.click('加载更多作业');
+    assert.equal(reads.length, 2); assert.deepEqual(opened, [[id, 'customer']]);
+    state.busy = true; await vue.nextTick(); assert.equal(h.button('刷新作业列表').props.disabled, true);
+  } finally { h.close(); }
+  state.busy = false; const detailReads = [], d = await ui('pages/planting-order/index.vue', state, { loadFarmPlantingOrder: async (...args) => { detailReads.push(args); return true; } });
+  try {
+    d.loads.forEach(fn => fn({ id })); await vue.nextTick(); assert.equal(d.button('刷新当前作业').props.disabled, false); assert.equal(d.button('取消播种申请').props.disabled, true);
+    await d.click('刷新当前作业'); await d.click('取消播种申请'); assert.equal(detailReads.length, 1); assert.equal(d.commands.length, 0); assert.equal(d.button('确认取消申请'), undefined);
+    state.plantingDetailBusy = true; await vue.nextTick(); assert.equal(d.button('刷新当前作业').props.disabled, true);
+  } finally { d.close(); }
+});
+test('planting record qualification reads and existing order navigation stay available under recovery gate', async () => {
+  const state = initial({ recoveryDiscovery: 'error', pending: true, mutationBlocked: true, plantingRecord: { ...scope, recordId, recordVersion: 1, enabled: true, notBefore: now, currentOrderId: null }, plantingRecordBusy: false }), reads = [], opened = [];
+  const h = await ui('components/FarmPlantingRequest.vue', state, { props: { record: farmRecord }, loadFarmPlantingRecord: async id => { reads.push(id); return true; }, openPlantingOrder: (...args) => opened.push(args) });
+  try {
+    assert.equal(h.button('刷新申请资格').props.disabled, false); assert.equal(h.button('申请本轮播种').props.disabled, true);
+    await h.click('刷新申请资格'); await h.click('申请本轮播种'); assert.deepEqual(reads, [recordId]); assert.equal(h.commands.length, 0); assert.equal(h.button('确认申请播种'), undefined);
+    state.plantingRecord = { ...state.plantingRecord, enabled: false, currentOrderId: id }; await vue.nextTick(); assert.equal(h.button('查看当前播种作业').props.disabled, false); await h.click('查看当前播种作业'); assert.deepEqual(opened, [[id, 'customer']]);
+    state.plantingRecordBusy = true; await vue.nextTick(); assert.equal(h.button('刷新申请资格').props.disabled, true);
+  } finally { h.close(); }
 });

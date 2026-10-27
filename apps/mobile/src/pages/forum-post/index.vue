@@ -14,7 +14,7 @@ defineOptions({ inheritAttrs: false });
 const id = ref(''), draft = ref(''), inputError = ref(''), bodyField = ref<InstanceType<typeof FarmTextField> | null>(null);
 const resultId = 'forum-comments-result-' + getCurrentInstance()!.uid;
 const detail = computed(() => state.forumDetail?.post.id === id.value ? state.forumDetail : null);
-const blocked = computed(() => state.busy || state.pending || state.forumDetailBusy);
+const blocked = computed(() => state.busy || state.pending || state.mutationBlocked || state.forumDetailBusy);
 const canComment = computed(() => !blocked.value && state.forumStatus?.canPost && detail.value?.post.state === 'published');
 const { leaving, cancelLeave, discardLeave } = useForumDraft(computed(() => !!draft.value), () => { draft.value = ''; inputError.value = ''; });
 watch(() => state.forumSubmission, value => { if (value?.action === 'submit-comment') { draft.value = ''; inputError.value = ''; } });

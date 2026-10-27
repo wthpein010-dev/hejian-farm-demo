@@ -1,10 +1,12 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import * as vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
-import * as clientModule from '../apps/mobile/src/core/client.mjs';
+import * as actualClientModule from '../apps/mobile/src/core/client.mjs';
+const clientModule = { ...actualClientModule, createFarmClient: options => actualClientModule.createFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) }) };
 import * as friends from '../shared/friends.mjs';
 import * as appNavigation from '../apps/mobile/src/core/navigation.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
@@ -26,7 +28,7 @@ async function wrapper() {
     navigateTo: options => navigation.push(options.url), navigateBack() {}, switchTab: options => navigation.push(options.url)
   }, () => []);
   async function login(id = 'member-a') {
-    replies.push(ok({ token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-account');
+    replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id } })); await client.loginDevelopment('synthetic-account');
     replies.push(ok(mobileSnapshot({ profile: { id } }))); await client.load();
   }
   return { core, client, calls, replies, navigation, login };

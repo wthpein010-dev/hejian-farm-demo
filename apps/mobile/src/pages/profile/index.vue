@@ -47,14 +47,14 @@ watch(() => state.authenticated, authenticated => { if (authenticated) void load
         <view class="section-heading">账户与隐私</view>
         <text class="body-copy">登录凭证只在当前运行内存中保留。退出后需重新登录，服务器保存的田园资产仍属于该账户。</text>
         <text class="helper" style="margin-top:12px">当前版本尚未开放真实收货信息、支付和现场视频。正式服务开放前，还需公布运营主体、隐私说明和联系方式。</text>
-        <FarmButton class="action secondary" style="margin-top:16px" :disabled="state.busy || state.pending" @tap="showPrivacy">查看账户保存的数据</FarmButton>
-        <FarmButton class="action secondary" style="margin-top:12px" :disabled="state.busy || state.pending" @tap="logoutFarm">退出当前账户</FarmButton>
+        <FarmButton class="action secondary" style="margin-top:16px" :disabled="state.busy" @tap="showPrivacy">查看账户保存的数据</FarmButton>
+        <FarmButton class="action secondary" style="margin-top:12px" :disabled="state.busy || state.pending || state.mutationBlocked" @tap="logoutFarm">退出当前账户</FarmButton>
       </view>
       <view v-if="state.privacy" id="privacy-details" class="panel" tabindex="-1" role="region" aria-label="账户数据说明">
         <view class="section-heading">本服务保存的数据</view>
         <view v-for="category in state.privacy.dataCategories" :key="category.id" class="simple-row"><view>{{ category.title }}</view><text class="helper">{{ category.description }}</text></view>
         <text class="helper">这些资料只属于当前田园账户。注销会移除当前服务中的账户和业务数据；已生成的备份需要按运营方的保留与删除制度处理。</text>
-        <FarmButton v-if="!state.deletionPrepared" id="delete-review" class="action danger-outline" style="margin-top:18px" :disabled="state.busy || state.pending" @tap="prepareDeletion">查看并核对账户注销</FarmButton>
+        <FarmButton v-if="!state.deletionPrepared" id="delete-review" class="action danger-outline" style="margin-top:18px" :disabled="state.busy || state.pending || state.mutationBlocked" @tap="prepareDeletion">查看并核对账户注销</FarmButton>
       </view>
       <view v-if="state.deletionPrepared" class="panel deletion-confirm" role="region" aria-labelledby="account-delete-title">
         <view id="account-delete-title" class="section-heading">注销当前田园账户</view>
@@ -62,7 +62,7 @@ watch(() => state.authenticated, authenticated => { if (authenticated) void load
         <text class="body-copy" style="margin-top:12px">确认后，本服务的账户、积分物资和兑换记录将被移除，全部登录失效。此操作不可撤销；以后重新登录会创建新账户。</text>
         <text class="helper" style="margin-top:12px">仅注销本服务账户，不会注销微信或抖音账号。请在准备后的2分钟内确认；账户状态变化后需要重新核对。</text>
         <FarmButton id="delete-cancel" class="action secondary" style="margin-top:20px" :disabled="state.busy" @tap="cancelDeletion">返回，保留我的账户</FarmButton>
-        <FarmButton class="action danger" style="margin-top:12px" :disabled="state.busy || state.pending" @tap="confirmDeletion">确认注销当前账户</FarmButton>
+        <FarmButton class="action danger" style="margin-top:12px" :disabled="state.busy || state.pending || state.mutationBlocked" @tap="confirmDeletion">确认注销当前账户</FarmButton>
       </view>
     </template>
   </FarmScreen>

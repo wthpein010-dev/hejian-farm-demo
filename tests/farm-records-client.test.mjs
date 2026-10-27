@@ -1,6 +1,8 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFarmClient } from '../apps/mobile/src/core/client.mjs';
+import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
+const createFarmClient = options => actualCreateFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
 import * as farmClient from '../apps/mobile/src/core/client.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 import { readFile } from 'node:fs/promises';
@@ -34,7 +36,7 @@ function harness() {
   return { client, calls, replies };
 }
 async function login(h, id = 'member-a', environment = 'development') {
-  h.replies.push(ok({ token: `token-${id}`, profile: { id, displayName: '合成测试账户' } }));
+  h.replies.push(ok({ environment: 'development', token: `token-${id}`, profile: { id, displayName: '合成测试账户' } }));
   await h.client.loginDevelopment('synthetic-account');
   h.replies.push(ok(mobileSnapshot({ profile: { id }, environment })));
   await h.client.load();
@@ -57,7 +59,7 @@ function historyPage(version, eventVersions, nextBeforeVersion = null) {
 
 test('farm reads require a confirmed account environment and send only the fixed read route', async () => {
   const h = harness();
-  h.replies.push(ok({ token: 'private-token', profile: { id: 'member-a' } })); await h.client.loginDevelopment('synthetic');
+  h.replies.push(ok({ environment: 'development', token: 'private-token', profile: { id: 'member-a' } })); await h.client.loginDevelopment('synthetic');
   await assert.rejects(() => h.client.loadFarmPage('plots'), { code: 'SNAPSHOT_REQUIRED' });
   h.replies.push(ok(mobileSnapshot())); await h.client.load();
   h.replies.push(ok(page())); assert.deepEqual(await h.client.loadFarmPage('plots'), page());
@@ -244,7 +246,7 @@ test('a different account cannot receive an old automatic history refresh or its
   assert.equal(core.farmState.farmRegistryDetail, null); assert.equal(core.farmState.farmRecordError, '');
 });
 for (const type of ['page', 'detail']) test(`an obsolete ${type} bootstrap does not dispatch a farm read that cancels the newer wrapper`, async () => {
-  const h = harness(); h.replies.push(ok({ token: 'token-member-a', profile: { id: 'member-a' } })); await h.client.loginDevelopment('synthetic');
+  const h = harness(); h.replies.push(ok({ environment: 'development', token: 'token-member-a', profile: { id: 'member-a' } })); await h.client.loginDevelopment('synthetic');
   const core = await coreHarness(h); let finishOldBootstrap, finishNewBootstrap, finishRead;
   h.replies.push(new Promise(resolve => { finishOldBootstrap = resolve; }), new Promise(resolve => { finishNewBootstrap = resolve; }), new Promise(resolve => { finishRead = resolve; }));
   const read = () => type === 'page' ? core.loadFarmRegistry('plots') : core.loadFarmRecord('record-0001');

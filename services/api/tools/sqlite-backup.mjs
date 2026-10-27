@@ -10,6 +10,7 @@ import { FARM_REGISTRY_TABLE_SQL, FARM_REGISTRY_INDEX_SQL, validateFarmRegistryD
 import { FRIENDS_TABLE_SQL, FRIENDS_INDEX_SQL, validateFriendsDatabase } from '../src/friends.mjs';
 import { FORUM_TABLE_SQL, FORUM_INDEX_SQL, validateForumDatabase } from '../src/forum.mjs';
 import { PLANTING_TABLE_SQL, PLANTING_INDEX_SQL, validatePlantingDatabase, restorePlantingAuthorization } from '../src/planting.mjs';
+import { RECOVERY_TABLE_SQL, RECOVERY_INDEX_SQL, validateRecoveryDatabase, restoreRecoveryDatabase } from '../src/recovery.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -18,7 +19,7 @@ const Domain = require('../../../prototype/domain.js');
 const DATABASE = 'farm.sqlite';
 const MANIFEST = 'manifest.json';
 const FORMAT = 1;
-const SUPPORTED_SCHEMAS = new Set([2, 3, 4, 5, 6, 7, 8]);
+const SUPPORTED_SCHEMAS = new Set([2, 3, 4, 5, 6, 7, 8, 9]);
 const COLUMNS = {
   server_clock: ['singleton:INTEGER', 'last_time:INTEGER'],
   users: ['id:TEXT', 'environment:TEXT', 'identity_provider:TEXT', 'identity_subject:TEXT', 'display_name:TEXT',
@@ -45,6 +46,9 @@ const COLUMNS = {
   planting_orders: ['environment:TEXT', 'id:TEXT', 'record_id:TEXT', 'owner_id:TEXT', 'assignee_id:TEXT', 'status:TEXT', 'version:INTEGER', 'data_json:TEXT', 'created_at:INTEGER', 'updated_at:INTEGER'],
   planting_events: ['environment:TEXT', 'order_id:TEXT', 'version:INTEGER', 'data_json:TEXT'],
   planting_commands: ['environment:TEXT', 'owner_id:TEXT', 'key:TEXT', 'fingerprint:TEXT', 'result_json:TEXT', 'created_at:INTEGER'],
+  recovery_epoch: ['singleton:INTEGER', 'epoch:TEXT', 'created_at:INTEGER'],
+  recovery_slots: ['owner_id:TEXT', 'environment:TEXT', 'version:INTEGER', 'open_id:TEXT', 'created_at:INTEGER', 'updated_at:INTEGER'],
+  planting_intents: ['environment:TEXT', 'id:TEXT', 'owner_id:TEXT', 'prepare_epoch:TEXT', 'prepare_version:INTEGER', 'fingerprint:TEXT', 'audience:TEXT', 'command_json:TEXT', 'operation_key:TEXT', 'phase:TEXT', 'version:INTEGER', 'receipt_json:TEXT', 'created_at:INTEGER', 'updated_at:INTEGER', 'closed_at:INTEGER'],
 };
 const PRIMARY_KEYS = { server_clock: ['singleton'], users: ['id'], sessions: ['token_hash'],
   idempotency: ['user_id', 'key'], code_claims: ['code_hash'], deletion_confirmations: ['token_hash'], deletion_receipts: ['token_hash'],
@@ -52,7 +56,8 @@ const PRIMARY_KEYS = { server_clock: ['singleton'], users: ['id'], sessions: ['t
   friends_profiles: ['owner_id'], friends_relations: ['environment', 'left_id', 'right_id'], friends_blocks: ['environment', 'owner_id', 'peer_id'], friends_commands: ['environment', 'owner_id', 'key'],
   forum_content: ['environment', 'id'], forum_usage: ['owner_id'], forum_reports: ['environment', 'id'], forum_commands: ['environment', 'owner_id', 'key'], forum_moderation: ['environment', 'batch_id'],
   planting_plans: ['environment', 'record_id'], planting_grants: ['environment', 'record_id', 'account_id', 'role'],
-  planting_orders: ['environment', 'id'], planting_events: ['environment', 'order_id', 'version'], planting_commands: ['environment', 'owner_id', 'key'] };
+  planting_orders: ['environment', 'id'], planting_events: ['environment', 'order_id', 'version'], planting_commands: ['environment', 'owner_id', 'key'],
+  recovery_epoch: ['singleton'], recovery_slots: ['owner_id', 'environment'], planting_intents: ['environment', 'id'] };
 // A versioned schema contract includes constraints and indexes: table_info and
 // foreign_key_check alone cannot detect removed UNIQUE/CHECK constraints or an
 // added index which changes which future application writes can succeed.
@@ -61,6 +66,7 @@ const TABLE_SQL = {
   ...FRIENDS_TABLE_SQL,
   ...FORUM_TABLE_SQL,
   ...PLANTING_TABLE_SQL,
+  ...RECOVERY_TABLE_SQL,
   server_clock: `CREATE TABLE server_clock (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), last_time INTEGER NOT NULL)`,
   users: `CREATE TABLE users (id TEXT PRIMARY KEY, environment TEXT NOT NULL, identity_provider TEXT NOT NULL,
     identity_subject TEXT NOT NULL, display_name TEXT NOT NULL, state_json TEXT NOT NULL,
@@ -93,7 +99,7 @@ function normalizedSql(sql) {
 function validateIndexes(db, tables) {
   const expected = {};
   for (const table of tables) {
-    if (table !== 'server_clock') expected[`sqlite_autoindex_${table}_1`] = { table, sql: null, columns: PRIMARY_KEYS[table], origin: 'pk', unique: 1 };
+    if (!['server_clock', 'recovery_epoch'].includes(table)) expected[`sqlite_autoindex_${table}_1`] = { table, sql: null, columns: PRIMARY_KEYS[table], origin: 'pk', unique: 1 };
   }
   expected.sqlite_autoindex_users_2 = { table: 'users', sql: null,
     columns: ['environment', 'identity_provider', 'identity_subject'], origin: 'u', unique: 1 };
@@ -126,6 +132,13 @@ function validateIndexes(db, tables) {
       ['planting_orders_owner', 'planting_orders', ['owner_id', 'environment', 'id']],
       ['planting_orders_assignee', 'planting_orders', ['assignee_id', 'environment', 'id']],
       ['planting_grants_account', 'planting_grants', ['account_id', 'environment', 'active']]]) expected[name] = { table, sql: PLANTING_INDEX_SQL[name], columns, origin: 'c', unique: 0 };
+  }
+  if (tables.includes('planting_intents')) {
+    for (const [name, columns] of [
+      ['recovery_prepare_once', ['owner_id', 'environment', 'prepare_epoch', 'prepare_version']],
+      ['recovery_operation_once', ['environment', 'owner_id', 'operation_key']],
+      ['recovery_one_open', ['owner_id', 'environment']]]) expected[name] = { table: 'planting_intents',
+      sql: RECOVERY_INDEX_SQL[name], columns, origin: 'c', unique: 1, partial: name === 'recovery_one_open' ? 1 : 0 };
   }
   const indexes = db.prepare("SELECT name, tbl_name, sql FROM sqlite_schema WHERE type = 'index'").all();
   if (!isDeepStrictEqual(indexes.map(index => index.name).sort(), Object.keys(expected).sort())) fail('INVALID_APPLICATION_SCHEMA');
@@ -333,7 +346,8 @@ function validateDatabase(file, { standalone = false } = {}) {
     if (standalone && db.prepare('PRAGMA journal_mode').get().journal_mode !== 'delete') fail('NON_STANDALONE_DATABASE');
     const expected = Object.keys(COLUMNS).filter(name => (schemaVersion >= 3 || !name.startsWith('deletion_')) &&
       (schemaVersion >= 5 || !name.startsWith('farm_')) && (schemaVersion >= 6 || !name.startsWith('friends_')) &&
-      (schemaVersion >= 7 || !name.startsWith('forum_')) && (schemaVersion >= 8 || !name.startsWith('planting_'))).sort();
+      (schemaVersion >= 7 || !name.startsWith('forum_')) && (schemaVersion >= 8 || !name.startsWith('planting_')) &&
+      (schemaVersion >= 9 || (!name.startsWith('recovery_') && name !== 'planting_intents'))).sort();
     const schema = db.prepare("SELECT name, type, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' AND type != 'index'").all();
     if (schema.some(row => row.type !== 'table') || JSON.stringify(schema.map(row => row.name).sort()) !== JSON.stringify(expected)) fail('INVALID_APPLICATION_SCHEMA');
     for (const table of schema) if (normalizedSql(table.sql) !== normalizedSql(TABLE_SQL[table.name])) fail('INVALID_APPLICATION_SCHEMA');
@@ -357,13 +371,15 @@ function validateDatabase(file, { standalone = false } = {}) {
                           : table === 'planting_grants' ? [{ table: 'users', from: 'account_id', to: 'id' }, { table: 'planting_plans', from: 'environment', to: 'environment' }, { table: 'planting_plans', from: 'record_id', to: 'record_id' }]
                             : table === 'planting_orders' ? [{ table: 'users', from: 'owner_id', to: 'id' }, { table: 'users', from: 'assignee_id', to: 'id' }, { table: 'planting_plans', from: 'environment', to: 'environment' }, { table: 'planting_plans', from: 'record_id', to: 'record_id' }]
                               : table === 'planting_events' ? [{ table: 'planting_orders', from: 'environment', to: 'environment' }, { table: 'planting_orders', from: 'order_id', to: 'id' }]
-                                : table === 'planting_commands' ? [{ table: 'users', from: 'owner_id', to: 'id' }] : [];
+                                : table === 'planting_commands' ? [{ table: 'users', from: 'owner_id', to: 'id' }]
+                                  : table === 'recovery_slots' ? [{ table: 'users', from: 'owner_id', to: 'id' }, { table: 'planting_intents', from: 'environment', to: 'environment' }, { table: 'planting_intents', from: 'open_id', to: 'id' }]
+                                    : table === 'planting_intents' ? [{ table: 'users', from: 'owner_id', to: 'id' }, { table: 'recovery_slots', from: 'owner_id', to: 'owner_id' }, { table: 'recovery_slots', from: 'environment', to: 'environment' }] : [];
       const orderKey = row => row.table + '|' + row.from + '|' + row.to;
       const ordered = rows => rows.map(row => ({ table: row.table, from: row.from, to: row.to })).sort((a, b) => orderKey(a).localeCompare(orderKey(b)));
       if (!isDeepStrictEqual(ordered(foreignKeys), ordered(expectedKeys)) ||
         foreignKeys.some(row => row.on_update !== 'NO ACTION' || row.on_delete !== 'NO ACTION' || row.match !== 'NONE') ||
-        (!['friends_relations', 'friends_blocks', 'forum_content', 'forum_reports', 'planting_plans', 'planting_grants', 'planting_orders'].includes(table) && foreignKeys.some(row => row.id !== 0)) ||
-        (!['farm_record_events', 'forum_content', 'forum_reports', 'planting_plans', 'planting_grants', 'planting_orders', 'planting_events'].includes(table) && foreignKeys.some(row => row.seq !== 0))) fail('INVALID_APPLICATION_SCHEMA');
+        (!['friends_relations', 'friends_blocks', 'forum_content', 'forum_reports', 'planting_plans', 'planting_grants', 'planting_orders', 'recovery_slots', 'planting_intents'].includes(table) && foreignKeys.some(row => row.id !== 0)) ||
+        (!['farm_record_events', 'forum_content', 'forum_reports', 'planting_plans', 'planting_grants', 'planting_orders', 'planting_events', 'recovery_slots', 'planting_intents'].includes(table) && foreignKeys.some(row => row.seq !== 0))) fail('INVALID_APPLICATION_SCHEMA');
     }
     const clock = db.prepare('SELECT singleton, last_time FROM server_clock').all();
     if (clock.length !== 1 || clock[0].singleton !== 1 || !integer(clock[0].last_time)) fail('INVALID_APPLICATION_DATA');
@@ -389,6 +405,10 @@ function validateDatabase(file, { standalone = false } = {}) {
     }
     if (schemaVersion >= 8) {
       try { validatePlantingDatabase(db, clock[0].last_time); }
+      catch { fail('INVALID_APPLICATION_DATA'); }
+    }
+    if (schemaVersion >= 9) {
+      try { validateRecoveryDatabase(db, clock[0].last_time); }
       catch { fail('INVALID_APPLICATION_DATA'); }
     }
     db.exec('ROLLBACK');
@@ -516,6 +536,7 @@ export async function restoreBackup({ backupDirectory, outputDirectory } = {}) {
       restored.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL; BEGIN IMMEDIATE; DELETE FROM sessions');
       if (schemaVersion >= 3) restored.exec('DELETE FROM deletion_confirmations');
       if (schemaVersion >= 8) restorePlantingAuthorization(restored);
+      if (schemaVersion >= 9) restoreRecoveryDatabase(restored, restored.prepare('SELECT last_time FROM server_clock WHERE singleton=1').get().last_time);
       restored.exec('COMMIT');
     } finally { restored.close(); }
     validateDatabase(held.file, { standalone: true });

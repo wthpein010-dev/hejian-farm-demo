@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { FarmStore } from '../src/store.mjs';
 import { normalizeConfig } from '../src/config.mjs';
+import { RECOVERY_SQL } from '../src/recovery.mjs';
 
 const CLI = fileURLToPath(new URL('../../../tools/moderate-forum.mjs', import.meta.url));
 const NOW = Date.now() - 60000;
@@ -84,25 +85,39 @@ test('queue export uses a new private file and prints only fixed counts', t => {
   assert.deepEqual(readFileSync(f.output), original); assert.equal(result.output.includes(f.directory), false);
 });
 
-test('moderation accepts a fully verified schema7 without silently migrating its database', t => {
+test('moderation accepts a strictly verified schema9 without changing its recovery epoch', t => {
   const f = fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9");
+  const epoch = db.prepare('SELECT epoch FROM recovery_epoch').get().epoch; db.close();
+  const result = f.run(f.exportArgs()); assert.equal(result.status, 0, result.output);
+  const checked = new DatabaseSync(f.database, { readOnly: true });
+  try { assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 9); assert.equal(checked.prepare('SELECT epoch FROM recovery_epoch').get().epoch, epoch); } finally { checked.close(); }
+});
+
+for (const schema of [7, 8]) test(`moderation accepts a fully verified schema${schema} without silently migrating its database`, t => {
+  const f = fixture(t), db = new DatabaseSync(f.database);
+  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch');
+  if (schema === 7) db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands');
+  db.exec(`PRAGMA user_version=${schema}`); db.close();
   const result = f.run(f.exportArgs()); assert.equal(result.status, 0, result.output);
   const checked = new DatabaseSync(f.database, { readOnly: true });
   try {
-    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 7);
-    assert.equal(checked.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name LIKE 'planting_%'").get().n, 0);
+    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, schema);
+    assert.equal(checked.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name='planting_orders'").get().n, schema === 7 ? 0 : 1);
+    assert.equal(checked.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name LIKE 'recovery_%' OR name='planting_intents'").get().n, 0);
   } finally { checked.close(); }
 });
 
-test('schema-preserving offline Store option rejects a different actual schema and production before changing bytes', t => {
+for (const schema of [7, 8]) test(`schema${schema}-preserving offline Store option rejects a different actual schema and production before changing bytes`, t => {
   const f = fixture(t), original = readFileSync(f.database);
-  assert.throws(() => new FarmStore(f.config, { preserveSchemaVersion: 7 }));
+  assert.throws(() => new FarmStore(f.config, { preserveSchemaVersion: schema }));
   assert.deepEqual(readFileSync(f.database), original);
   const db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch');
+  if (schema === 7) db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands');
+  db.exec(`PRAGMA user_version=${schema}`); db.close();
   const legacy = readFileSync(f.database);
-  assert.throws(() => new FarmStore(normalizeConfig({ databasePath: f.database, mode: 'production' }), { preserveSchemaVersion: 7 }));
+  assert.throws(() => new FarmStore(normalizeConfig({ databasePath: f.database, mode: 'production' }), { preserveSchemaVersion: schema }));
   assert.deepEqual(readFileSync(f.database), legacy);
 });
 

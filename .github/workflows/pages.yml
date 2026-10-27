@@ -54,6 +54,8 @@ jobs:
           node --check tools/moderate-forum.mjs
           node --check shared/planting.mjs
           node --check services/api/src/planting.mjs
+          node --check shared/recovery.mjs
+          node --check services/api/src/recovery.mjs
           node --check tools/provision-planting.mjs
           node --check tools/private-file-guards.mjs
           node --check services/api/src/farm-registry.mjs

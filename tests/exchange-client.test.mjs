@@ -1,3 +1,4 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as farmClient from '../apps/mobile/src/core/client.mjs';
@@ -5,13 +6,14 @@ import { createExchangePage, createExchangeDetail } from '../shared/exchanges.mj
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 
 const now=1793044800000,scope={ownerId:'member-a',environment:'development',serverTime:now};
-const {createFarmClient,mergeExchangePages}=farmClient;
+const {mergeExchangePages}=farmClient;
+const createFarmClient = options => farmClient.createFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
 const ok=data=>({status:200,data:{data}});
 function purchase(n=1){const receiptId='api-'+n.toString(16).padStart(64,'0');return {id:'shop-'+receiptId,receiptId,day:'2026-10-27',items:[{id:'feed-pack',title:'原版日常饲料包',art:'feed',cost:30,quantity:2,lineTotal:60,grant:{feed:3}}],count:2,subtotal:60,discount:20,total:40,couponId:'coupon-original'};}
 const detail=(n=1)=>createExchangeDetail(purchase(n),scope);
 const page=(items=[purchase(1)],cursor='start')=>createExchangePage(items,{...scope,cursor});
 function fixture(){const calls=[],replies=[];let serial=0;const client=createFarmClient({baseURL:'http://127.0.0.1:8787',generateKey:()=>`checkout-operation-${++serial}`,transport:async r=>{calls.push(structuredClone(r));const reply=replies.shift();assert.ok(reply,'explicit response required');if(reply instanceof Error)throw reply;return await reply;}});return {client,calls,replies};}
-async function login(h,owner='member-a'){h.replies.push(ok({token:'token-'+owner,profile:{id:owner,displayName:'合成账户'}}));await h.client.loginDevelopment('synthetic-account');h.replies.push(ok(mobileSnapshot({profile:{id:owner}})));await h.client.load();}
+async function login(h,owner='member-a'){h.replies.push(ok({environment:'development',token:'token-'+owner,profile:{id:owner,displayName:'合成账户'}}));await h.client.loginDevelopment('synthetic-account');h.replies.push(ok(mobileSnapshot({profile:{id:owner}})));await h.client.load();}
 
 test('exchange reads require a scoped snapshot and reject malformed or different-owner data',async()=>{
  const h=fixture();assert.equal(typeof h.client.loadExchangePage,'function');

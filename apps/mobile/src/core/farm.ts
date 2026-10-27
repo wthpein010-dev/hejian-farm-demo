@@ -1,7 +1,7 @@
-import { reactive } from 'vue';
+import { reactive, nextTick } from 'vue';
 import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
 import { isForumId, isPlantingId } from './client.mjs';
-import type { PlantingAudience, PlantingStatus, PlantingRecord, PlantingPage, PlantingDetail, PlantingCommand, PlantingReceipt, PlantingState, PlantingAction } from './types';
+import type { RecoveryIntent, RecoveryDiscovery, RecoveryStage, PlantingAudience, PlantingStatus, PlantingRecord, PlantingPage, PlantingDetail, PlantingCommand, PlantingReceipt, PlantingState, PlantingAction } from './types';
 import { requestNavigation } from './navigation.mjs';
 import type { ForumStatus, ForumPage, ForumDetail, ForumReports, ForumCommand, ForumReceipt, ForumState, ForumCircle, ForumReason } from './types';
 import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail, FriendsView, FriendCommand, FriendCommandReceipt } from './types';
@@ -27,6 +27,7 @@ export const farmState = reactive({
   plantingStatus: null as PlantingStatus | null, plantingRecord: null as PlantingRecord | null, plantingPage: null as PlantingPage | null, plantingDetail: null as PlantingDetail | null,
   plantingAudience: 'customer' as PlantingAudience, plantingDetailAudience: 'customer' as PlantingAudience,
   plantingBusy: false, plantingDetailBusy: false, plantingRecordBusy: false, plantingError: '', plantingDetailError: '', plantingRecordError: '', plantingMessage: '', plantingConfirmedOrderId: '',
+  recoveryDiscovery: 'unknown' as RecoveryDiscovery, recoveryError: '', recoveryIntent: null as RecoveryIntent | null, recoveryStage: null as RecoveryStage | null, mutationBlocked: true,
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -82,6 +83,9 @@ function syncClientState() {
   farmState.deletionPrepared = client.deletionPrepared;
   farmState.pendingCanRetryWithoutAuth = client.pendingCanRetryWithoutAuth;
   farmState.authenticated = client.authenticated; farmState.pending = client.hasPending();
+  farmState.recoveryDiscovery = client.recoveryDiscovery as RecoveryDiscovery; farmState.recoveryError = client.recoveryError;
+  farmState.recoveryIntent = client.recoveryIntent as RecoveryIntent | null; farmState.recoveryStage = client.pendingStage as RecoveryStage | null;
+  farmState.mutationBlocked = client.mutationBlocked;
   farmState.confirmedCheckout = client.hasConfirmedCheckout;
   if (!client.farmPage) farmState.farmRegistryPage = null;
   if (!client.farmDetail) farmState.farmRegistryDetail = null;
@@ -115,9 +119,21 @@ export const retryFarmOperation = () => {
     const result = await client.retryPending();
     if (kind === 'friends') await completeFriendsCommand(result as FriendCommandReceipt);
     if (kind === 'forum') await completeForumCommand(result as ForumReceipt);
-    if (kind === 'planting') await completePlantingCommand(result as PlantingReceipt);
+    if (kind === 'planting' && result) await completePlantingCommand(result as PlantingReceipt);
   }, ['friends', 'forum', 'planting'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
 };
+export const retryFarmRecovery = () => run(() => client.discoverRecovery());
+export const continueFarmPlanting = () => run(async () => {
+  const receipt = await client.continuePlanting() as PlantingReceipt | null;
+  syncClientState();
+  if (receipt) await completePlantingCommand(receipt);
+});
+export const acknowledgeFarmPlanting = () => { const intentId = farmState.recoveryIntent?.id; return run(() => client.acknowledgePlanting(intentId)); };
+export const abandonFarmPlanting = () => run(async () => {
+  const receipt = await client.abandonPlanting() as PlantingReceipt | null;
+  syncClientState();
+  if (receipt) await completePlantingCommand(receipt);
+});
 export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
 export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
 export const deleteFarmAccount = () => run(() => client.deleteAccount(), '账户已注销，全部登录已失效。');
@@ -163,7 +179,7 @@ async function completeFriendsCommand(receipt: FriendCommandReceipt) {
   await loadFarmFriends();
 }
 export async function commandFarmFriends(command: FriendCommand) {
-  if (farmState.busy || farmState.pending) return false;
+  if (farmState.busy || farmState.pending || client.mutationBlocked) return false;
   invalidateFriendsView(); invalidateForumViews(forumRelationRefresh);
   let applied = false;
   const confirmed = await run(async () => {
@@ -238,7 +254,7 @@ async function completeForumCommand(receipt: ForumReceipt) {
   if (forumPostId) await loadFarmForumPost(forumPostId);
 }
 export async function commandFarmForum(command: ForumCommand) {
-  if (farmState.busy || farmState.pending) return false;
+  if (farmState.busy || farmState.pending || client.mutationBlocked) return false;
   invalidateForumViews();
   if (command.action === 'block-author') invalidateFriendsView(friendRelationRefresh);
   let applied = false;
@@ -418,11 +434,14 @@ export async function loadFarmPlantingRecord(id: string) {
   } catch (failure) { if (read === plantingRecordRead && account === client.profile) farmState.plantingRecordError = failure instanceof Error ? failure.message : '申请资格读取失败，请重试。'; return false; }
   finally { syncClientState(); if (read === plantingRecordRead) farmState.plantingRecordBusy = false; }
 }
-const plantingRefusals: Record<string, string> = { PLANTING_UNAVAILABLE: '播种作业暂未开放。', NOT_FOUND: '作业已不可访问，请刷新列表。', PLAN_DISABLED: '农场暂未开放这块田的播种，请联系农场核查。', RECORD_CHANGED: '地块档案已更新，请查看最新档案后重新决定。', ORDER_CHANGED: '作业状态刚刚更新，请查看最新进展后重新决定。', INVALID_STATE: '当前状态无法执行此操作，请刷新核对。', ACTIVE_ORDER_EXISTS: '本轮已有未结束作业，请查看当前申请。', ASSIGNEE_UNAVAILABLE: '所选农务员授权已变化，请刷新候选名单。', TOO_EARLY: '尚未到农场安排的最早开工时间。', INVALID_PERFORMED_AT: '实际操作时间未能确认，请刷新作业核对。', EVENT_LIMIT: '当前作业记录已达限制，请由农场核查。', IDEMPOTENCY_CONFLICT: '操作记录有冲突，请核对原操作。' };
+const plantingRefusals: Record<string, string> = { INTENT_PENDING: '请先核对上次播种操作，再提交新的操作。', PLANTING_UNAVAILABLE: '播种作业暂未开放。', NOT_FOUND: '作业已不可访问，请刷新列表。', PLAN_DISABLED: '农场暂未开放这块田的播种，请联系农场核查。', RECORD_CHANGED: '地块档案已更新，请查看最新档案后重新决定。', ORDER_CHANGED: '作业状态刚刚更新，请查看最新进展后重新决定。', INVALID_STATE: '当前状态无法执行此操作，请刷新核对。', ACTIVE_ORDER_EXISTS: '本轮已有未结束作业，请查看当前申请。', ASSIGNEE_UNAVAILABLE: '所选农务员授权已变化，请刷新候选名单。', TOO_EARLY: '尚未到农场安排的最早开工时间。', INVALID_PERFORMED_AT: '实际操作时间未能确认，请刷新作业核对。', EVENT_LIMIT: '当前作业记录已达限制，请由农场核查。', IDEMPOTENCY_CONFLICT: '操作记录有冲突，请核对原操作。' };
+export function plantingResultLabel(receipt: PlantingReceipt) {
+  return receipt.outcome === 'applied' ? ({ request: '播种申请已保存，等待农场接单。', cancel: '播种申请已取消。', accept: '已接单，等待安排农务员。', assign: '派工已保存，请查看最新作业进展。', start: '开工已登记，实际作业仍由农场执行。', complete: '播种完成已回传，地块档案已更新。', 'cancel-work': '人工停工已记录，农场重新核查前暂停新申请。' }[receipt.action]) : plantingRefusals[receipt.code] || '操作未完成，请刷新后核对。';
+}
 async function completePlantingCommand(receipt: PlantingReceipt) {
   syncClientState();
   farmState.plantingConfirmedOrderId = receipt.outcome === 'applied' ? receipt.orderId || '' : '';
-  farmState.plantingMessage = receipt.outcome === 'applied' ? ({ request: '播种申请已保存，等待农场接单。', cancel: '播种申请已取消。', accept: '已接单，等待安排农务员。', assign: '派工已保存，请查看最新作业进展。', start: '开工已登记，实际作业仍由农场执行。', complete: '播种完成已回传，地块档案已更新。', 'cancel-work': '人工停工已记录，农场重新核查前暂停新申请。' }[receipt.action]) : plantingRefusals[receipt.code] || '操作未完成，请刷新后核对。';
+  farmState.plantingMessage = plantingResultLabel(receipt);
   // A confirmed original command is final even when any subsequent GET fails.
   const audience = plantingAudience, selectedOrder = plantingOrderId, selectedRecord = plantingRecordId;
   await loadFarmPlantingOrders(audience);
@@ -430,10 +449,10 @@ async function completePlantingCommand(receipt: PlantingReceipt) {
   if (selectedRecord) { await loadFarmPlantingRecord(selectedRecord); if (receipt.action === 'complete') await loadFarmRecord(selectedRecord); }
 }
 export async function commandFarmPlanting(command: PlantingCommand, audience: PlantingAudience = 'customer') {
-  if (farmState.busy || farmState.pending) return false;
+  if (farmState.busy || farmState.pending || client.mutationBlocked) return false;
   plantingAudience = audience; invalidatePlantingViews(); farmState.plantingMessage = ''; farmState.plantingConfirmedOrderId = '';
   let applied = false;
-  const confirmed = await run(async () => { const receipt = await client.commandPlanting(command, audience) as PlantingReceipt; applied = receipt.outcome === 'applied'; await completePlantingCommand(receipt); });
+  const confirmed = await run(async () => { const receipt = await client.commandPlanting(command, audience) as PlantingReceipt | null; if (!receipt) { farmState.plantingMessage = '这次操作已结束，未执行新的播种操作。'; return; } applied = receipt.outcome === 'applied'; await completePlantingCommand(receipt); syncClientState(); await nextTick(); if (client.recoveryIntent?.operationKey === receipt.operationKey && client.pendingStage === 'receipt-review') await client.acknowledgePlanting(receipt.operationKey.slice('intent-'.length)); });
   return confirmed && applied;
 }
 export function openPlantingOrders(audience: PlantingAudience = 'customer') {

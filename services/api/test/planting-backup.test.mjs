@@ -26,7 +26,8 @@ function fixture(t, seed = true) {
   const finances = store.bootstrap(owner.profile.id, now); store.close();
   // Build the schema8 fixture from the module's canonical DDL independently of
   // Store migration, so this suite specifically exercises the offline boundary.
-  const db = new DatabaseSync(databasePath); db.exec('PRAGMA foreign_keys=ON; ' + PLANTING_SQL + ' PRAGMA user_version=8;');
+  const db = new DatabaseSync(databasePath);
+  db.exec('PRAGMA foreign_keys=ON; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; ' + PLANTING_SQL + ' PRAGMA user_version=8;');
   const prepare = sql => db.prepare(sql), registry = createFarmRegistry({ prepare, environment: 'development' });
   const planting = createPlanting({ prepare, environment: 'development', farmRegistry: registry });
   const user = auth => db.prepare('SELECT * FROM users WHERE id = ?').get(auth.profile.id);

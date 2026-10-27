@@ -79,3 +79,5 @@ uni-app{max-width:480px;margin:auto;background:var(--canvas)}body{background:var
 .farm-nav-mark{display:block;width:28px;height:28px;flex:0 0 28px}
 /* #endif */
 @media(max-width:360px){.home-sign-panel{padding:15px}.home-sign-row{gap:8px}.home-sign-action{padding-inline:10px;font-size:16px}.home-entry{gap:10px}.home-entry-symbol{width:38px;flex-basis:38px}.home-social-list{padding-inline:14px}.sign-week{gap:3px}.sign-day>text:first-child{width:30px;height:30px}}
+
+.recovery-notice{overflow-wrap:anywhere;font-size:17px;line-height:1.85}.recovery-copy{display:block;margin:10px 0}.recovery-notice .action{width:100%;min-height:48px;margin-top:14px;white-space:normal}.recovery-action.action{background:var(--action);color:var(--action-ink);border-color:var(--action)}

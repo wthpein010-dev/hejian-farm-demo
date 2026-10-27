@@ -1,6 +1,8 @@
+import { recoveryFixtureTransport } from './helpers/recovery-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFarmClient } from '../apps/mobile/src/core/client.mjs';
+import { createFarmClient as actualCreateFarmClient } from '../apps/mobile/src/core/client.mjs';
+const createFarmClient = options => actualCreateFarmClient({ ...options, transport: recoveryFixtureTransport(options.transport) });
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
 
 const ok = data => ({ status: 200, data: { data } });
@@ -17,7 +19,7 @@ function harness() {
   return { client, replies, calls };
 }
 async function connect(h, id = 'member-a') {
-  h.replies.push(ok({ token: 'session-a', profile: { id, displayName: '田园新友' } }));
+  h.replies.push(ok({ environment: 'development', token: 'session-a', profile: { id, displayName: '田园新友' } }));
   await h.client.loginDevelopment(id);
   h.replies.push(ok(mobileSnapshot({ profile: { id } }))); await h.client.load();
 }

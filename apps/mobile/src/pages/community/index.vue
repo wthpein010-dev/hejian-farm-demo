@@ -17,7 +17,7 @@ const resultId = 'forum-list-result-' + getCurrentInstance()!.uid;
 const composing = ref(false), title = ref(''), body = ref(''), postCircle = ref<ForumCircle>('harvest');
 const titleError = ref(''), bodyError = ref('');
 const titleField = ref<InstanceType<typeof FarmTextField> | null>(null), bodyField = ref<InstanceType<typeof FarmTextField> | null>(null);
-const blocked = computed(() => state.busy || state.pending || state.forumBusy);
+const blocked = computed(() => state.busy || state.pending || state.mutationBlocked || state.forumBusy);
 const canSubmit = computed(() => !blocked.value && state.forumStatus?.available && state.forumStatus.canPost);
 const current = computed(() => mode.value === 'reports' ? state.forumReports : state.forumPage);
 const dirty = computed(() => !!title.value || !!body.value);

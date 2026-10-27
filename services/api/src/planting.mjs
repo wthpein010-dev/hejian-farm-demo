@@ -53,6 +53,7 @@ export class PlantingError extends Error {
       'RECORD_CHANGED',
       'ACCOUNT_UNAVAILABLE',
       'ACTIVE_WORK',
+      'RESERVED_OPERATION_KEY',
     ].includes(code)
       ? code
       : 'INVALID_PLANTING_DATA';
@@ -84,7 +85,7 @@ const canonicalCommand = (input) =>
       .map((k) => [k, input[k]]),
   );
 
-export function createPlanting({ prepare, environment, farmRegistry }) {
+export function createPlanting({ prepare, environment, farmRegistry, beforeNewCommand }) {
   if (
     typeof prepare !== 'function' ||
     !['development', 'production'].includes(environment) ||
@@ -222,7 +223,7 @@ export function createPlanting({ prepare, environment, farmRegistry }) {
       'UPDATE planting_orders SET assignee_id = ?, status = ?, version = ?, data_json = ?, updated_at = ? WHERE environment = ? AND id = ?',
     ).run(r.assignee_id, o.status, o.version, JSON.stringify(o), o.updatedAt, environment, o.id);
   }
-  function command(user, audience, key, input, now) {
+  function command(user, audience, key, input, now, intentId = null) {
     if (!safe(user?.id) || !operationKey(key) || !time(now) || !isPlantingCommand(input, audience)) invalid();
     const fingerprint = digest(JSON.stringify({ audience, command: canonicalCommand(input) }));
     const receipt = (code, orderId = null) => ({
@@ -247,6 +248,10 @@ export function createPlanting({ prepare, environment, farmRegistry }) {
     }
     let id = null;
     const apply = () => {
+      // Historical receipts above settle before any current recovery gate.
+      // The optional context is supplied only by Store's trusted executor.
+      const blocked = beforeNewCommand?.(user, audience, key, input, now, intentId);
+      if (blocked) return blocked;
       if (!available(user, environment) || !available(account(user.id), environment))
         return 'PLANTING_UNAVAILABLE';
       if (input.action === 'request') {
