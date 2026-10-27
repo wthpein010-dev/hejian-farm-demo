@@ -56,6 +56,9 @@ jobs:
           node --check services/api/src/planting.mjs
           node --check shared/recovery.mjs
           node --check services/api/src/recovery.mjs
+          node --check shared/eggs.mjs
+          node --check services/api/src/eggs.mjs
+          node --check tools/provision-eggs.mjs
           node --check tools/provision-planting.mjs
           node --check tools/private-file-guards.mjs
           node --check services/api/src/farm-registry.mjs

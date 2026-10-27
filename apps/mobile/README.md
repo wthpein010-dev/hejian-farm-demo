@@ -1,4 +1,4 @@
-# 禾间跨端客户端
+# 合耕小舍跨端客户端
 
 当前为正式工程推进中的客户端，使用uni-app Vue3/TypeScript，目标微信、抖音小程序及App。已实现五入口、账户连接、服务端积分购物车/活动/仓库；真实认养、设备、视频、支付广告与物流仍待接入，见[上线矩阵](../../docs/release/READINESS.md)。
 
@@ -42,3 +42,7 @@
 商城和“我的”可进入完整积分兑换记录、原值收据与当前仓库。记录最近优先每页20笔，详情返回保留已加载页；成功checkout和未知结果核对后按原操作查收据，URL只有白名单id或operation=last。认证/原key仅内存，读取失败不重兑。饲料余额来自wallet.feed，其他库存来自system.inventory，本笔发放不代表剩余库存；不构成现金支付或实体履约。
 
 `prototype/styles.css`为已有canonical token源。运行根 `npm run tokens` 生成 `src/styles/tokens.css`；后续只改上游token并重新生成。场景/商品/商城横幅使用prototype/assets/photos中的12张摄影风格AI示意WebP；运行根npm run assets或各build自动同步，node tools/sync-photo-assets.mjs --check校验同源摘要。原始PNG和本机生成路径不入Git，未使用的旧插画副本已移除，不冒充实时视频或实拍。
+
+## 每日手动收蛋
+
+“我的”及动物档案进入鸡蛋批次，授权记录人员另有对象与登记入口；灰色输入提示、校验与离开草稿保护共用现有组件。仅开发沙盒，见[EGGS](../../docs/release/EGGS.md)。新鸡蛋和播种共用服务端恢复槽，原结果独立于当前资产；成功收取的已确认版本下限在ack后仍有效，资产未同步时锁新写并保留刷新入口。其他域/legacy的冷启动缺口仍保留。

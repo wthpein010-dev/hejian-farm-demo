@@ -5,7 +5,9 @@ import { isExchangeId, isExchangePage, isExchangeDetail } from '../../../../shar
 import { isFriendsView, isFriendCommandReceipt, isFriendCommand } from '../../../../shared/friends.mjs';
 import { isForumStatus, isForumPage, isForumDetail, isForumReports, isForumCommand, isForumCommandReceipt, isForumId } from '../../../../shared/forum.mjs';
 import { isPlantingStatus, isPlantingRecord, isPlantingPage, isPlantingDetail, isPlantingReceipt, isPlantingCommand, isPlantingId } from '../../../../shared/planting.mjs';
-import { isRecoveryView, isRecoveryDetail, isRecoveryResult } from '../../../../shared/recovery.mjs';
+import { isRecoveryView, isRecoveryDetail, isRecoveryResult, isRecoveryCommand } from '../../../../shared/recovery.mjs';
+import { isEggsId, isEggsStatus, isEggsRecord, isEggsRecordsPage, isEggsPage, isEggsDetail } from '../../../../shared/eggs.mjs';
+export { isEggsId };
 export { isPlantingId };
 export { isForumId };
 export { isExchangeId };
@@ -46,6 +48,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   }
   let token = '', profile = null, snapshot = null, pending = null, generation = 0, loginAttempt = 0, activeLogins = 0, activeMutation = false;
   let authEnvironment = null;
+  let minimumConfirmedRevision = 0, confirmedAccountId = '', confirmedEnvironment = null;
   let recoveryDiscovery = 'unknown', recoveryError = '', recoveryMeta = null, recoveryRead = 0;
   let privacy = null, deletionProposal = null, deletionAttempt = 0;
   let farmPage = null, farmDetail = null, farmPageRead = 0, farmDetailRead = 0;
@@ -56,6 +59,12 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   let forumStatusRead = 0, forumPageRead = 0, forumDetailRead = 0, forumReportsRead = 0;
   let plantingStatus = null, plantingRecord = null, plantingPage = null, plantingDetail = null;
   let plantingStatusRead = 0, plantingRecordRead = 0, plantingPageRead = 0, plantingDetailRead = 0;
+  let eggsStatus = null, eggsRecord = null, eggsRecords = null, eggsPage = null, eggsDetail = null;
+  let eggsStatusRead = 0, eggsRecordRead = 0, eggsRecordsRead = 0, eggsPageRead = 0, eggsDetailRead = 0;
+  function clearEggs() {
+    eggsStatus = null; eggsRecord = null; eggsRecords = null; eggsPage = null; eggsDetail = null;
+    eggsStatusRead++; eggsRecordRead++; eggsRecordsRead++; eggsPageRead++; eggsDetailRead++;
+  }
   function clearPlanting() {
     plantingStatus = null; plantingRecord = null; plantingPage = null; plantingDetail = null;
     plantingStatusRead++; plantingRecordRead++; plantingPageRead++; plantingDetailRead++;
@@ -72,11 +81,15 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     friendsView = null; friendsRead++; friendsVersion = -1;
     clearForum();
     clearPlanting();
+    clearEggs();
   }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
-  function acceptSnapshot(value) {
+  const assetSyncRequired = () => minimumConfirmedRevision > 0 && (!snapshot || snapshot.revision < minimumConfirmedRevision);
+  function acceptSnapshot(value, historical = false) {
     if (!isFarmSnapshot(value, profile?.id) || value.environment !== authEnvironment) throw error('SERVER_UNAVAILABLE', '田园数据未能确认，请重新同步。');
+    if (!historical && value.revision < minimumConfirmedRevision) throw error('ASSET_SYNC_REQUIRED', '原收蛋结果已确认，当前资产尚未同步到该结果。请重新同步，确认前暂不能提交新操作。');
+    if (historical && value.revision < minimumConfirmedRevision) return snapshot;
     if (!snapshot || value.revision >= snapshot.revision) snapshot = value;
     if (deletionProposal && deletionProposal.revision !== snapshot.revision) cancelAccountDeletion();
     return snapshot;
@@ -93,7 +106,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     const afterReceiptLookup = (response.status === 409 && ['IDEMPOTENCY_CONFLICT', 'REVISION_CONFLICT'].includes(code)) ||
       (response.status === 422 && code === 'BUSINESS_RULE') || (response.status === 503 && code === 'CAPABILITY_UNAVAILABLE');
     if (financial && authenticated && key && afterReceiptLookup && isFarmSnapshot(response.data?.data, profile?.id)) {
-      acceptSnapshot(response.data.data); confirmedMutationRefusals.add(failure);
+      acceptSnapshot(response.data.data, true); confirmedMutationRefusals.add(failure);
     }
     return failure;
   }
@@ -118,7 +131,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     }
     if (response.status >= 400) {
       if (response.status === 401 && authenticated) { token = ''; snapshot = null; privacy = null; recoveryDiscovery = 'unknown'; recoveryMeta = null; recoveryRead++; clearFarmRecords(); cancelAccountDeletion(); generation++; }
-      if (financial && response.status === 409 && response.data?.data) acceptSnapshot(response.data.data);
+      if (financial && response.status === 409 && response.data?.data) acceptSnapshot(response.data.data, true);
       throw responseFailure(response, authenticated, key, '操作未完成，请刷新后核对。', financial);
     }
     if (!response.data || !Object.prototype.hasOwnProperty.call(response.data, 'data')) throw error('SERVER_UNAVAILABLE', '服务回复未能确认，请稍后重试。');
@@ -133,6 +146,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
       if (typeof result?.token !== 'string' || !result?.profile?.id || !['development', 'production'].includes(result.environment)) throw error('INVALID_SESSION', '登录回复不完整，请重试。');
       if (pending && (pending.accountId !== result.profile.id || (pending.environment && pending.environment !== result.environment))) throw error('ACCOUNT_MISMATCH', '上次操作仍待核对，请登录操作时的原账户，再核对结果。');
+      if (confirmedAccountId !== result.profile.id || confirmedEnvironment !== result.environment) minimumConfirmedRevision = 0;
+      confirmedAccountId = result.profile.id; confirmedEnvironment = result.environment;
       token = result.token; profile = result.profile; authEnvironment = result.environment; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++;
       recoveryDiscovery = 'checking'; recoveryMeta = null; recoveryError = '';
       try { await discoverRecovery(); }
@@ -147,7 +162,9 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     activeMutation = true;
     try {
       const result = await send(operation.path, 'POST', operation.body, true, operation.key);
-      acceptSnapshot(result);
+      // A historical financial replay settles its original key even if a
+      // later confirmed egg receipt establishes a newer asset revision floor.
+      acceptSnapshot(result, true);
       if (operation.path === '/checkout') {
         confirmedCheckout = { key: operation.key, accountId: operation.accountId, environment: result.environment };
         exchangePage = null; exchangePageRead++;
@@ -167,6 +184,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   function requireIdle() {
     if (pending || activeMutation || activeLogins) throw error('PENDING_OPERATION', '请先完成登录或核对上次操作的结果，再继续。');
     if (recoveryDiscovery !== 'clear') throw error('RECOVERY_REQUIRED', '请先检查并核对上次操作，再继续新的操作。');
+    if (assetSyncRequired()) throw error('ASSET_SYNC_REQUIRED', '原收蛋结果已确认，请先同步最新田园资产，再继续新的操作。');
   }
   async function submitFriends(operation) {
     activeMutation = true; clearFriendsView(); clearForum();
@@ -214,7 +232,20 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     if (activeMutation) throw error('PENDING_OPERATION', '正在核对操作，请稍后刷新作业。');
     return { ownerId: profile.id, environment: snapshot.environment, generation };
   }
+  function eggsReadContext(audience = 'customer', cursor = 'start') {
+    requireSession();
+    if (!['customer', 'staff'].includes(audience) || (cursor !== 'start' && !isEggsId(cursor))) throw error('INVALID_REQUEST', '收蛋入口或分页位置无效，请返回重新选择。');
+    if (activeMutation) throw error('PENDING_OPERATION', '正在核对操作，请稍后刷新产出。');
+    return { ownerId: profile.id, environment: authEnvironment, generation };
+  }
   const sameCommand = (a, b) => JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+  const isRecoveryOperation = operation => operation?.kind === 'planting' || operation?.kind === 'eggs';
+  function observeReceipt(receipt) {
+    if (receipt?.eggFormat === 1 && receipt.action === 'collect' && receipt.outcome === 'applied') {
+      minimumConfirmedRevision = Math.max(minimumConfirmedRevision, receipt.appliedRevision);
+      cancelAccountDeletion();
+    }
+  }
   function hydrateIntent(intent, operation = null, cold = true) {
     if (!intent || intent.phase === 'abandoned' || intent.closedAt !== null) return null;
     const previous = operation?.intent;
@@ -222,7 +253,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       !sameCommand(intent.command, previous.command) || intent.operationKey !== previous.operationKey)) {
       throw error('SERVER_UNAVAILABLE', '原操作记录未能确认，请保留并重新核对。');
     }
-    return { kind: 'planting', accountId: profile.id, environment: authEnvironment,
+    observeReceipt(intent.receipt);
+    return { kind: intent.command.domain === 'eggs' ? 'eggs' : 'planting', accountId: profile.id, environment: authEnvironment,
       audience: intent.audience, body: intent.command, key: intent.operationKey, intent,
       attempt: operation?.attempt || null, cold: operation?.cold ?? cold,
       stage: intent.phase === 'settled' ? 'receipt-review' : intent.phase };
@@ -240,7 +272,10 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       // An existing unknown operation is the only command slot. Never replace
       // it with a different device's open intent, nor forget a late prepare.
       if (!pending) pending = hydrateIntent(value.intent);
-      recoveryDiscovery = value.intent || pending?.kind === 'planting' ? 'open' : 'clear';
+      // Even when another unknown command owns the one local slot, a valid
+      // remote original receipt is evidence of the same account's asset floor.
+      observeReceipt(value.intent?.receipt);
+      recoveryDiscovery = value.intent || isRecoveryOperation(pending) ? 'open' : 'clear';
       return value;
     } catch (failure) {
       if (read === recoveryRead && session === generation) { recoveryDiscovery = 'error'; recoveryError = failure.message; }
@@ -248,7 +283,11 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     }
   }
   async function recoveryPost(operation, action) {
-    activeMutation = true; clearPlanting(); cancelAccountDeletion();
+    activeMutation = true;
+    // Acknowledgement only closes the original receipt. It cannot change the
+    // independently read current business views, including an unknown ack.
+    if (action !== 'ack') { clearPlanting(); clearEggs(); }
+    cancelAccountDeletion();
     pending = operation; recoveryDiscovery = 'open';
     const unknown = { prepare: 'prepare-unknown', execute: 'execute-unknown', ack: 'ack-unknown', abandon: 'abandon-unknown' };
     operation.stage = unknown[action];
@@ -268,6 +307,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       }
       if (!target) throw error('SERVER_UNAVAILABLE', '原操作记录缺失。');
       const originalReceipt = target.receipt;
+      observeReceipt(originalReceipt);
       if (target.closedAt !== null) {
         pending = null; await discoverRecovery();
       } else {
@@ -289,6 +329,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (!isRecoveryDetail(value, operation.accountId, operation.environment, operation.intent.id)) throw error('SERVER_UNAVAILABLE', '原操作记录未能确认。');
       if (value.intent.version < operation.intent.version) throw error('SERVER_UNAVAILABLE', '原操作版本未能确认。');
       const receipt = value.intent.receipt;
+      observeReceipt(receipt);
       if (value.intent.closedAt !== null) { pending = null; await discoverRecovery(); }
       else pending = hydrateIntent(value.intent, operation);
       return receipt;
@@ -296,7 +337,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   }
   function requirePlantingStage(stages) {
     requireSession();
-    if (activeMutation || activeLogins || pending?.kind !== 'planting' || !stages.includes(pending.stage)) throw error('PENDING_OPERATION', '请先核对当前恢复项。');
+    if (activeMutation || activeLogins || !isRecoveryOperation(pending) || !stages.includes(pending.stage)) throw error('PENDING_OPERATION', '请先核对当前恢复项。');
     return pending;
   }
   async function submitDeletion(operation) {
@@ -305,6 +346,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       const receipt = await send(operation.path, 'POST', operation.body, false);
       if (receipt?.deleted !== true || !Number.isSafeInteger(receipt.completedAt) || receipt.completedAt < 0) throw error('SERVER_UNAVAILABLE', '注销结果尚未确认。');
       token = ''; profile = null; snapshot = null; privacy = null; pending = null; clearFarmRecords();
+      minimumConfirmedRevision = 0; confirmedAccountId = ''; confirmedEnvironment = null;
       cancelAccountDeletion(); generation++; loginAttempt++;
       return { deleted: true, completedAt: receipt.completedAt };
     } catch (failure) {
@@ -339,15 +381,25 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get plantingRecord() { return plantingRecord; },
     get plantingPage() { return plantingPage; },
     get plantingDetail() { return plantingDetail; },
+    get eggsStatus() { return eggsStatus; },
+    get eggsRecord() { return eggsRecord; },
+    get eggsRecords() { return eggsRecords; },
+    get eggsPage() { return eggsPage; },
+    get eggsDetail() { return eggsDetail; },
     get recoveryDiscovery() { return recoveryDiscovery; },
     get recoveryError() { return recoveryError; },
-    get recoveryIntent() { return pending?.kind === 'planting' ? pending.intent || null : null; },
-    get pendingStage() { return pending?.kind === 'planting' ? pending.stage : null; },
-    get mutationBlocked() { return recoveryDiscovery !== 'clear' || !!pending || activeMutation || activeLogins > 0; },
+    get recoveryIntent() { return isRecoveryOperation(pending) ? pending.intent || null : null; },
+    get pendingStage() { return isRecoveryOperation(pending) ? pending.stage : null; },
+    get minimumConfirmedRevision() { return minimumConfirmedRevision; },
+    get assetSyncRequired() { return assetSyncRequired(); },
+    get mutationBlocked() { return recoveryDiscovery !== 'clear' || !!pending || activeMutation || activeLogins > 0 || assetSyncRequired(); },
     discoverRecovery,
     async continuePlanting() { return recoveryPost(requirePlantingStage(['prepared']), 'execute'); },
     async acknowledgePlanting(intentId = pending?.intent?.id) { const operation = requirePlantingStage(['receipt-review', 'ack-unknown']); if (operation.intent.id !== intentId) throw error('PENDING_OPERATION', '待确认结果已变化，请查看当前原结果后再确认。'); return recoveryPost(operation, 'ack'); },
     async abandonPlanting() { return recoveryPost(requirePlantingStage(['prepared', 'abandon-unknown']), 'abandon'); },
+    async continueRecovery() { return recoveryPost(requirePlantingStage(['prepared']), 'execute'); },
+    async acknowledgeRecovery(intentId = pending?.intent?.id) { const operation = requirePlantingStage(['receipt-review', 'ack-unknown']); if (operation.intent.id !== intentId) throw error('PENDING_OPERATION', '待确认结果已变化，请查看当前原结果后再确认。'); return recoveryPost(operation, 'ack'); },
+    async abandonRecovery() { return recoveryPost(requirePlantingStage(['prepared', 'abandon-unknown']), 'abandon'); },
     get pendingKind() { return pending?.kind || (pending ? 'assets' : null); },
     get hasConfirmedCheckout() { return !!confirmedCheckout && !!token && confirmedCheckout.accountId === profile?.id; },
     get deletionPrepared() { return !!deletionProposal; },
@@ -466,6 +518,59 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (pending?.stage === 'prepared' && pending.attempt === operation.attempt) return recoveryPost(pending, 'execute');
       return preparedReceipt;
     },
+    async loadEggsStatus() {
+      const context = eggsReadContext(), read = ++eggsStatusRead;
+      const value = await send('/eggs/status', 'GET', undefined, true, '', false);
+      if (read !== eggsStatusRead || context.generation !== generation) throw error('READ_SUPERSEDED', '收蛋服务状态已更新，请刷新。');
+      if (!isEggsStatus(value, context.ownerId, context.environment)) throw error('SERVER_UNAVAILABLE', '收蛋服务状态未能确认，请重新读取。');
+      if (!value.available) clearEggs();
+      eggsStatus = value; return value;
+    },
+    async loadEggsRecord(id, audience = 'customer') {
+      const context = eggsReadContext(audience), read = ++eggsRecordRead;
+      if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(id)) throw error('INVALID_REQUEST', '牧场档案位置无效。');
+      eggsRecord = null;
+      const value = await send(`${audience === 'staff' ? '/staff' : ''}/eggs/record/${id}`, 'GET', undefined, true, '', false);
+      if (read !== eggsRecordRead || context.generation !== generation) throw error('READ_SUPERSEDED', '已选择其他档案，请刷新当前对象。');
+      if (!isEggsRecord(value, context.ownerId, context.environment, id)) throw error('SERVER_UNAVAILABLE', '当日产出登记资格未能确认，请重新读取。');
+      eggsRecord = value; return value;
+    },
+    async loadEggsRecords(cursor = 'start') {
+      const context = eggsReadContext('staff'), read = ++eggsRecordsRead;
+      if (cursor !== 'start' && (typeof cursor !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(cursor))) throw error('INVALID_REQUEST', '授权对象分页位置无效，请刷新。');
+      const value = await send(`/staff/eggs/records/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== eggsRecordsRead || context.generation !== generation) throw error('READ_SUPERSEDED', '授权对象已更新，请刷新。');
+      if (!isEggsRecordsPage(value, context.ownerId, context.environment) || (cursor !== 'start' && value.items.some(item => item.recordId <= cursor))) throw error('SERVER_UNAVAILABLE', '授权牧场对象未能确认，请重新读取。');
+      eggsRecords = value; return value;
+    },
+    async loadEggsPage(audience = 'customer', cursor = 'start') {
+      const context = eggsReadContext(audience, cursor), read = ++eggsPageRead;
+      const value = await send(`${audience === 'staff' ? '/staff' : ''}/eggs/batches/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== eggsPageRead || context.generation !== generation) throw error('READ_SUPERSEDED', '产出列表已更新，请查看当前入口。');
+      if (!isEggsPage(value, context.ownerId, context.environment) || (cursor !== 'start' && value.items.some(item => item.id <= cursor))) throw error('SERVER_UNAVAILABLE', '鸡蛋产出列表未能确认，请重新读取。');
+      eggsPage = value; return value;
+    },
+    async loadEggsDetail(id, audience = 'customer') {
+      const context = eggsReadContext(audience), read = ++eggsDetailRead;
+      if (!isEggsId(id)) throw error('INVALID_REQUEST', '产出编号无效，请重新选择。');
+      eggsDetail = null;
+      const value = await send(`${audience === 'staff' ? '/staff' : ''}/eggs/batch/${id}`, 'GET', undefined, true, '', false);
+      if (read !== eggsDetailRead || context.generation !== generation) throw error('READ_SUPERSEDED', '已选择其他产出，请查看当前对象。');
+      if (!isEggsDetail(value, context.ownerId, context.environment, id)) throw error('SERVER_UNAVAILABLE', '鸡蛋产出详情未能确认，请重新读取。');
+      eggsDetail = value; return value;
+    },
+    async commandEggs(audience, command) {
+      requireSession(); requireIdle();
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再登记或收取鸡蛋。');
+      if (command?.domain !== 'eggs' || !isRecoveryCommand(command, audience)) throw error('INVALID_REQUEST', '收蛋操作无效，请核对数量、来源编号和当前产出。');
+      if (command.action === 'collect' && command.expectedRevision !== snapshot.revision) throw error('VERSION_CONFLICT', '田园资产已更新，请重新核对本次收取。');
+      if (!recoveryMeta?.available) throw error('RECOVERY_UNAVAILABLE', '操作恢复服务暂未开放。');
+      cancelAccountDeletion();
+      const operation = { kind: 'eggs', accountId: profile.id, environment: authEnvironment, cold: false, intent: null, stage: 'prepare-unknown', attempt: JSON.parse(JSON.stringify({ expectedEpoch: recoveryMeta.epoch, expectedVersion: recoveryMeta.version, audience, command })) };
+      const preparedReceipt = await recoveryPost(operation, 'prepare');
+      if (pending?.stage === 'prepared' && pending.attempt === operation.attempt) return recoveryPost(pending, 'execute');
+      return preparedReceipt;
+    },
     async loadFarmPage(kind, cursor = 'start') {
       requireSession();
       if (!['plots', 'animals'].includes(kind) || (cursor !== 'start' && (typeof cursor !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(cursor)))) throw error('INVALID_REQUEST', '档案分类或分页位置无效，请重新加载。');
@@ -515,8 +620,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       requireSession();
       const checkout = confirmedCheckout;
       if (!checkout || checkout.accountId !== profile.id) throw error('CHECKOUT_RECEIPT_UNAVAILABLE', '本次运行没有可核对的已确认兑换，请查看全部记录。');
-      if (!snapshot || checkout.environment !== snapshot.environment) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再查看兑换收据。');
-      const read = ++exchangeDetailRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      if (checkout.environment !== authEnvironment) throw error('SESSION_CHANGED', '账户环境已变化，请查看当前田园。');
+      const read = ++exchangeDetailRead, requestGeneration = generation, ownerId = profile.id, environment = authEnvironment;
       if (exchangeDetailOperationKey !== checkout.key) exchangeDetail = null;
       // Keep the original operation key in memory and the private request header.
       // A newer synchronized purchase must never become this operation's receipt.
@@ -575,7 +680,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       requireSession();
       if (!pending) throw error('NO_PENDING_OPERATION', '没有需要核对的操作。');
       if (pending.accountId !== profile.id) throw error('ACCOUNT_MISMATCH', '请登录原来的账户，再核对上次操作。');
-      if (pending.kind === 'planting') {
+      if (isRecoveryOperation(pending)) {
         if (pending.stage === 'prepare-unknown') return recoveryPost(pending, 'prepare');
         if (pending.stage === 'ack-unknown') return recoveryPost(pending, 'ack');
         if (pending.stage === 'abandon-unknown') return recoveryPost(pending, 'abandon');

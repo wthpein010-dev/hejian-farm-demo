@@ -1,4 +1,21 @@
 import { isPlantingCommand, isPlantingReceipt } from './planting.mjs';
+import { isEggsCommand, isEggsReceipt } from './eggs.mjs';
+
+// Domainless commands are the original planting protocol. A domain is never
+// inferred from an action or a receipt, and reading it must not invoke a getter.
+export function isRecoveryCommand(input, audience) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
+  if (!Object.hasOwn(input, 'domain')) return isPlantingCommand(input, audience);
+  const domain = Object.getOwnPropertyDescriptor(input, 'domain');
+  return !!domain && Object.hasOwn(domain, 'value') && domain.value === 'eggs' &&
+    isEggsCommand(input, audience);
+}
+export function isRecoveryReceipt(value, ownerId, environment, key, command) {
+  if (!isRecoveryCommand(command, 'customer') && !isRecoveryCommand(command, 'staff')) return false;
+  return Object.hasOwn(command, 'domain')
+    ? isEggsReceipt(value, ownerId, environment, key, command.action)
+    : isPlantingReceipt(value, ownerId, environment, key, command.action);
+}
 
 export const RECOVERY_CODES = Object.freeze([
   'OK',
@@ -57,7 +74,7 @@ function prepare(input) {
   ensure(isRecoveryId(value.expectedEpoch) && integer(value.expectedVersion));
   ensure(
     ['customer', 'staff'].includes(value.audience) &&
-      isPlantingCommand(value.command, value.audience),
+      isRecoveryCommand(value.command, value.audience),
   );
   return {
     expectedEpoch: value.expectedEpoch,
@@ -92,7 +109,7 @@ function intent(input, ownerId, environment, now) {
   ensure(isRecoveryId(value.prepareEpoch) && integer(value.prepareVersion));
   ensure(
     ['customer', 'staff'].includes(value.audience) &&
-      isPlantingCommand(value.command, value.audience) &&
+      isRecoveryCommand(value.command, value.audience) &&
       phases.includes(value.phase),
   );
   ensure(integer(value.version, 1) && time(value.createdAt) && time(value.updatedAt));
@@ -108,12 +125,12 @@ function intent(input, ownerId, environment, now) {
   } else if (value.phase === 'settled') {
     ensure(value.version === (value.closedAt === null ? 2 : 3));
     ensure(
-      isPlantingReceipt(
+      isRecoveryReceipt(
         value.receipt,
         ownerId,
         environment,
         value.operationKey,
-        value.command.action,
+        value.command,
       ),
     );
     ensure(

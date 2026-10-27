@@ -10,7 +10,8 @@ import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm
 import { FRIENDS_SQL, createFriends } from './friends.mjs';
 import { FORUM_SQL, createForum } from './forum.mjs';
 import { PLANTING_SQL, createPlanting, PlantingError } from './planting.mjs';
-import { RECOVERY_SQL, createRecovery, RecoveryError } from './recovery.mjs';
+import { RECOVERY_SQL, createRecovery, RecoveryError, validateRecoveryDatabase } from './recovery.mjs';
+import { EGGS_SQL, createEggs, EggsError } from './eggs.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -25,7 +26,8 @@ const PRIVACY_CATEGORIES = [
   { id: 'friends', title: '农友名片与关系', description: '主动开通的系统名片、双方申请及关系（合计最多200条）、主动屏蔽（最多200条）、上海日界每日20次新申请额度与防重复操作记录；关闭交友保留历史额度及最小操作确认，注销删除本人记录和双方引用' },
   { id: 'forum', title: '社区内容与举报', description: '本人提交审核的帖子和评论、固定理由举报、每日额度与最小操作确认；关闭农友名片不撤回已发内容，本人可单独撤回，注销删除本人内容、子评论和相关举报' },
   { id: 'planting', title: '播种申请与作业', description: '本人地块的播种申请、处理时间线、当前授权和最小操作确认；尚有待办或指派作业时先处理后注销，结束后删除本人订单及档案，其他人员最小回执不含本人资料' },
-  { id: 'recovery', title: '操作恢复记录', description: '播种固定操作参数、原操作编号和回执、准备代际与核对状态；支持重新登录后核对原操作，不保存会话明文或社区正文；待核对操作先处理再注销' },
+  { id: 'eggs', title: '每日鸡蛋产出与收取', description: '明确配置的鸡舍产出、来源编号、当日实际登记与本人手动收取回执；注销清本人批次和人员关联，员工的最小确认不含鸡舍资料' },
+  { id: 'recovery', title: '操作恢复记录', description: '播种与收蛋的固定操作参数、原操作编号和回执、准备代际与核对状态；支持重新登录后核对原操作，不保存会话明文或社区正文；待核对操作先处理再注销' },
   { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
 ];
 
@@ -49,6 +51,7 @@ export class FarmStore {
   #forum;
   #planting;
   #recovery;
+  #eggs;
 
   constructor(config, options = {}) {
     this.#config = config;
@@ -56,16 +59,23 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 9) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
-      // Private tools may retain an already-validated schema7/8 database.
+      if (schema > 10) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      // Private tools may retain an already-validated schema7/8/9 database.
       // HTTP startup never supplies this compatibility flag.
       const preserveSchema7 = options.preserveSchemaVersion === 7;
       const preserveSchema8 = options.preserveSchemaVersion === 8;
-      const preserveLegacy = preserveSchema7 || preserveSchema8;
+      const preserveSchema9 = options.preserveSchemaVersion === 9;
+      const preserveLegacy = preserveSchema7 || preserveSchema8 || preserveSchema9;
       if (Object.keys(options).some(key => key !== 'preserveSchemaVersion') ||
           (options.preserveSchemaVersion !== undefined && !preserveLegacy) ||
           (preserveLegacy && (schema !== options.preserveSchemaVersion || config.mode !== 'development'))) {
         throw new TypeError('数据库兼容模式不可用');
+      }
+      // Legacy schema9 recovery only accepts the original planting wire.
+      // Verify before DDL so upgrading cannot legitimize a forged eggs intent.
+      if (schema === 9 && !preserveLegacy) {
+        const legacyClock = this.#prepare('SELECT last_time FROM server_clock WHERE singleton = 1').get()?.last_time;
+        validateRecoveryDatabase(this.#database, legacyClock);
       }
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
@@ -127,8 +137,9 @@ export class FarmStore {
       ${FRIENDS_SQL}
       ${FORUM_SQL}
       ${preserveSchema7 ? '' : PLANTING_SQL}
-      ${preserveLegacy ? '' : RECOVERY_SQL}
-      PRAGMA user_version = ${preserveLegacy ? options.preserveSchemaVersion : 9};
+      ${preserveSchema7 || preserveSchema8 ? '' : RECOVERY_SQL}
+      ${preserveLegacy ? '' : EGGS_SQL}
+      PRAGMA user_version = ${preserveLegacy ? options.preserveSchemaVersion : 10};
     `);
       this.#farmRegistry = createFarmRegistry({ prepare: sql => this.#prepare(sql), environment: config.mode });
       this.#friends = createFriends({ prepare: sql => this.#prepare(sql), environment: config.mode });
@@ -146,8 +157,17 @@ export class FarmStore {
           if (/^intent-[a-f0-9]{32}$/.test(key)) throw new PlantingError('RESERVED_OPERATION_KEY');
           return this.#recovery.hasOpen(user.id) ? 'INTENT_PENDING' : null;
         } });
-      if (!preserveLegacy) this.#recovery = createRecovery({ prepare: sql => this.#prepare(sql), environment: config.mode,
-        executePlanting: (user, audience, key, input, now, intentId) => this.#planting.command(user, audience, key, input, now, intentId) });
+      if (!preserveLegacy) this.#eggs = createEggs({ prepare: sql => this.#prepare(sql), environment: config.mode,
+        farmRegistry: this.#farmRegistry,
+        beforeNewCommand: (user, audience, key, input, now, intentId) => {
+          if (intentId !== null && this.#recovery?.allowCommand(user, audience, key, input, intentId)) return null;
+          if (/^intent-[a-f0-9]{32}$/.test(key)) throw new EggsError('RESERVED_OPERATION_KEY');
+          throw new RecoveryError('INVALID_RECOVERY_STATE');
+        },
+        harvest: (ownerId, expectedRevision, quantity, eventId, now) => this.#harvestEggs(ownerId, expectedRevision, quantity, eventId, now) });
+      if (!preserveSchema7 && !preserveSchema8) this.#recovery = createRecovery({ prepare: sql => this.#prepare(sql), environment: config.mode,
+        executePlanting: (user, audience, key, input, now, intentId) => this.#planting.command(user, audience, key, input, now, intentId),
+        ...(preserveSchema9 ? {} : { executeEggs: (user, audience, key, input, now, intentId) => this.#eggs.command(user, audience, key, input, now, intentId) }) });
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
 
@@ -226,6 +246,23 @@ export class FarmStore {
         .run(row.state_json, row.revision, now, row.id);
     }
     return state;
+  }
+
+  #harvestEggs(ownerId, expectedRevision, quantity, eventId, now) {
+    const row = this.#user(ownerId);
+    if (row.revision !== expectedRevision) return { code: 'REVISION_CONFLICT' };
+    if (!this.#sandbox(row) || row.revision >= Number.MAX_SAFE_INTEGER) return { code: 'ASSET_LIMIT' };
+    let state, next;
+    try {
+      state = JSON.parse(row.state_json);
+      if (state.system.eventIds.includes(eventId)) throw new Error('重复收获事件');
+      const system = Systems.recordEvent(state.system, { type: 'harvest', eventId, items: { eggs: quantity }, now });
+      if (system.inventory.eggs !== state.system.inventory.eggs + quantity || system.xp !== state.system.xp + 8 || system.stats.harvest !== state.system.stats.harvest + 1) throw new Error('收获事件未执行');
+      next = { system, wallet: { ...state.wallet, ...(system.daily.day === state.system.daily.day ? {} : { adToday: 0 }) } };
+    } catch { return { code: 'ASSET_LIMIT' }; }
+    const appliedRevision = row.revision + 1;
+    this.#prepare('UPDATE users SET state_json = ?, revision = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(next), appliedRevision, now, ownerId);
+    return { code: 'OK', appliedRevision };
   }
 
   createIdentity(provider, subject, now) {
@@ -357,6 +394,14 @@ export class FarmStore {
   }
   provisionPlanting(input, now) { return this.#transaction(() => this.#planting.provision(input, now)); }
 
+  eggsStatus(userId, now) { return this.#transaction(() => this.#eggs.status(this.#user(userId), now)); }
+  eggsRecord(userId, audience, id, now) { return this.#transaction(() => this.#eggs.record(this.#user(userId), audience, id, now)); }
+  eggsRecords(userId, cursor = 'start', now) { return this.#transaction(() => this.#eggs.records(this.#user(userId), cursor, now)); }
+  eggsPage(userId, audience, cursor = 'start', now) { return this.#transaction(() => this.#eggs.page(this.#user(userId), audience, cursor, now)); }
+  eggsDetail(userId, audience, id, now) { return this.#transaction(() => this.#eggs.detail(this.#user(userId), audience, id, now)); }
+  eggsCommand(userId, audience, key, input, now) { return this.#transaction(() => this.#eggs.command(this.#user(userId), audience, key, input, now)); }
+  provisionEggs(input, now) { return this.#transaction(() => this.#eggs.provision(input, now)); }
+
   recoveryCurrent(userId, now) { return this.#transaction(() => this.#recovery.current(this.#user(userId), now)); }
   recoveryDetail(userId, id, now) { return this.#transaction(() => this.#recovery.detail(this.#user(userId), id, now)); }
   recoveryPrepare(userId, input, now) { return this.#transaction(() => this.#recovery.prepareIntent(this.#user(userId), input, now)); }
@@ -409,6 +454,7 @@ export class FarmStore {
       this.#prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
       this.#recovery?.deleteOwner(row.id);
       this.#planting?.deleteOwner(row.id, now);
+      this.#eggs?.deleteOwner(row.id, now);
       this.#farmRegistry.deleteOwner(row.id);
       this.#forum.deleteOwner(row.id);
       this.#friends.deleteOwner(row.id, now);

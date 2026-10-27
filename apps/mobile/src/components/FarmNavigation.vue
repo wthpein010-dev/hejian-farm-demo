@@ -22,7 +22,7 @@ function prepareNavigation() {
 }
 onShow(prepareNavigation);
 onMounted(prepareNavigation);
-const selected = computed(() => ['pages/friends/index', 'pages/community/index', 'pages/forum-post/index'].includes(route.value) ? 'pages/activities/index' : route.value === 'pages/cart/index' ? 'pages/shop/index' : route.value === 'pages/farm-record/index' ? 'pages/farm/index' : ['pages/exchanges/index', 'pages/exchange/index', 'pages/inventory/index', 'pages/planting/index', 'pages/planting-order/index'].includes(route.value) ? 'pages/profile/index' : route.value);
+const selected = computed(() => ['pages/friends/index', 'pages/community/index', 'pages/forum-post/index'].includes(route.value) ? 'pages/activities/index' : route.value === 'pages/cart/index' ? 'pages/shop/index' : route.value === 'pages/farm-record/index' ? 'pages/farm/index' : ['pages/exchanges/index', 'pages/exchange/index', 'pages/inventory/index', 'pages/planting/index', 'pages/planting-order/index', 'pages/eggs/index', 'pages/egg-batch/index', 'pages/egg-register/index'].includes(route.value) ? 'pages/profile/index' : route.value);
 function navigate(path: string) { if (path !== route.value) requestNavigation(() => uni.switchTab({ url: '/' + path })); }
 </script>
 <template><view class="farm-navigation" role="navigation" aria-label="主导航"><FarmButton v-for="entry in entries" :key="entry.path" class="farm-nav-item" :class="{ active: selected === entry.path }" :aria-current="selected === entry.path ? 'page' : undefined" @tap="navigate(entry.path)"><image class="farm-nav-mark" :src="`/static/navigation/${entry.icon}${selected === entry.path ? '-selected' : ''}.png`" mode="aspectFit" aria-hidden="true" /><text>{{ entry.title }}</text></FarmButton></view></template>

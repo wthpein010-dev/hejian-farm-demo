@@ -1,11 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { isPlantingCommand, isPlantingReceipt } from '../../../shared/planting.mjs';
 import {
   isRecoveryId,
   isRecoveryPrepare,
   isRecoveryView,
   isRecoveryDetail,
   isRecoveryResult,
+  isRecoveryCommand,
+  isRecoveryReceipt,
 } from '../../../shared/recovery.mjs';
 
 // Store owns BEGIN IMMEDIATE for every mutation. Backup imports these exact definitions.
@@ -100,13 +101,18 @@ function parseIntent(row) {
   };
 }
 
-export function createRecovery({ prepare, environment, executePlanting }) {
+export function createRecovery({ prepare, environment, executePlanting, executeEggs }) {
   if (
     typeof prepare !== 'function' ||
     typeof executePlanting !== 'function' ||
+    (executeEggs !== undefined && typeof executeEggs !== 'function') ||
     !['development', 'production'].includes(environment)
   )
     invalid();
+  // Legacy fixtures may omit eggs entirely. Existing ledgers still reserve
+  // their keys even when this service instance has no eggs executor.
+  const hasEggsLedger = !!prepare("SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'eggs_commands'").get();
+  if (executeEggs && !hasEggsLedger) invalid();
   prepare('INSERT OR IGNORE INTO recovery_epoch (singleton,epoch,created_at) VALUES (1,?,0)').run(
     random(),
   );
@@ -128,6 +134,9 @@ export function createRecovery({ prepare, environment, executePlanting }) {
     );
   const account = (owner) =>
     prepare('SELECT id,environment,identity_provider FROM users WHERE id = ?').get(owner);
+  const commandLedger = (command, owner, key) => Object.hasOwn(command, 'domain')
+    ? prepare('SELECT fingerprint,result_json FROM eggs_commands WHERE environment = ? AND owner_id = ? AND key = ?').get(environment, owner, key)
+    : prepare('SELECT fingerprint,result_json FROM planting_commands WHERE environment = ? AND owner_id = ? AND key = ?').get(environment, owner, key);
   const stamp = (user, now) => ({
     recoveryFormat: 1,
     ownerId: user.id,
@@ -204,6 +213,7 @@ export function createRecovery({ prepare, environment, executePlanting }) {
     prepareIntent(user, input, now) {
       validateUser(user, now);
       if (!isRecoveryPrepare(input)) invalid();
+      if (Object.hasOwn(input.command, 'domain') && !executeEggs) invalid();
       const attempt = canonicalPrepare(input);
       const digest = fingerprint(attempt.audience, attempt.command);
       // Original accepted CAS tombstones win even after acknowledgement or epoch rotation.
@@ -237,7 +247,10 @@ export function createRecovery({ prepare, environment, executePlanting }) {
         const legacy = prepare(
           'SELECT 1 FROM planting_commands WHERE environment = ? AND owner_id = ? AND key = ?',
         ).get(environment, user.id, 'intent-' + candidate);
-        if (!exists && !legacy) {
+        const egg = hasEggsLedger && prepare(
+          'SELECT 1 FROM eggs_commands WHERE environment = ? AND owner_id = ? AND key = ?',
+        ).get(environment, user.id, 'intent-' + candidate);
+        if (!exists && !legacy && !egg) {
           id = candidate;
           break;
         }
@@ -277,12 +290,13 @@ export function createRecovery({ prepare, environment, executePlanting }) {
       if (target.phase !== 'prepared' || slot(user.id)?.open_id !== id)
         throw new RecoveryError('INVALID_RECOVERY_STATE');
       const input = JSON.parse(target.command_json);
-      const receipt = executePlanting(user, target.audience, target.operation_key, input, now, id);
-      if (!isPlantingReceipt(receipt, user.id, environment, target.operation_key, input.action))
+      if (!isRecoveryCommand(input, target.audience)) invalid();
+      const execute = Object.hasOwn(input, 'domain') ? executeEggs : executePlanting;
+      if (typeof execute !== 'function') invalid();
+      const receipt = execute(user, target.audience, target.operation_key, input, now, id);
+      if (!isRecoveryReceipt(receipt, user.id, environment, target.operation_key, input))
         invalid();
-      const ledger = prepare(
-        'SELECT fingerprint,result_json FROM planting_commands WHERE environment = ? AND owner_id = ? AND key = ?',
-      ).get(environment, user.id, target.operation_key);
+      const ledger = commandLedger(input, user.id, target.operation_key);
       if (
         !ledger ||
         ledger.fingerprint !== target.fingerprint ||
@@ -329,7 +343,7 @@ export function createRecovery({ prepare, environment, executePlanting }) {
         !safe(user?.id) ||
         !enabled(user) ||
         !isRecoveryId(intentId) ||
-        !isPlantingCommand(input, audience)
+        !isRecoveryCommand(input, audience)
       )
         return false;
       const target = row(user.id, intentId);
@@ -376,7 +390,7 @@ export function createRecovery({ prepare, environment, executePlanting }) {
   );
 }
 
-export function validateRecoveryDatabase(db, now) {
+export function validateRecoveryDatabase(db, now, { allowEggs = false } = {}) {
   try {
     if (!time(now)) invalid();
     const epochs = db.prepare('SELECT * FROM recovery_epoch').all();
@@ -425,6 +439,7 @@ export function validateRecoveryDatabase(db, now) {
         serverTime: now,
         intent: parseIntent(target),
       };
+      if (!allowEggs && Object.hasOwn(detail.intent.command, 'domain')) invalid();
       if (
         !user ||
         !available(user, target.environment) ||
@@ -458,11 +473,15 @@ export function validateRecoveryDatabase(db, now) {
       )
         invalid();
       if ((target.closed_at === null) !== (current.open_id === target.id)) invalid();
-      const ledger = db
-        .prepare(
-          'SELECT fingerprint,result_json,created_at FROM planting_commands WHERE environment = ? AND owner_id = ? AND key = ?',
-        )
-        .get(target.environment, target.owner_id, target.operation_key);
+      const egg = Object.hasOwn(detail.intent.command, 'domain');
+      const plantingLedger = db.prepare(
+        'SELECT fingerprint,result_json,created_at FROM planting_commands WHERE environment = ? AND owner_id = ? AND key = ?',
+      ).get(target.environment, target.owner_id, target.operation_key);
+      const eggLedger = allowEggs ? db.prepare(
+        'SELECT fingerprint,result_json,created_at FROM eggs_commands WHERE environment = ? AND owner_id = ? AND key = ?',
+      ).get(target.environment, target.owner_id, target.operation_key) : null;
+      const ledger = egg ? eggLedger : plantingLedger;
+      if (egg ? plantingLedger : eggLedger) invalid();
       if (target.phase === 'settled') {
         if (
           !ledger ||
@@ -510,10 +529,10 @@ export function validateRecoveryDatabase(db, now) {
   }
 }
 
-export function restoreRecoveryDatabase(db, now) {
+export function restoreRecoveryDatabase(db, now, options) {
   try {
     if (!time(now)) invalid();
-    validateRecoveryDatabase(db, now);
+    validateRecoveryDatabase(db, now, options);
     const current = db
       .prepare('SELECT epoch,created_at FROM recovery_epoch WHERE singleton = 1')
       .get();

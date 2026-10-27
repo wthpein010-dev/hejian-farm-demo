@@ -1,6 +1,7 @@
 import { reactive, nextTick } from 'vue';
 import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
-import { isForumId, isPlantingId } from './client.mjs';
+import { isForumId, isPlantingId, isEggsId } from './client.mjs';
+import type { EggsAudience, EggsStatus, EggsRecord, EggsRecordsPage, EggsPage, EggsDetail, EggsCommand, EggsReceipt, EggsBatch, RecoveryCommand, RecoveryReceipt } from './types';
 import type { RecoveryIntent, RecoveryDiscovery, RecoveryStage, PlantingAudience, PlantingStatus, PlantingRecord, PlantingPage, PlantingDetail, PlantingCommand, PlantingReceipt, PlantingState, PlantingAction } from './types';
 import { requestNavigation } from './navigation.mjs';
 import type { ForumStatus, ForumPage, ForumDetail, ForumReports, ForumCommand, ForumReceipt, ForumState, ForumCircle, ForumReason } from './types';
@@ -27,6 +28,10 @@ export const farmState = reactive({
   plantingStatus: null as PlantingStatus | null, plantingRecord: null as PlantingRecord | null, plantingPage: null as PlantingPage | null, plantingDetail: null as PlantingDetail | null,
   plantingAudience: 'customer' as PlantingAudience, plantingDetailAudience: 'customer' as PlantingAudience,
   plantingBusy: false, plantingDetailBusy: false, plantingRecordBusy: false, plantingError: '', plantingDetailError: '', plantingRecordError: '', plantingMessage: '', plantingConfirmedOrderId: '',
+  eggsStatus: null as EggsStatus | null, eggsRecord: null as EggsRecord | null, eggsRecords: null as EggsRecordsPage | null, eggsPage: null as EggsPage | null, eggsDetail: null as EggsDetail | null,
+  eggsAudience: 'customer' as EggsAudience, eggsDetailAudience: 'customer' as EggsAudience, eggsRecordAudience: 'customer' as EggsAudience,
+  eggsBusy: false, eggsDetailBusy: false, eggsRecordBusy: false, eggsError: '', eggsDetailError: '', eggsRecordError: '', eggsMessage: '', eggsSyncError: '', eggsConfirmedBatchId: '',
+  assetSyncRequired: false, minimumConfirmedRevision: 0,
   recoveryDiscovery: 'unknown' as RecoveryDiscovery, recoveryError: '', recoveryIntent: null as RecoveryIntent | null, recoveryStage: null as RecoveryStage | null, mutationBlocked: true,
   error: '', message: '', pending: false, configured: client.configured
 });
@@ -44,6 +49,21 @@ let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRea
 let forumRead = 0, forumDetailRead = 0, forumSelection = { scope: 'public' as 'public' | 'mine' | 'reports', circle: 'all' as 'all' | ForumCircle }, forumPostId = '';
 let plantingRead = 0, plantingDetailRead = 0, plantingRecordRead = 0, plantingStatusRead = 0;
 let plantingAudience: PlantingAudience = 'customer', plantingOrderId = '', plantingRecordId = '', plantingClock: { serverTime: number; receivedAt: number } | null = null;
+let eggsRead = 0, eggsDetailRead = 0, eggsRecordRead = 0, eggsStatusRead = 0, eggsRecordId = '', eggsBatchId = '';
+let eggsAudience: EggsAudience = 'customer';
+let eggsFeedback: { operationKey: string; audience: EggsAudience; recordId: string; batchId: string } | null = null;
+let eggsFeedbackView: { audience: EggsAudience; kind: 'list' | 'record' | 'batch'; id: string } = { audience: 'customer', kind: 'list', id: '' };
+function selectEggsFeedback(audience: EggsAudience, kind: 'list' | 'record' | 'batch', id = '') {
+  eggsFeedbackView = { audience, kind, id };
+  if (eggsFeedback && (eggsFeedback.audience !== audience || (kind === 'record' && eggsFeedback.recordId !== id) || (kind === 'batch' && eggsFeedback.batchId !== id))) {
+    farmState.eggsMessage = ''; farmState.eggsConfirmedBatchId = ''; eggsFeedback = null;
+  }
+}
+function invalidateEggsViews() {
+  eggsRead++; eggsDetailRead++; eggsRecordRead++; eggsStatusRead++;
+  farmState.eggsStatus = null; farmState.eggsRecord = null; farmState.eggsRecords = null; farmState.eggsPage = null; farmState.eggsDetail = null;
+  farmState.eggsBusy = false; farmState.eggsDetailBusy = false; farmState.eggsRecordBusy = false;
+}
 function invalidatePlantingViews() {
   plantingRead++; plantingDetailRead++; plantingRecordRead++; plantingStatusRead++;
   farmState.plantingStatus = null; farmState.plantingRecord = null; farmState.plantingPage = null; farmState.plantingDetail = null;
@@ -77,6 +97,10 @@ function syncClientState() {
     farmState.forumSubmission = null;
     invalidatePlantingViews(); plantingOrderId = ''; plantingRecordId = ''; plantingAudience = 'customer'; plantingClock = null;
     farmState.plantingError = ''; farmState.plantingDetailError = ''; farmState.plantingRecordError = ''; farmState.plantingMessage = ''; farmState.plantingConfirmedOrderId = '';
+    invalidateEggsViews(); eggsRecordId = ''; eggsBatchId = ''; eggsAudience = 'customer';
+    eggsFeedback = null;
+    eggsFeedbackView = { audience: 'customer', kind: 'list', id: '' };
+    farmState.eggsError = ''; farmState.eggsDetailError = ''; farmState.eggsRecordError = ''; farmState.eggsMessage = ''; farmState.eggsSyncError = ''; farmState.eggsConfirmedBatchId = '';
   }
   farmState.snapshot = client.snapshot as Snapshot | null;
   farmState.privacy = client.privacy as PrivacyReport | null;
@@ -86,6 +110,7 @@ function syncClientState() {
   farmState.recoveryDiscovery = client.recoveryDiscovery as RecoveryDiscovery; farmState.recoveryError = client.recoveryError;
   farmState.recoveryIntent = client.recoveryIntent as RecoveryIntent | null; farmState.recoveryStage = client.pendingStage as RecoveryStage | null;
   farmState.mutationBlocked = client.mutationBlocked;
+  farmState.assetSyncRequired = client.assetSyncRequired; farmState.minimumConfirmedRevision = client.minimumConfirmedRevision;
   farmState.confirmedCheckout = client.hasConfirmedCheckout;
   if (!client.farmPage) farmState.farmRegistryPage = null;
   if (!client.farmDetail) farmState.farmRegistryDetail = null;
@@ -100,6 +125,11 @@ function syncClientState() {
   if (!client.plantingRecord) farmState.plantingRecord = null;
   if (!client.plantingPage) farmState.plantingPage = null;
   if (!client.plantingDetail) farmState.plantingDetail = null;
+  if (!client.eggsStatus) farmState.eggsStatus = null;
+  if (!client.eggsRecord) farmState.eggsRecord = null;
+  if (!client.eggsRecords) farmState.eggsRecords = null;
+  if (!client.eggsPage) farmState.eggsPage = null;
+  if (!client.eggsDetail) farmState.eggsDetail = null;
 }
 
 async function run(operation: () => Promise<unknown>, message = '') {
@@ -120,7 +150,8 @@ export const retryFarmOperation = () => {
     if (kind === 'friends') await completeFriendsCommand(result as FriendCommandReceipt);
     if (kind === 'forum') await completeForumCommand(result as ForumReceipt);
     if (kind === 'planting' && result) await completePlantingCommand(result as PlantingReceipt);
-  }, ['friends', 'forum', 'planting'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+    if (kind === 'eggs' && result) await completeEggsCommand(result as EggsReceipt);
+  }, ['friends', 'forum', 'planting', 'eggs'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
 };
 export const retryFarmRecovery = () => run(() => client.discoverRecovery());
 export const continueFarmPlanting = () => run(async () => {
@@ -133,6 +164,15 @@ export const abandonFarmPlanting = () => run(async () => {
   const receipt = await client.abandonPlanting() as PlantingReceipt | null;
   syncClientState();
   if (receipt) await completePlantingCommand(receipt);
+});
+export const continueFarmRecovery = () => run(async () => {
+  const receipt = await client.continueRecovery() as RecoveryReceipt | null; syncClientState();
+  if (receipt) await completeRecoveryCommand(receipt);
+});
+export const acknowledgeFarmRecovery = () => { const intentId = farmState.recoveryIntent?.id; return run(async () => { await client.acknowledgeRecovery(intentId); if (client.assetSyncRequired) await syncEggAssets(); }); };
+export const abandonFarmRecovery = () => run(async () => {
+  const receipt = await client.abandonRecovery() as RecoveryReceipt | null; syncClientState();
+  if (receipt) await completeRecoveryCommand(receipt);
 });
 export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
 export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
@@ -286,7 +326,7 @@ export async function loadExchangeRecord(id: string) {
   if (exchangeSelection !== id || id === 'last') farmState.exchangeRecord = null;
   exchangeSelection = id;
   try {
-    if (!client.snapshot) await client.load();
+    if (id !== 'last' && !client.snapshot) await client.load();
     if (read !== exchangeRecordRead || account !== client.profile) return false;
     const detail = await (id === 'last' ? client.loadConfirmedCheckout() : client.loadExchangeDetail(id)) as ExchangeDetail;
     if (read !== exchangeRecordRead || account !== client.profile || detail !== client.exchangeDetail) return false;
@@ -463,6 +503,145 @@ export function openPlantingOrders(audience: PlantingAudience = 'customer') {
     if (position >= 0 && plantingAudience === audience && position < pages.length - 1) uni.navigateBack({ delta: pages.length - 1 - position, fail: fallback }); else fallback();
   });
 }
+export function eggsStateLabel(status: EggsBatch['status']) { return { available: '待手动收取', collected: '已收取', withdrawn: '农场已撤回' }[status]; }
+export function eggsDayLabel(day: string) { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day); return match ? `${match[1]}年${match[2]}月${match[3]}日` : '日期待核对'; }
+export function recoveryActionLabel(command: RecoveryCommand) {
+  return 'domain' in command ? ({ register: '登记今日鸡蛋', withdraw: '撤回产出登记', collect: '手动收取鸡蛋' }[command.action]) : plantingActionLabel(command.action);
+}
+export function recoveryObjectLabel(command: RecoveryCommand) { return 'recordId' in command ? command.recordId : 'batchId' in command ? command.batchId : command.orderId; }
+export function recoveryResultLabel(receipt: RecoveryReceipt) { return 'eggFormat' in receipt ? eggsResultLabel(receipt) : plantingResultLabel(receipt); }
+async function completeRecoveryCommand(receipt: RecoveryReceipt) { return 'eggFormat' in receipt ? completeEggsCommand(receipt) : completePlantingCommand(receipt); }
+const eggsRefusals: Record<string, string> = {
+  EGGS_UNAVAILABLE: '鸡蛋登记与收取暂未开放。', NOT_FOUND: '这笔产出已不可访问，请刷新核对。', PROFILE_DISABLED: '本轮鸡蛋登记已关闭，请联系农场核查。', PROFILE_CHANGED: '登记资格刚刚更新，请刷新对象后重新核对。', RECORD_CHANGED: '牧场轮次或状态已变化，请核对当前档案。', BATCH_CHANGED: '产出状态已变化，请刷新后重新核对。', INVALID_STATE: '这笔产出已收取或撤回，不能再次操作。', DAILY_BATCH_EXISTS: '今天已有未撤回的登记，请先核对原登记。', SOURCE_EXISTS: '来源编号已使用，请核对原登记。', REVISION_CONFLICT: '田园资产已更新，请同步后重新核对收取。', IDEMPOTENCY_CONFLICT: '原操作记录有冲突，请保留并核对原操作。', ASSET_LIMIT: '本次收取未完成，请由农场核查资产上限。'
+};
+export function eggsResultLabel(receipt: EggsReceipt) {
+  if (receipt.outcome !== 'applied') return eggsRefusals[receipt.code] || '操作未完成，请刷新当前产出并核对。';
+  return receipt.action === 'collect' ? `原收取已完成，本笔收取 ${receipt.quantity} 枚鸡蛋。` : receipt.action === 'register' ? '今日鸡蛋产出已登记，等待用户手动收取。' : '这笔产出登记已撤回，未发放鸡蛋。';
+}
+export async function loadFarmEggsStatus() {
+  syncClientState(); const read = ++eggsStatusRead, account = client.profile;
+  try {
+    const value = await client.loadEggsStatus() as EggsStatus;
+    if (read !== eggsStatusRead || account !== client.profile) return false;
+    farmState.eggsStatus = value; return true;
+  } catch (failure) { if (read === eggsStatusRead && account === client.profile) farmState.eggsError = failure instanceof Error ? failure.message : '收蛋服务状态未能确认，请重试。'; return false; }
+  finally { syncClientState(); }
+}
+function mergeEggPages<T extends EggsPage | EggsRecordsPage>(previous: T | null, page: T, cursor: string, field: 'id' | 'recordId'): T {
+  if (cursor === 'start') return page;
+  if (!previous || previous.ownerId !== page.ownerId || previous.environment !== page.environment || previous.nextCursor !== cursor) throw new Error('产出列表已更新，请刷新后继续。');
+  const ids = new Set(previous.items.map(item => field === 'id' ? (item as EggsBatch).id : (item as EggsRecord).recordId));
+  if (page.items.some(item => ids.has(field === 'id' ? (item as EggsBatch).id : (item as EggsRecord).recordId))) throw new Error('产出列表已更新，请刷新后继续。');
+  return { ...page, items: [...previous.items, ...page.items] } as T;
+}
+export function loadFarmEggs(audience: EggsAudience = 'customer', cursor = 'start', recordsCursor = 'start') {
+  syncClientState(); selectEggsFeedback(audience, 'list'); return readFarmEggs(audience, cursor, recordsCursor);
+}
+async function readFarmEggs(audience: EggsAudience, cursor = 'start', recordsCursor = 'start') {
+  syncClientState(); const read = ++eggsRead, account = client.profile;
+  if (eggsAudience !== audience) { farmState.eggsPage = null; farmState.eggsRecords = null; }
+  eggsAudience = audience; farmState.eggsAudience = audience; farmState.eggsBusy = true; farmState.eggsError = '';
+  try {
+    if (!await loadFarmEggsStatus()) throw new Error('收蛋服务状态未能确认，请刷新重试。');
+    if (read !== eggsRead || account !== client.profile) return false;
+    if (!farmState.eggsStatus?.available) return true;
+    const page = await client.loadEggsPage(audience, cursor) as EggsPage;
+    if (read !== eggsRead || account !== client.profile || page !== client.eggsPage) return false;
+    farmState.eggsPage = mergeEggPages(farmState.eggsPage, page, cursor, 'id');
+    if (audience === 'staff' && cursor === 'start') {
+      const records = await client.loadEggsRecords(recordsCursor) as EggsRecordsPage;
+      if (read !== eggsRead || account !== client.profile || records !== client.eggsRecords) return false;
+      farmState.eggsRecords = mergeEggPages(farmState.eggsRecords, records, recordsCursor, 'recordId');
+    }
+    return true;
+  } catch (failure) { if (read === eggsRead && account === client.profile) farmState.eggsError = failure instanceof Error ? failure.message : '鸡蛋产出读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === eggsRead) farmState.eggsBusy = false; }
+}
+export async function loadFarmEggsRecords(cursor = 'start') {
+  syncClientState(); const read = ++eggsRead, account = client.profile;
+  selectEggsFeedback('staff', 'list');
+  farmState.eggsBusy = true; farmState.eggsError = '';
+  try {
+    const page = await client.loadEggsRecords(cursor) as EggsRecordsPage;
+    if (read !== eggsRead || account !== client.profile || page !== client.eggsRecords) return false;
+    farmState.eggsRecords = mergeEggPages(farmState.eggsRecords, page, cursor, 'recordId'); return true;
+  } catch (failure) { if (read === eggsRead && account === client.profile) farmState.eggsError = failure instanceof Error ? failure.message : '授权对象读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === eggsRead) farmState.eggsBusy = false; }
+}
+export function loadFarmEggsBatch(id: string, audience: EggsAudience = 'customer') {
+  syncClientState(); selectEggsFeedback(audience, 'batch', id); return readFarmEggsBatch(id, audience);
+}
+async function readFarmEggsBatch(id: string, audience: EggsAudience) {
+  syncClientState(); const read = ++eggsDetailRead, account = client.profile;
+  eggsBatchId = id; eggsAudience = audience; farmState.eggsDetailAudience = audience; farmState.eggsDetail = null; farmState.eggsDetailBusy = true; farmState.eggsDetailError = '';
+  try {
+    const detail = await client.loadEggsDetail(id, audience) as EggsDetail;
+    if (read !== eggsDetailRead || account !== client.profile || detail !== client.eggsDetail) return false;
+    farmState.eggsDetail = detail; return true;
+  } catch (failure) { if (read === eggsDetailRead && account === client.profile) farmState.eggsDetailError = failure instanceof Error ? failure.message : '产出详情读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === eggsDetailRead) farmState.eggsDetailBusy = false; }
+}
+export function loadFarmEggsRecord(id: string, audience: EggsAudience = 'staff') {
+  syncClientState(); selectEggsFeedback(audience, 'record', id); return readFarmEggsRecord(id, audience);
+}
+async function readFarmEggsRecord(id: string, audience: EggsAudience) {
+  syncClientState(); const read = ++eggsRecordRead, account = client.profile;
+  eggsRecordId = id; eggsAudience = audience; farmState.eggsRecordAudience = audience; farmState.eggsRecord = null; farmState.eggsRecordBusy = true; farmState.eggsRecordError = '';
+  try {
+    const record = await client.loadEggsRecord(id, audience) as EggsRecord;
+    if (read !== eggsRecordRead || account !== client.profile || record !== client.eggsRecord) return false;
+    farmState.eggsRecord = record; return true;
+  } catch (failure) { if (read === eggsRecordRead && account === client.profile) farmState.eggsRecordError = failure instanceof Error ? failure.message : '登记资格读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === eggsRecordRead) farmState.eggsRecordBusy = false; }
+}
+async function completeEggsCommand(receipt: EggsReceipt) {
+  syncClientState();
+  const intent = client.recoveryIntent as RecoveryIntent | null;
+  const original = intent?.operationKey === receipt.operationKey && 'domain' in intent.command ? intent : null;
+  const previous = eggsFeedback?.operationKey === receipt.operationKey ? eggsFeedback : null;
+  const recordId = original && 'recordId' in original.command ? original.command.recordId : previous?.recordId || '';
+  eggsFeedback = { operationKey: receipt.operationKey, audience: original?.audience || previous?.audience || eggsAudience, recordId, batchId: receipt.batchId || '' };
+  const view = eggsFeedbackView, audience = eggsFeedback.audience;
+  const sameView = view.audience === audience && (view.kind === 'list' || (view.kind === 'record' ? view.id === recordId : view.id === receipt.batchId));
+  farmState.eggsMessage = sameView ? eggsResultLabel(receipt) : ''; farmState.eggsConfirmedBatchId = sameView && receipt.outcome === 'applied' ? receipt.batchId || '' : '';
+  await readFarmEggs(audience);
+  // Refresh only the result's matching selection. An earlier unrelated detail
+  // must not consume or erase this object's feedback during reconciliation.
+  if (sameView && view.kind === 'batch' && view.id === receipt.batchId) await readFarmEggsBatch(view.id, audience);
+  if (sameView && view.kind === 'record' && view.id === recordId && audience === 'staff') await readFarmEggsRecord(view.id, audience);
+}
+async function syncEggAssets() {
+  farmState.eggsSyncError = '';
+  try { await client.load(); }
+  catch (failure) { farmState.eggsSyncError = failure instanceof Error ? failure.message : '田园资产暂未同步，请重试。'; }
+  finally { syncClientState(); }
+}
+export async function commandFarmEggs(audience: EggsAudience, command: EggsCommand) {
+  if (farmState.busy || farmState.pending || client.mutationBlocked) return false;
+  eggsAudience = audience; invalidateEggsViews(); farmState.eggsMessage = ''; farmState.eggsConfirmedBatchId = ''; eggsFeedback = null;
+  let applied = false;
+  const confirmed = await run(async () => {
+    const receipt = await client.commandEggs(audience, command) as EggsReceipt | null;
+    if (!receipt) { farmState.eggsMessage = '这次操作已结束，未登记或收取新的鸡蛋。'; return; }
+    applied = receipt.outcome === 'applied'; await completeEggsCommand(receipt); syncClientState(); await nextTick();
+    if (client.recoveryIntent?.operationKey === receipt.operationKey && client.pendingStage === 'receipt-review') await client.acknowledgeRecovery(receipt.operationKey.slice('intent-'.length));
+    if (client.assetSyncRequired) await syncEggAssets();
+  });
+  return confirmed && applied;
+}
+export function openEggs(audience: EggsAudience = 'customer') {
+  if (!['customer', 'staff'].includes(audience)) return;
+  requestNavigation(() => {
+    selectEggsFeedback(audience, 'list');
+    const pages = getCurrentPages(), position = pages.map(page => page.route).lastIndexOf('pages/eggs/index');
+    if (position === pages.length - 1 && eggsAudience === audience) return;
+    const fallback = () => uni.navigateTo({ url: `/pages/eggs/index?audience=${audience}` });
+    if (position >= 0 && eggsAudience === audience && position < pages.length - 1) uni.navigateBack({ delta: pages.length - 1 - position, fail: fallback }); else fallback();
+  });
+}
+export function openEggsBatch(id: string, audience: EggsAudience = 'customer') { if (isEggsId(id) && ['customer', 'staff'].includes(audience)) requestNavigation(() => { selectEggsFeedback(audience, 'batch', id); uni.navigateTo({ url: `/pages/egg-batch/index?id=${id}&audience=${audience}` }); }); }
+export function openEggsRegister(id: string) { if (/^[a-z0-9][a-z0-9-]{7,63}$/.test(id)) requestNavigation(() => { selectEggsFeedback('staff', 'record', id); uni.navigateTo({ url: `/pages/egg-register/index?id=${id}` }); }); }
+export function returnFromEggs() { requestNavigation(() => { const fallback = () => uni.switchTab({ url: '/pages/profile/index' }); if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback }); else fallback(); }); }
 export function openPlantingOrder(id: string, audience: PlantingAudience = 'customer') { if (isPlantingId(id) && ['customer', 'staff'].includes(audience)) requestNavigation(() => uni.navigateTo({ url: `/pages/planting-order/index?id=${id}&audience=${audience}` })); }
 export function returnFromPlanting() { requestNavigation(() => { const fallback = () => uni.switchTab({ url: '/pages/profile/index' }); if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback }); else fallback(); }); }
 export function openFarmRegistry() {

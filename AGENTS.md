@@ -94,12 +94,22 @@ prototype/social.js的FarmSocial拥有纯内存圈子/帖子/评论/好友规则
 
 dispatch接单/派工，当前assignee+execute开工/完成；按记录每次重读权限。完成在同事务核对原档案版本/归属/轮次并新增growing历史，不复制旧测量/旧预测，不动financial Snapshot/revision/奖励。外部导入原批次先回放，新改写才检查active锁；不可在Store外抢先guard破坏原key语义。cancel-work是明确人工核实停工并禁用plan，非设备停止ACK，不能宣称地块未播种。
 
-未知命令复用唯一pending，原最小回执和当前详情分开。独立工作流变化撤销相关注销准备；active本人/受派作业阻断注销，结束员工引用匿名化。恢复清session/注销准备并禁用plan、撤销grant/递增版本，防旧备份复活权限；仍需最新撤权/注销清单和保留/容量政策。私有工具显式保留经完整验证的旧schema7/8，HTTP升级当前schema9。所有数据合成、不迁移运行库。
+未知命令复用唯一pending，原最小回执和当前详情分开。独立工作流变化撤销相关注销准备；active本人/受派作业阻断注销，结束员工引用匿名化。恢复清session/注销准备并禁用plan、撤销grant/递增版本，防旧备份复活权限；仍需最新撤权/注销清单和保留/容量政策。私有工具显式保留经完整验证的旧schema7/8，当时HTTP升级schema9，当前schema10见下文。所有数据合成、不迁移运行库。
 
 ## 播种冷启动恢复
 
-契约[RECOVERY](docs/release/RECOVERY.md)，计划`.scratch/cold-start-recovery/`。shared/recovery.mjs拥有严格wire，api/recovery.mjs拥有schema9 epoch/slots/intents三表、prepare代际墓碑、原回执状态、备份校验与恢复隔离。只保存planting固定字段，不额外保存UGC；production关闭。不把本模块当财务/农友/论坛或跨任意恢复点的全域保障。
+契约[RECOVERY](docs/release/RECOVERY.md)，计划`.scratch/cold-start-recovery/`。shared/recovery.mjs拥有严格wire，api/recovery.mjs拥有schema9 epoch/slots/intents三表、prepare代际墓碑、原回执状态、备份校验与恢复隔离。该阶段只保存planting固定字段，schema10另扩展固定eggs域，不额外保存UGC；production关闭。不把本模块当财务/农友/论坛或跨任意恢复点的全域保障。
 
 登录结果明确environment，client严格核对并必须await恢复检查；失败锁新写但保留读资料/重试。open本体复用唯一pending，其他域原key不被覆盖；prepared冷启动不自动执行，settled只原结果、精确id ack，ack未知不重执行业务。原target和当前槽不同，不能拿GET current当旧ack证据。原账先查，raw保留intent-[32hex]非记账拒绝，避免毒化；只有owned当前prepared窄上下文可首次执行，execute/业务/原账/settle在同事务。
 
 恢复轮换epoch、每槽version++、open prepared隔离quarantined，不自动继续或用户自助解除；原receipt不改。外部灾备核查仍必要，最新撤权/删除与快照外操作缺口不掩盖。准备/槽变化撤销注销确认，open先处理再删。客户端不写token/key/正文storage/URL/日志；当前唯一pending和账户/generation边界保持。全部合成数据，工作树/备份/私有输入不入Git。
+
+## 每日鸡蛋登记与手动收取（2026-10-28）
+
+契约[EGGS](docs/release/EGGS.md)，计划`.scratch/durable-eggs/`。shared/eggs拥有严格wire，api/eggs拥有schema10四表/固定索引/配置授权/实登批次/最小命令账及备份变换。显式chicken-eggs绑定本人animal/轮次，独立record权限；上海当日一笔非withdrawn批次/来源唯一，不自动补产或销毁。当前授权人员可撤回未收归档旧批次。
+
+collect核对batchVersion和financial revision，Store同事务harvest items.eggs，继承XP8/收获统计与资格并revision+1；登记/撤回不动财务。原key优先，typed command/批次/事件/资产跨表校验；注销清本人对象和真实人员引用。私有provision-eggs仅inspect既有schema10，不迁移运行库。
+
+新命令domain:'eggs'，旧无domain只严格planting；recovery固定分派/分别固定账，旧字节/指纹/墓碑不重写。schema9升级前拒绝伪造egg意图；备份2–10，恢复禁配置/撤权/version++及prepared隔离。旧工具明确保留7/8/9，HTTP升级10。
+
+client唯一pending/全局原结果面板；成功collect抬高同账户/环境最低资产revision，ack不能解除旧资产写锁，GET可重试。FarmTextField数字语义/灰色placeholder与useFarmDraft复用唯一导航guard，错误保稿、label常显。全部合成开发沙盒，公开Pages仍内存示例，不把四端编译当正式上线。

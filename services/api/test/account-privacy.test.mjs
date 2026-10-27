@@ -87,7 +87,7 @@ test('privacy lists only the authenticated account data and rejects account sele
   assert.deepEqual(Object.keys(r.json.data).sort(), ['createdAt', 'dataCategories', 'deletionSupported', 'profile', 'updatedAt']);
   assert.deepEqual(r.json.data.profile, a.profile);
   assert.deepEqual([r.json.data.createdAt, r.json.data.updatedAt, r.json.data.deletionSupported], [NOW, NOW, true]);
-  assert.deepEqual(r.json.data.dataCategories.map(category => category.id), ['account', 'assets', 'history', 'farm-records', 'friends', 'forum', 'planting', 'recovery', 'sessions']);
+  assert.deepEqual(r.json.data.dataCategories.map(category => category.id), ['account', 'assets', 'history', 'farm-records', 'friends', 'forum', 'planting', 'eggs', 'recovery', 'sessions']);
   assert.ok(r.json.data.dataCategories.every(category => typeof category.title === 'string' && category.title.length && typeof category.description === 'string' && category.description.length));
   for (const privateValue of [a.token, b.profile.id, 'identity_subject', 'token_hash', 'code_hash', 'privacy-owner']) assert.equal(r.text.includes(privateValue), false);
   assert.match(r.headers.get('cache-control'), /no-store/);
@@ -269,11 +269,11 @@ test('schema v2 upgrades preserve existing users, sessions and assets while addi
   await f.getApp().close();
   f.database(db => {
     db.prepare('UPDATE idempotency SET success_json = ?').run(JSON.stringify(original.json.data));
-    db.exec('DROP TABLE recovery_slots; DROP TABLE planting_intents; DROP TABLE recovery_epoch; DROP TABLE planting_commands; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2');
+    db.exec('DROP TABLE IF EXISTS eggs_commands; DROP TABLE IF EXISTS eggs_batches; DROP TABLE IF EXISTS eggs_grants; DROP TABLE IF EXISTS eggs_profiles; DROP TABLE recovery_slots; DROP TABLE planting_intents; DROP TABLE recovery_epoch; DROP TABLE planting_commands; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2');
   });
   await f.restart();
   assert.equal((await f.request('/bootstrap', { token: a.token })).json.data.wallet.points, 100);
-  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 9);
+  assert.equal(f.database(db => db.prepare('PRAGMA user_version').get().user_version), 10);
   assert.deepEqual(f.counts(), { users: 1, sessions: 1, idempotency: 1, deletion_confirmations: 0, deletion_receipts: 0 });
   assert.equal((await f.prepare(a.token, 1)).status, 200);
 });

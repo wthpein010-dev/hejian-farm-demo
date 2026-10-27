@@ -91,7 +91,7 @@ test('private provisioning installs and replaces the complete grant list without
 
 test('private provisioning preserves a fully verified schema8 rather than silently adding recovery tables', t => {
   const f = fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); db.close();
+  db.exec('DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); db.close();
   const result = f.run(); assert.equal(result.status, 0, result.output);
   const checked = new DatabaseSync(f.database, { readOnly: true });
   try {
@@ -103,7 +103,7 @@ test('private provisioning preserves a fully verified schema8 rather than silent
 
 test('private provisioning accepts a verified schema9 and preserves its recovery epoch', t => {
   const f = fixture(t), db = new DatabaseSync(f.database);
-  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9");
+  db.exec('DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles;' + RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9");
   const epoch = db.prepare('SELECT epoch FROM recovery_epoch').get().epoch; db.close();
   const result = f.run(); assert.equal(result.status, 0, result.output);
   const checked = new DatabaseSync(f.database, { readOnly: true });
@@ -163,7 +163,7 @@ test('a private JSON file in a public directory cannot be used to grant authorit
 
 test('a complete legacy schema7 is refused without adding schema8 tables or changing any bytes', t => {
   const f = fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  db.exec('DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
   const before=readFileSync(f.database); fixedFailure(f.run(), 'DATABASE_UNAVAILABLE'); assert.deepEqual(readFileSync(f.database), before);
 });
 

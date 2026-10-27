@@ -3,7 +3,7 @@ import { onBackPress, onHide, onShow, onUnload } from '@dcloudio/uni-app';
 import { farmState } from './farm';
 import { setNavigationGuard, requestNavigation } from './navigation.mjs';
 export { requestNavigation };
-export function useForumDraft(dirty: ComputedRef<boolean>, clear: () => void) {
+export function useDraftGuard(dirty: ComputedRef<boolean>, clear: () => void, cancelId = 'forum-leave-cancel') {
   const leaving = ref(false); let destination: (() => void) | null = null, unregister = () => {};
   let previousFocus: HTMLElement | null = null;
   function cancelLeave() {
@@ -19,10 +19,10 @@ export function useForumDraft(dirty: ComputedRef<boolean>, clear: () => void) {
     // #endif
     destination = action; leaving.value = true; await nextTick();
     // #ifdef H5
-    document.getElementById('forum-leave-cancel')?.focus();
+    document.getElementById(cancelId)?.focus();
     // #endif
     // #ifndef H5
-    uni.pageScrollTo({ selector: '#forum-leave-cancel', duration: 0 });
+    uni.pageScrollTo({ selector: '#' + cancelId, duration: 0 });
     // #endif
   }
   function discardLeave() { const action = destination; clear(); cancelLeave(); action?.(); }
@@ -42,3 +42,4 @@ export function useForumDraft(dirty: ComputedRef<boolean>, clear: () => void) {
   onBackPress(() => { if (!dirty.value) return false; void guard(() => uni.navigateBack({ delta: 1 })); return true; });
   return { leaving, cancelLeave, discardLeave };
 }
+export function useForumDraft(dirty: ComputedRef<boolean>, clear: () => void) { return useDraftGuard(dirty, clear); }

@@ -7,6 +7,7 @@ const ROUTES = new Set([
   '/api/v1/friends', '/api/v1/friends/commands',
   '/api/v1/forum/status', '/api/v1/forum/commands',
   '/api/v1/planting/status', '/api/v1/planting/commands', '/api/v1/staff/planting/commands',
+  '/api/v1/eggs/status',
   '/api/v1/account/recovery', '/api/v1/account/recovery/prepare', '/api/v1/account/recovery/execute',
   '/api/v1/account/recovery/ack', '/api/v1/account/recovery/abandon',
   '/api/v1/account/deletion/prepare', '/api/v1/account/deletion/confirm', '/api/v1/cart/items',
@@ -17,6 +18,10 @@ const LATENCY_BUCKETS = Object.freeze([5, 25, 100, 500, 2000, 10000]);
 
 function routeTemplate(pathname) {
   if (ROUTES.has(pathname)) return pathname;
+  if (/^\/api\/v1\/(staff\/)?eggs\/record\/[a-z0-9][a-z0-9-]{7,63}$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/eggs/record/:recordId' : '/api/v1/eggs/record/:recordId';
+  if (/^\/api\/v1\/staff\/eggs\/records\/(start|[a-z0-9][a-z0-9-]{7,63})$/.test(pathname)) return '/api/v1/staff/eggs/records/:cursor';
+  if (/^\/api\/v1\/(staff\/)?eggs\/batches\/(start|[a-f0-9]{32})$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/eggs/batches/:cursor' : '/api/v1/eggs/batches/:cursor';
+  if (/^\/api\/v1\/(staff\/)?eggs\/batch\/[a-f0-9]{32}$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/eggs/batch/:batchId' : '/api/v1/eggs/batch/:batchId';
   if (/^\/api\/v1\/account\/recovery\/intent\/[a-f0-9]{32}$/.test(pathname)) return '/api/v1/account/recovery/intent/:intentId';
   if (/^\/api\/v1\/planting\/record\/[a-z0-9][a-z0-9-]{7,63}$/.test(pathname)) return '/api/v1/planting/record/:recordId';
   if (/^\/api\/v1\/(staff\/)?planting\/orders\/(start|[a-f0-9]{32})$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/planting/orders/:cursor' : '/api/v1/planting/orders/:cursor';

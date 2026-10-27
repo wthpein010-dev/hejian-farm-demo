@@ -5,7 +5,7 @@ import FarmScreen from '../../components/FarmScreen.vue';
 import FarmButton from '../../components/FarmButton.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
 import FarmPlantingRequest from '../../components/FarmPlantingRequest.vue';
-import { farmState as state, loadFarmRecord, loadFarmPlantingRecord, openFarmRegistry, openProfile, farmRecordDate, farmRecordStatus, farmRecordUnitLabel, farmMeasurements } from '../../core/farm';
+import { farmState as state, loadFarmRecord, loadFarmPlantingRecord, openFarmRegistry, openProfile, openEggs, farmRecordDate, farmRecordStatus, farmRecordUnitLabel, farmMeasurements } from '../../core/farm';
 
 const recordId = ref(''), routeError = ref('');
 const detail = computed(() => state.farmRegistryDetail?.record.id === recordId.value ? state.farmRegistryDetail : null);
@@ -38,6 +38,7 @@ onShow(() => { if (recordId.value && state.authenticated) load(); });
           <FarmButton class="action secondary" :disabled="state.farmRecordBusy" @tap="load()">刷新本轮档案</FarmButton>
         </view>
         <FarmPlantingRequest :record="record" />
+        <view v-if="record.kind === 'animal'" class="panel"><view class="section-heading">鸡蛋产出与手动收取</view><text class="body-copy">只有农场明确配置的养鸡档案会登记鸡蛋。按原产出日期核对数量，每笔由你手动收取一次。</text><FarmButton class="action" @tap="openEggs('customer')">查看本人鸡蛋产出</FarmButton></view>
         <view class="panel">
           <view class="section-heading" role="heading" aria-level="2">最近测量</view>
           <view v-for="measurement in farmMeasurements(record)" :key="measurement.label" class="summary-row"><text>{{ measurement.label }}</text><text class="record-value">{{ measurement.value }}</text></view>

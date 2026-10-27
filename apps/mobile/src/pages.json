@@ -85,6 +85,18 @@
       "style": {
         "navigationBarTitleText": "我的仓库"
       }
+    },
+    {
+      "path": "pages/eggs/index",
+      "style": { "navigationBarTitleText": "鸡蛋产出" }
+    },
+    {
+      "path": "pages/egg-batch/index",
+      "style": { "navigationBarTitleText": "鸡蛋产出详情" }
+    },
+    {
+      "path": "pages/egg-register/index",
+      "style": { "navigationBarTitleText": "登记今日鸡蛋" }
     }
   ],
   "globalStyle": {

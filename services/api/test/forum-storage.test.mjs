@@ -30,7 +30,7 @@ test('forum backup and isolated restore preserve minimal original receipts and a
   const f=await fixture(t), body={action:'submit-post',circle:'chat',title:'合成原回执标题',body:'合成原回执正文资料。'}, key='forum-original-unreceived';
   const p=f.cmd(f.a,body,key);f.approve(p);const before=f.store.bootstrap(f.a.profile.id,NOW);
   const backup=path.join(f.directory,'backup'), out=path.join(f.directory,'restored');
-  assert.equal(inspectApplicationDatabase(f.file),9);assert.equal((await createBackup({databasePath:f.file,outputDirectory:backup})).schemaVersion,9);
+  assert.equal(inspectApplicationDatabase(f.file),10);assert.equal((await createBackup({databasePath:f.file,outputDirectory:backup})).schemaVersion,10);
   await restoreBackup({backupDirectory:backup,outputDirectory:out});
   const restored=new FarmStore(config(path.join(out,'farm.sqlite')));
   try {assert.equal(restored.authenticate(f.a.token,NOW),null);assert.deepEqual(restored.forumCommand(f.a.profile.id,key,body,NOW),p);assert.equal(restored.forumPage(f.b.profile.id,'all','start',NOW).items.length,1);assert.deepEqual(restored.bootstrap(f.a.profile.id,NOW),before);}finally{restored.close();}

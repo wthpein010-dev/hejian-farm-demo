@@ -95,7 +95,7 @@ test('apply only targets an existing SQLite service database and cannot create u
   const config = normalizeConfig({ databasePath: database, mode: 'development', clock: () => NOW });
   let store = new FarmStore(config); const owner = store.createIdentity('development', 'synthetic-cli', store.serverNow()); store.close();
   const db = new DatabaseSync(database);
-  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=9"); db.close();
+  db.exec(RECOVERY_SQL + " INSERT OR IGNORE INTO recovery_epoch VALUES(1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0); PRAGMA user_version=10"); db.close();
   chmodSync(database, 0o600); f.save(input(owner.profile.id));
   const applied = f.run(...args(database)); assert.equal(applied.status, 0, applied.output);
   assert.deepEqual(JSON.parse(applied.stdout), { ok: true, operation: 'farm-import', created: 1, updated: 0, replayed: false });
@@ -129,12 +129,12 @@ test('farm import retains its explicit apply upgrade contract for an existing sc
   const database = path.join(f.directory, 'legacy-service.sqlite'), store = new FarmStore(normalizeConfig({ databasePath: database, mode: 'development', clock: () => NOW }));
   const owner = store.createIdentity('development', 'synthetic-legacy-import', store.serverNow()); store.close(); f.save(input(owner.profile.id));
   const legacy = new DatabaseSync(database);
-  legacy.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); legacy.close();
+  legacy.exec('DROP TABLE IF EXISTS eggs_commands; DROP TABLE IF EXISTS eggs_batches; DROP TABLE IF EXISTS eggs_grants; DROP TABLE IF EXISTS eggs_profiles; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; PRAGMA user_version=8'); legacy.close();
   const applied = f.run('--input', f.file, '--environment', 'development', '--apply', '--database', database);
   assert.equal(applied.status, 0, applied.output);
   const checked = new DatabaseSync(database, { readOnly: true });
   try {
-    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 9);
+    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 10);
     assert.equal(checked.prepare('SELECT COUNT(*) n FROM recovery_epoch').get().n, 1);
     assert.equal(checked.prepare('SELECT COUNT(*) n FROM farm_records').get().n, 1);
   } finally { checked.close(); }

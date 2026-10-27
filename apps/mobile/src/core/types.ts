@@ -93,4 +93,19 @@ export interface PlantingReceipt { plantingFormat: 1; ownerId: string; environme
 
 export type RecoveryDiscovery = 'unknown' | 'checking' | 'clear' | 'open' | 'error';
 export type RecoveryStage = 'prepare-unknown' | 'prepared' | 'execute-unknown' | 'receipt-review' | 'ack-unknown' | 'abandon-unknown' | 'quarantined';
-export interface RecoveryIntent { id: string; audience: PlantingAudience; command: PlantingCommand; operationKey: string; prepareEpoch: string; prepareVersion: number; phase: 'prepared' | 'settled' | 'abandoned' | 'quarantined'; version: number; createdAt: number; updatedAt: number; closedAt: number | null; receipt: PlantingReceipt | null; }
+export type EggsAudience = 'customer' | 'staff';
+export type EggsAction = 'register' | 'withdraw' | 'collect';
+export interface EggsScope { eggFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number; }
+export interface EggsStatus extends EggsScope { available: boolean; hasStaffAccess: boolean; }
+export interface EggsRecordEntry { recordId: string; recordVersion: number; profileVersion: number; cycleRef: string; name: string; unitLabel: string; enabled: boolean; maxDailyQuantity: number | null; currentBatchId: string | null; permissions: { canRegister: boolean }; }
+export interface EggsRecord extends EggsScope, EggsRecordEntry {}
+export interface EggsRecordsPage extends EggsScope { items: EggsRecordEntry[]; nextCursor: string | null; }
+export interface EggsBatch { id: string; recordId: string; cycleRef: string; name: string; unitLabel: string; day: string; sourceRef: string; quantity: number; status: 'available' | 'collected' | 'withdrawn'; version: number; createdAt: number; updatedAt: number; collectedAt: number | null; withdrawnAt: number | null; }
+export interface EggsPage extends EggsScope { items: EggsBatch[]; nextCursor: string | null; }
+export interface EggsDetail extends EggsScope { batch: EggsBatch; permissions: { canCollect: boolean; canWithdraw: boolean }; }
+export type EggsCommand = { domain: 'eggs'; action: 'register'; recordId: string; expectedProfileVersion: number; sourceRef: string; quantity: number } | { domain: 'eggs'; action: 'withdraw'; batchId: string; expectedBatchVersion: number } | { domain: 'eggs'; action: 'collect'; batchId: string; expectedBatchVersion: number; expectedRevision: number };
+export interface EggsReceipt { eggFormat: 1; ownerId: string; environment: 'development' | 'production'; operationKey: string; action: EggsAction; outcome: 'applied' | 'refused'; code: string; batchId: string | null; quantity: number; appliedRevision: number | null; completedAt: number; }
+export type RecoveryCommand = PlantingCommand | EggsCommand;
+export type RecoveryReceipt = PlantingReceipt | EggsReceipt;
+interface RecoveryIntentBase { id: string; audience: PlantingAudience; operationKey: string; prepareEpoch: string; prepareVersion: number; phase: 'prepared' | 'settled' | 'abandoned' | 'quarantined'; version: number; createdAt: number; updatedAt: number; closedAt: number | null; }
+export type RecoveryIntent = RecoveryIntentBase & ({ command: PlantingCommand; receipt: PlantingReceipt | null } | { command: EggsCommand; receipt: EggsReceipt | null });

@@ -27,7 +27,7 @@ function fixture(t, seed = true) {
   // Build the schema8 fixture from the module's canonical DDL independently of
   // Store migration, so this suite specifically exercises the offline boundary.
   const db = new DatabaseSync(databasePath);
-  db.exec('PRAGMA foreign_keys=ON; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; ' + PLANTING_SQL + ' PRAGMA user_version=8;');
+  db.exec('PRAGMA foreign_keys=ON; DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; ' + PLANTING_SQL + ' PRAGMA user_version=8;');
   const prepare = sql => db.prepare(sql), registry = createFarmRegistry({ prepare, environment: 'development' });
   const planting = createPlanting({ prepare, environment: 'development', farmRegistry: registry });
   const user = auth => db.prepare('SELECT * FROM users WHERE id = ?').get(auth.profile.id);

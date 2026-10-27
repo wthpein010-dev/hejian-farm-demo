@@ -13,6 +13,8 @@ import { isForumCommand, isForumId } from '../../../shared/forum.mjs';
 import { ForumError } from './forum.mjs';
 import { isPlantingCommand, isPlantingId } from '../../../shared/planting.mjs';
 import { PlantingError } from './planting.mjs';
+import { isEggsId } from '../../../shared/eggs.mjs';
+import { EggsError } from './eggs.mjs';
 import { isRecoveryPrepare, isRecoveryId } from '../../../shared/recovery.mjs';
 import { RecoveryError } from './recovery.mjs';
 
@@ -220,6 +222,26 @@ export function createApp(options = {}) {
         if (recoveryDetail && !isRecoveryId(recoveryDetail[1])) throw invalid();
         send(200, { data: recoveryDetail ? store.recoveryDetail(userId, recoveryDetail[1], refreshSession()) : store.recoveryCurrent(userId, refreshSession()) }); return;
       }
+      if (route.startsWith('/eggs/') || route.startsWith('/staff/eggs/')) {
+        const page = /^\/(staff\/)?eggs\/batches\/([^/]+)$/.exec(route), detail = /^\/(staff\/)?eggs\/batch\/([^/]+)$/.exec(route),
+          record = /^\/(staff\/)?eggs\/record\/([a-z0-9][a-z0-9-]{7,63})$/.exec(route), records = /^\/staff\/eggs\/records\/([^/]+)$/.exec(route);
+        if (route !== '/eggs/status' && !page && !detail && !record && !records) throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        let data;
+        if (route === '/eggs/status') data = store.eggsStatus(userId, refreshSession());
+        else if (record) data = store.eggsRecord(userId, record[1] ? 'staff' : 'customer', record[2], refreshSession());
+        else if (records) {
+          if (records[1] !== 'start' && !/^[a-z0-9][a-z0-9-]{7,63}$/.test(records[1])) throw invalid();
+          data = store.eggsRecords(userId, records[1], refreshSession());
+        } else if (page) {
+          if (page[2] !== 'start' && !isEggsId(page[2])) throw invalid();
+          data = store.eggsPage(userId, page[1] ? 'staff' : 'customer', page[2], refreshSession());
+        } else {
+          if (!isEggsId(detail[2])) throw invalid();
+          data = store.eggsDetail(userId, detail[1] ? 'staff' : 'customer', detail[2], refreshSession());
+        }
+        send(200, { data }); return;
+      }
       const plantingCommands = /^\/(staff\/)?planting\/commands$/.exec(route);
       if (plantingCommands) {
         if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
@@ -367,6 +389,8 @@ export function createApp(options = {}) {
       else if (error instanceof ExchangeCursorError) send(400, { error: { code: error.code, message: error.message } });
       else if (error instanceof FarmRegistryError && error.code === 'NOT_FOUND') send(404, { error: { code: error.code, message: error.message } });
       else if (error instanceof ForumError && error.code === 'INVALID_CURSOR') send(400, { error: { code: 'INVALID_REQUEST', message: '社区请求无效，请刷新后重试' } });
+      else if (error instanceof EggsError && error.code === 'NOT_FOUND') send(404, { error: { code: 'NOT_FOUND', message: '未找到此收蛋记录' } });
+      else if (error instanceof EggsError && error.code === 'EGGS_UNAVAILABLE') send(503, { error: { code: error.code, message: '每日收蛋尚未开放，请稍后再来' } });
       else if (error instanceof PlantingError && error.code === 'NOT_FOUND') send(404, { error: { code: 'NOT_FOUND', message: '未找到此播种记录' } });
       else if (error instanceof PlantingError && error.code === 'PLANTING_UNAVAILABLE') send(503, { error: { code: error.code, message: '播种作业尚未开放，请稍后再来' } });
       else if (error instanceof PlantingError && error.code === 'RESERVED_OPERATION_KEY') send(409, { error: { code: error.code, message: '此操作编号由恢复流程使用，请先核对原操作' } });

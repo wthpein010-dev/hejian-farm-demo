@@ -22,7 +22,7 @@ function fixture(t) {
   const auth = ['prepared', 'settled', 'closed', 'abandoned'].map(name => store.createIdentity('development', `synthetic-recovery-${name}`, store.serverNow()));
   const finances = auth.map(a => store.bootstrap(a.profile.id, NOW)); store.close();
   const db = new DatabaseSync(file);
-  db.exec('PRAGMA foreign_keys=ON; ' + RECOVERY_SQL + ' PRAGMA user_version=9;');
+  db.exec('PRAGMA foreign_keys=ON; DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles; ' + RECOVERY_SQL + ' PRAGMA user_version=9;');
   const prepare = sql => db.prepare(sql), environment = 'development';
   const planting = createPlanting({ prepare, environment, farmRegistry: createFarmRegistry({ prepare, environment }) });
   const recovery = createRecovery({ prepare, environment, executePlanting: (user, audience, key, input, now, intentId) => planting.command(user, audience, key, input, now, { intentId }) });

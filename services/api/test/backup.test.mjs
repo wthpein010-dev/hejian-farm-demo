@@ -134,7 +134,7 @@ test('online WAL backup restores confirmed assets, invalidates old sessions and 
   let report;
   try { [report] = await Promise.all([copyingResult, writes]); } finally { fill.close(); }
   assert.ok(overlappingWrites > 0, 'at least one HTTP write must commit during the online backup');
-  assert.ok([2, 3, 4, 5, 6, 7, 8, 9].includes(report.schemaVersion));
+  assert.ok([2, 3, 4, 5, 6, 7, 8, 9, 10].includes(report.schemaVersion));
   assert.match(report.sha256, /^[a-f0-9]{64}$/);
   assert.deepEqual((await readdir(f.output('backup'))).sort(), ['farm.sqlite', 'manifest.json']);
   const bytes = await readFile(path.join(f.output('backup'), 'farm.sqlite'));
@@ -180,6 +180,7 @@ test('restore clears schema3 deletion confirmations and sessions, retaining anon
   requireTools();
   const f = await fixture(t), source = await f.service(), auth = await source.login(); await source.app.close();
   const db = new DatabaseSync(f.databasePath);
+  db.exec('DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles;');
   db.exec(`CREATE TABLE IF NOT EXISTS deletion_confirmations (
     token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), session_hash TEXT NOT NULL,
     expected_revision INTEGER NOT NULL, expires_at INTEGER NOT NULL);
@@ -359,7 +360,7 @@ test('v2 backups remain accepted and schema claims must match the actual databas
   requireTools();
   const f = await fixture(t), source = await f.service(); await source.login(); await source.app.close();
   const db = new DatabaseSync(f.databasePath);
-  db.exec('DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2'); db.close();
+  db.exec('DROP TABLE eggs_commands; DROP TABLE eggs_batches; DROP TABLE eggs_grants; DROP TABLE eggs_profiles; DROP TABLE IF EXISTS recovery_slots; DROP TABLE IF EXISTS planting_intents; DROP TABLE IF EXISTS recovery_epoch; DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE IF EXISTS deletion_confirmations; DROP TABLE IF EXISTS deletion_receipts; PRAGMA user_version = 2'); db.close();
   const report = await tools.createBackup({ databasePath: f.databasePath, outputDirectory: f.output('backup-v2') });
   assert.equal(report.schemaVersion, 2);
   await tools.restoreBackup({ backupDirectory: f.output('backup-v2'), outputDirectory: f.output('restored-v2') });
