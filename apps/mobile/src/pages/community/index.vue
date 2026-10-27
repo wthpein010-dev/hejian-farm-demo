@@ -25,8 +25,8 @@ function clearDraft() { title.value = ''; body.value = ''; titleError.value = ''
 const { leaving, cancelLeave, discardLeave } = useForumDraft(dirty, clearDraft);
 watch(() => state.forumSubmission, value => { if (value?.action === 'submit-post') clearDraft(); });
 function refresh(cursor = 'start', event?: unknown) { return loadWithPageFocus(cursor, event, () => loadFarmForum(mode.value, circle.value, cursor), () => !!current.value?.nextCursor, resultId); }
-function selectMode(value: 'public' | 'mine' | 'reports') { requestNavigation(() => { mode.value = value; void refresh(); }); }
-function selectCircle(value: 'all' | ForumCircle) { requestNavigation(() => { circle.value = value; void refresh(); }); }
+function selectMode(value: 'public' | 'mine' | 'reports') { if (value === mode.value) return; requestNavigation(() => { mode.value = value; void refresh(); }); }
+function selectCircle(value: 'all' | ForumCircle) { if (value === circle.value) return; requestNavigation(() => { circle.value = value; void refresh(); }); }
 function closeCompose() { requestNavigation(clearDraft); }
 function reportResult(item: ForumReport) { return item.status === 'open' ? '待处理' : { dismissed: '已处理：未作隐藏', hidden: '已处理：内容已隐藏', withdrawn: '作者已撤回，举报已结束' }[item.resolution || 'dismissed']; }
 async function submitPost() {

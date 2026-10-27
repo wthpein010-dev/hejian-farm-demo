@@ -350,6 +350,10 @@ export function openFarmRegistry() {
 export function farmRecordStatus(status: FarmRecordStatus) {
   return { planned: '待开始', growing: '生长中', ready: '待农场安排收获', archived: '本轮已归档' }[status];
 }
+export function farmRecordUnitLabel(record: Pick<FarmRecord, 'kind' | 'unitLabel'>) {
+  const match = record.kind === 'plot' && /^A0([1-6])$/.exec(record.unitLabel);
+  return match ? `地块${match[1]}` : record.unitLabel;
+}
 // UTC arithmetic gives the same Beijing calendar in mini-programs without Intl.
 export function farmRecordDate(value: number | null) {
   if (value === null) return '农场暂未记录';

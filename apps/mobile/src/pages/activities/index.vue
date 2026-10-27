@@ -15,8 +15,8 @@ onShow(onFarmPageShow);
 <template>
   <FarmScreen title="合耕小舍" warm>
     <view class="home-profile">
-      <image class="home-avatar" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="AI生成的农庄静态示意头像，非实拍、非直播" />
-      <view class="home-profile-copy"><view class="section-heading">{{ state.snapshot?.profile.displayName }}</view><text class="helper">Lv.{{ state.snapshot?.level.level }} · {{ state.snapshot?.level.label }}</text><text class="helper">农庄头像为AI摄影示意</text></view>
+      <image class="home-avatar" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="农庄头像" />
+      <view class="home-profile-copy"><view class="section-heading">{{ state.snapshot?.profile.displayName }}</view><text class="helper">Lv.{{ state.snapshot?.level.level }} · {{ state.snapshot?.level.label }}</text></view>
     </view>
     <FarmSignIn />
     <view class="home-social-list"><FarmButton class="home-entry" aria-label="进入田园圈子" @tap="openCommunity"><view class="home-entry-symbol home-entry-community" aria-hidden="true"><view /><view /></view><view class="home-entry-copy"><text class="home-entry-title">进入田园圈子</text><text class="helper">聊种养，看看农友的日常</text></view><text class="home-entry-arrow" aria-hidden="true">›</text></FarmButton><FarmButton class="home-entry" aria-label="查看我的农友" @tap="openFriends"><view class="home-entry-symbol home-entry-friends" aria-hidden="true"><view /><view /></view><view class="home-entry-copy"><text class="home-entry-title">查看我的农友</text><text class="helper">交换农友码，彼此确认后添加</text></view><text class="home-entry-arrow" aria-hidden="true">›</text></FarmButton></view>

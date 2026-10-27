@@ -84,10 +84,10 @@ test('restoring a suspended active device requires reconciliation and retains it
 
 test('a late adoption result does not replace a newer product dialog', async () => {
   const app = createApp('#shop');
-  await app.click('推荐 · 选择樱桃萝卜');
+  await app.click('选择樱桃萝卜');
   await app.click('确认认养 · 演示下单');
   await app.click('关闭弹窗');
-  await app.click('推荐 · 选择上海青');
+  await app.click('选择上海青');
   app.flushTimeout(500);
   assert.equal(app.state.orders[0].product, 'radish');
   assert.equal(app.modal.type, 'buy');
@@ -100,15 +100,15 @@ test('a completed previous crop shipment does not block a new cultivation cycle 
   await app.click('去采收'); fillShipping(app); await app.submit();
   await app.click('查看收获与配送');
   for (let i = 0; i < 3; i++) await app.click('模拟下一步履约');
-  await app.click('我的农场'); await app.click('A02'); await app.click('为这块地选种');
-  await app.click('推荐 · 选择樱桃萝卜'); await app.click('确认认养 · 演示下单');
+  await app.click('我的农场'); await app.click('地块2'); await app.click('为这块地选种');
+  await app.click('选择樱桃萝卜'); await app.click('确认认养 · 演示下单');
   app.flushTimeout(500); await app.click('查看认养订单');
   await app.click('模拟工作人员完成播种');
   await app.click('我的农场');
-  assert.doesNotMatch(app.html, /<h3>A02 空闲地块<\/h3>/, 'a planted second cycle is not described as an empty plot');
+  assert.doesNotMatch(app.html, /<h3>地块2 空闲地块<\/h3>/, 'a planted second cycle is not described as an empty plot');
   const current = app.state.plots.find(p => p.id === 'A02');
   current.status = 'ready'; current.days = current.total;
-  await app.click('我的农场'); await app.click('A02');
+  await app.click('我的农场'); await app.click('地块2');
   assert.ok(app.controls().some(c => c.dataset.action === 'harvest' && c.dataset.id === 'A02'), 'a second cycle has its own harvest action');
   await app.click('预约采收 · 收获到家'); fillShipping(app); await app.submit();
   assert.equal(app.state.shipments.length, 2);

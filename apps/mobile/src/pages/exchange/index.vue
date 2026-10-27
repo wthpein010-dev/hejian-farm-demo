@@ -49,7 +49,7 @@ onShow(() => { if (state.authenticated) void load(); });
           <view class="summary-row"><text>商品积分小计</text><text>{{ exchange.subtotal }} 积分</text></view><view class="summary-row"><text>积分券抵扣</text><text>− {{ exchange.discount }} 积分</text></view><view class="summary-row total"><text>实扣积分</text><text>{{ exchange.total }} 积分</text></view><text class="helper registry-footnote">{{ exchange.couponId ? '本笔已使用积分券并核销。' : '本笔未使用积分券。' }}</text>
         </view>
         <view class="panel"><view class="section-heading" role="heading" aria-level="2">本笔发放</view><view v-for="resource in received" :key="resource.key" class="summary-row"><text>{{ resource.title }}</text><text>{{ resource.quantity }} {{ resource.unit }}</text></view><text class="helper registry-footnote">以上是这一笔发放的物资，不是当前仓库余额。之后的领取、兑换和使用会改变余额，请进入仓库核对最新数据。</text><FarmButton class="action" @tap="openInventory">查看当前仓库</FarmButton><FarmButton class="action secondary" @tap="openExchangeHistory">查看全部兑换记录</FarmButton></view>
-        <view class="notice"><text>本收据用于核对虚拟积分与物资，不代表现金付款、认养成功或实体配送。商品图为AI生成物资示意，非实拍。</text></view>
+        <view class="notice"><text>本收据用于核对虚拟积分与物资，不代表现金付款、认养成功或实体配送。</text></view>
       </template>
     </template>
   </FarmScreen>

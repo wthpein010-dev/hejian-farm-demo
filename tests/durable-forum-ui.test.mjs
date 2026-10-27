@@ -116,6 +116,21 @@ test('failed submission keeps private draft and app-owned navigation confirmatio
     await h.click('返回，继续填写'); assert.ok(!h.text().includes('要放弃未提交')); await h.click('返回田园主页'); await h.click('放弃草稿并离开'); assert.deepEqual(h.destinations, ['home']);
   } finally { h.close(); }
 });
+test('reselecting the current community tabs keeps loaded content and a dirty draft without extra reads or focus moves', async () => {
+  const reads = [], h = await ui('pages/community/index.vue', initial(), { loadFarmForum: async (...args) => { reads.push(args); return true; } });
+  try {
+    h.shows.forEach(fn => fn()); reads.length = 0;
+    await h.click('圈子动态'); await h.click('全部圈子'); assert.equal(reads.length, 0);
+    await h.click('写一篇帖子'); await h.input('forum-post-title', '还在填写的田园记录');
+    const focused = h.focused.length;
+    await h.click('圈子动态'); await h.click('全部圈子');
+    assert.equal(reads.length, 0); assert.equal(h.focused.length, focused);
+    assert.equal(h.nodes().find(node => node.props?.['data-field-key'] === 'forum-post-title').props.value, '还在填写的田园记录');
+    assert.ok(!h.text().includes('要放弃未提交'));
+    await h.click('我的内容'); assert.ok(h.text().includes('要放弃未提交'), 'a real context change still protects the draft');
+  } finally { h.close(); }
+});
+
 test('actual detail comment uses current parent version and renders user text as plain text', async () => {
   const state = initial(); state.forumDetail.post.body = '<img src=x onerror=alert(1)>'; const h = await ui('pages/forum-post/index.vue', state);
   try {

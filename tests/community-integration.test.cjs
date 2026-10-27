@@ -28,6 +28,23 @@ test('home uses the same sign-in transaction and reaches the full activity calen
   assert.equal(app.state.wallet.points, before + 20);
 });
 
+test('joining a circle exposes a visible leave action and leaving restores its join action', async () => {
+  const app = createApp('#community'), before = assets(app);
+  const visibleCircleAction = circle => {
+    const match = app.html.match(new RegExp(`<button(?=[^>]*data-action="s-join")(?=[^>]*data-circle="${circle}")[^>]*>([\\s\\S]*?)<\\/button>`));
+    assert.ok(match, `circle ${circle} has an action`);
+    return match[1].replace(/<[^>]*>/g, '').trim();
+  };
+  assert.equal(visibleCircleAction('questions'), '加入圈子');
+  await app.click(action('s-join', {circle: 'questions'}));
+  assert.ok(app.state.social.joined.includes('questions'));
+  assert.equal(visibleCircleAction('questions'), '退出圈子', 'the visible text names the available action');
+  await app.click(action('s-join', {circle: 'questions'}));
+  assert.ok(!app.state.social.joined.includes('questions'));
+  assert.equal(visibleCircleAction('questions'), '加入圈子');
+  assert.equal(assets(app), before);
+});
+
 test('community creates, likes, comments and deletes a local post without changing farm assets', async () => {
   const app = createApp('#community'), before = assets(app);
   const id = await publish(app);

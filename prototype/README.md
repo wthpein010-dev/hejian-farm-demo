@@ -47,9 +47,9 @@ python prototype/serve.py
 
 ## 截图讲解视频
 
-[打开24秒界面讲解](video/index.html)。六张完整界面截图按农场、商城、主页、社区、我的、猪第一视角依次展示，每张4秒；第五张为“我的：资产与每日签到”。内容为静态截图与单行字幕编排，无音频，非连续实机录屏；摄影素材为AI示意、非实拍或直播。
+[打开24秒界面讲解](video/index.html)。六张完整界面截图按农场、商城、主页、社区、我的、猪第一视角依次展示，每张4秒；第五张为“我的：资产与每日签到”。内容为静态截图与单行字幕编排，无音频，非连续实机录屏或直播。
 
-制作脚本为 `tools/make_walkthrough.py`，默认从项目根目录 `.scratch/warm-theme/screenshots/` 读取六张截图，输出 `prototype/video/walkthrough.mp4` 和 `prototype/video/poster.webp`。第五张文件名为 `05-profile.png`；完整输入清单、依赖与媒体验收方法见[视频说明](video/README.md)。生成后仍需核对实际媒体信息与播放结果。
+制作脚本为 `tools/make_walkthrough.py`，默认从项目根目录 `.scratch/ui-polish/screenshots/` 读取六张截图，输出 `prototype/video/walkthrough.mp4` 和 `prototype/video/poster.webp`。第五张文件名为 `05-profile.png`；完整输入清单、依赖与媒体验收方法见[视频说明](video/README.md)。生成后仍需核对实际媒体信息与播放结果。
 
 ## 开发入口
 

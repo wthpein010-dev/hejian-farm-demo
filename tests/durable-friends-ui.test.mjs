@@ -125,7 +125,8 @@ async function renderPage(state, path = 'pages/friends/index.vue') {
   const root = { children: [] }, app = renderer.createApp(component); app.mount(root);
   const text = node => (node.type === '#comment' ? '' : node.text || '') + (node.children || []).map(text).join('');
   const collect = (node, type) => (node.type === type ? [node] : []).concat((node.children || []).flatMap(child => collect(child, type)));
-  const result = { text: text(root), buttons: collect(root, 'button').map(node => ({ label: text(node), ...node.props })), inputs: collect(root, 'input'), labels: collect(root, 'label') };
+  const nodes = node => [node].concat((node.children || []).flatMap(nodes));
+  const result = { text: text(root), nodes: nodes(root), textOf: text, buttons: collect(root, 'button').map(node => ({ label: text(node), ...node.props })), inputs: collect(root, 'input'), labels: collect(root, 'label') };
   app.unmount(); return result;
 }
 test('actual friends template closes production writes and explains empty sandbox lists', async () => {
@@ -145,6 +146,9 @@ test('actual template disables relation and code actions during unknown operatio
 });
 test('actual homepage places friends directly after the photo and before activity content', async () => {
   const rendered = await renderPage(vue.reactive({ snapshot: mobileSnapshot() }), 'pages/activities/index.vue');
-  assert.ok(rendered.text.indexOf('AI摄影示意') < rendered.text.indexOf('查看我的农友'));
+  const avatar = rendered.nodes.find(node => node.type === 'image' && node.props.src === '/static/photos/farm-estate.webp');
+  const friendButton = rendered.nodes.find(node => node.type === 'button' && rendered.textOf(node).includes('查看我的农友'));
+  assert.equal(avatar?.props['aria-label'], '农庄头像'); assert.ok(friendButton);
+  assert.ok(rendered.nodes.indexOf(avatar) < rendered.nodes.indexOf(friendButton));
   assert.ok(rendered.text.indexOf('查看我的农友') < rendered.text.indexOf('今日活动'));
 });

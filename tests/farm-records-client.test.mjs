@@ -262,9 +262,10 @@ test('returning to the farm preserves the loaded classification and all 23 items
   const state = vue.reactive({ authenticated: true, snapshot: mobileSnapshot(), farmRegistryPage: page({ kind: 'animals', items }) }), loads = [], shows = [];
   const component = evaluateTypeScript(source, { vue, '@dcloudio/uni-app': { onShow: fn => shows.push(fn) }, '../../core/farm': {
     farmState: state, onFarmPageShow() {}, loadFarmRegistry: (...args) => loads.push(args)
-  } }, {}, '\nexports.pageTest = { area, load };');
+  } }, {}, '\nexports.pageTest = { area, load, selectArea };');
   assert.equal(component.pageTest.area.value, 'animals');
   shows[0](); assert.equal(loads.length, 0); assert.equal(state.farmRegistryPage.items.length, 23);
+  component.pageTest.selectArea('animals'); assert.equal(loads.length, 0, 'reselecting the current classification preserves the loaded page and scroll context');
   component.pageTest.load(); assert.deepEqual(loads, [['animals', 'start']]);
   state.farmRegistryPage = null; shows[0](); assert.equal(loads.length, 2);
 });

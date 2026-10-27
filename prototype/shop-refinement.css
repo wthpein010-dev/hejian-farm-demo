@@ -1,4 +1,11 @@
 /* Shop composition consumes the canonical tokens in styles.css. */
+.product-image .tag.recommended {
+  background: var(--action);
+  color: var(--action-ink);
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
 .goods-sorting {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

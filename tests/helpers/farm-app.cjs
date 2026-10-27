@@ -158,6 +158,8 @@ function createApp(hash = '', options = {}) {
     get html() { return app.innerHTML; }, get modalHTML() { return dialogHTML; }, get dialogOpen() { return dialog.open; },
     get clock() { return clock; }, get bootStatus() { return status.textContent; }, get reloads() { return reloads; },
     get clipboardWrites() { return [...clipboardWrites]; }, get url() { return location.href; },
+    get scrollTop() { return document.querySelector('.app-scroll').scrollTop; },
+    setScrollTop(top) { document.querySelector('.app-scroll').scrollTop = top; },
     get historyState() { return history.state; },
     controls,
     async click(name) {

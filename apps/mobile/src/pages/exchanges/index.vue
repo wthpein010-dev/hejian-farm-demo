@@ -43,7 +43,6 @@ onShow(() => { if (state.authenticated && !state.exchangeHistory) load(); });
       </view>
       <FarmButton v-if="state.exchangeHistory?.nextCursor" class="action secondary" :disabled="state.exchangeHistoryBusy" :loading="state.exchangeHistoryBusy" @tap="load(state.exchangeHistory.nextCursor, $event)">加载更早的兑换记录</FarmButton>
       <text v-else-if="state.exchangeHistory?.items.length" class="helper registry-footnote">已显示全部兑换记录。</text>
-      <text class="helper registry-footnote">商品图为AI生成物资示意，非实拍。</text>
     </template>
   </FarmScreen>
 </template>

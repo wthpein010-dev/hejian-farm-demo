@@ -26,7 +26,7 @@ SCENES = (
     ("03-home.png", "合耕小舍：每日签到与田园动态"),
     ("04-community.png", "田园社区：发帖、交流与分享"),
     ("05-profile.png", "我的：资产与每日签到"),
-    ("06-pig-pov.png", "猪的第一视角：AI静态场景示意"),
+    ("06-pig-pov.png", "猪的第一视角：静态场景体验"),
 )
 
 
@@ -37,8 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--screenshots",
         type=Path,
-        default=PROJECT_ROOT / ".scratch" / "warm-theme" / "screenshots",
-        help="六张 PNG 截图所在目录。默认：项目 .scratch/warm-theme/screenshots",
+        default=PROJECT_ROOT / ".scratch" / "ui-polish" / "screenshots",
+        help="六张 PNG 截图所在目录。默认：项目 .scratch/ui-polish/screenshots",
     )
     parser.add_argument(
         "--output",

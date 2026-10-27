@@ -28,7 +28,7 @@ onShow(onFarmPageShow);
 </script>
 <template>
   <FarmScreen title="我的" allow-guest warm>
-    <view class="profile-hero"><image class="home-avatar" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="AI生成的农庄示意头像，非实拍" /><view class="profile-name">{{ state.authenticated && state.snapshot ? state.snapshot.profile.displayName : '未登录' }}</view><text v-if="state.authenticated && state.snapshot" class="helper">Lv.{{ state.snapshot.level.level }} · {{ state.snapshot.level.label }}</text><text v-else class="helper">登录后，开启我的田园生活</text><text class="helper">农庄头像为AI摄影示意</text></view>
+    <view class="profile-hero"><image class="home-avatar" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="农庄头像" /><view class="profile-name">{{ state.authenticated && state.snapshot ? state.snapshot.profile.displayName : '未登录' }}</view><text v-if="state.authenticated && state.snapshot" class="helper">Lv.{{ state.snapshot.level.level }} · {{ state.snapshot.level.label }}</text><text v-else class="helper">登录后，开启我的田园生活</text></view>
     <view v-if="!state.authenticated && !state.pendingCanRetryWithoutAuth" class="panel">
       <view id="account-login-title" class="section-heading" tabindex="-1">登录合耕小舍</view><text class="body-copy">田园资产和兑换记录随账户保存，换页或刷新不会重新发放奖励。</text>
       <FarmButton v-if="platformProvider" class="action" style="margin-top:20px" :disabled="state.busy || !state.configured" @tap="loginPlatform">{{ platformProvider === 'weixin' ? '微信登录' : '抖音登录' }}</FarmButton>

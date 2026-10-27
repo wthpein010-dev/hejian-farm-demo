@@ -91,11 +91,11 @@ test('account sign-in uses the shared reward transaction and preserves unknown-r
   } finally { ui.close(); }
 });
 
-test('Home renders its brand and a labeled example avatar, and uses the existing account sign-in transaction once', async () => {
+test('Home renders its brand and a labeled farm avatar, and uses the existing account sign-in transaction once', async () => {
   const h = await home();
   try {
     assert.equal(h.nodes().find(node => node.props?.['aria-level'] === '1')?.text, '合耕小舍');
-    assert.ok(h.nodes().some(node => node.type === 'image' && node.props.src === '/static/photos/farm-estate.webp' && /AI生成.*示意头像.*非实拍/.test(node.props['aria-label'])));
+    assert.ok(h.nodes().some(node => node.type === 'image' && node.props.src === '/static/photos/farm-estate.webp' && node.props['aria-label'] === '农庄头像'));
     activate(h.findButton(/^签到领取 /));
     assert.deepEqual(h.mutations.map(args => [args[0], args[1]]), [['/activities/sign-in', {}]]);
     h.state.snapshot.signIn.todayClaimed = true; h.state.snapshot.signIn.streak = 1; await vue.nextTick();

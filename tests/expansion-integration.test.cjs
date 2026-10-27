@@ -12,7 +12,7 @@ test('adoption entry points override a previous supplies tab while ordinary shop
     assert.equal(app.state.storefront, 'supplies', 'ordinary bottom navigation keeps the last shop section');
     await app.click('我的农场');
     if (intent === 'empty-plot') {
-      await app.click('A04');
+      await app.click('地块4');
       await app.click('为这块地选种');
     } else if (intent === 'recommendations') {
       await app.click('查看推荐');

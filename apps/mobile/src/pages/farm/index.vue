@@ -4,14 +4,14 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
-import { farmState as state, onFarmPageShow, openProfile, openShop, loadFarmRegistry, openFarmRecord, farmRecordDate, farmRecordStatus } from '../../core/farm';
+import { farmState as state, onFarmPageShow, openProfile, openShop, loadFarmRegistry, openFarmRecord, farmRecordDate, farmRecordStatus, farmRecordUnitLabel } from '../../core/farm';
 import type { FarmRegistryKind } from '../../core/types';
 const initialPage = state.farmRegistryPage;
 const area = ref<FarmRegistryKind>(initialPage && initialPage.ownerId === state.snapshot?.profile.id ? initialPage.kind : 'plots');
 const page = computed(() => state.farmRegistryPage?.kind === area.value ? state.farmRegistryPage : null);
 let requestedCursor = 'start';
 function load(cursor = 'start') { requestedCursor = cursor; void loadFarmRegistry(area.value, cursor); }
-function selectArea(kind: FarmRegistryKind) { area.value = kind; load(); }
+function selectArea(kind: FarmRegistryKind) { if (kind === area.value) return; area.value = kind; load(); }
 onShow(() => {
   onFarmPageShow();
   if (state.authenticated && (!page.value || page.value.ownerId !== state.snapshot?.profile.id || page.value.environment !== state.snapshot.environment)) load();
@@ -19,8 +19,8 @@ onShow(() => {
 </script>
 <template>
   <FarmScreen title="我的农场" allow-guest>
-    <image class="hero-image" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="AI生成的农庄静态示意，非实拍、非直播" />
-    <view class="hero-caption"><text class="helper">AI生成静态示意 · 非实拍、非直播</text><text class="helper">认养与作业以农场记录为准</text></view>
+    <image class="hero-image" src="/static/photos/farm-estate.webp" mode="aspectFill" aria-label="农庄全景" />
+    <view class="hero-caption"><text class="helper">认养与作业以农场记录为准</text></view>
     <template v-if="state.snapshot">
       <view class="asset-row"><view class="asset-cell"><text class="asset-number">Lv.{{ state.snapshot.level.level }}</text><text class="asset-label">{{ state.snapshot.level.label }}</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.points }}</text><text class="asset-label">田园积分</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.feed }}</text><text class="asset-label">饲料份数</text></view></view>
       <view class="tabs" role="group" aria-label="切换菜园与牧场"><FarmButton :class="{ active: area === 'plots' }" :aria-pressed="area === 'plots'" @tap="selectArea('plots')">我的菜园</FarmButton><FarmButton :class="{ active: area === 'animals' }" :aria-pressed="area === 'animals'" @tap="selectArea('animals')">我的牧场</FarmButton></view>
@@ -32,9 +32,9 @@ onShow(() => {
       <view v-if="page?.items.length" role="list" aria-label="我的种养档案">
         <view v-for="item in page.items" :key="item.id" class="panel registry-card" role="listitem">
           <view class="record-heading"><view class="section-heading" role="heading" aria-level="3">{{ item.name }}</view><text class="record-status">{{ farmRecordStatus(item.status) }}</text></view>
-          <view class="record-meta"><text>位置：{{ item.unitLabel }}</text><text>轮次：{{ item.cycleRef }}</text></view>
+          <view class="record-meta"><text>位置：{{ farmRecordUnitLabel(item) }}</text><text>轮次：{{ item.cycleRef }}</text></view>
           <text class="helper">最近观测 · {{ farmRecordDate(item.observedAt) }}（北京时间）</text>
-          <FarmButton class="action secondary" :aria-label="`查看${item.name}，${item.unitLabel}，轮次${item.cycleRef}的档案`" @tap="openFarmRecord(item.id)">查看种养档案</FarmButton>
+          <FarmButton class="action secondary" :aria-label="`查看${item.name}，${farmRecordUnitLabel(item)}，轮次${item.cycleRef}的档案`" @tap="openFarmRecord(item.id)">查看种养档案</FarmButton>
         </view>
       </view>
       <FarmButton v-if="page?.nextCursor" class="action secondary" :disabled="state.farmRegistryBusy" :loading="state.farmRegistryBusy" @tap="load(page.nextCursor)">加载更多档案</FarmButton>

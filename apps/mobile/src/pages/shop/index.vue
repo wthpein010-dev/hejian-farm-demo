@@ -30,6 +30,6 @@ function canAdd(p: CatalogItem) { return !state.busy && !state.pending && !!stat
     <EmptyPanel v-if="section === 'adopt'" title="认养服务准备中" description="农场核定可认养地块、品种、农时与价格后开放。这里不会创建未经确认的真实认养订单。" />
     <EmptyPanel v-else-if="!state.snapshot?.capabilities.pointShop" title="积分兑换暂未开放" description="农场核定物资和积分规则后开放，当前不会扣除任何积分。" />
     <view v-else class="card-grid"><view v-for="p in items" :key="p.id" class="goods-card"><FarmGoodsPhoto :art="p.art" :title="p.title" /><view class="goods-title">{{ p.title }}</view><text class="helper">{{ p.description }}</text><text class="helper">今日可兑 {{ remaining(p) }} 件<text v-if="state.snapshot?.system.cart[p.id]"> · 车中 {{ state.snapshot.system.cart[p.id] }}</text></text><view class="goods-cost">{{ p.cost }} <text>积分</text></view><FarmButton class="action" :disabled="!canAdd(p)" :aria-label="`加入${p.title}到购物车`" @tap="mutateFarm('/cart/items', { sku: p.id, delta: 1 }, '已加入购物车，可以统一核对兑换。')">{{ remaining(p) ? '加入购物车' : '今日已兑完' }}</FarmButton></view></view>
-    <view class="panel"><text class="helper">商品图为AI生成物资示意，非实拍。积分兑换与现金认养分开核对。当前可用服务以农场开放状态为准，物资不会解除照料间隔。</text></view>
+    <view class="panel"><text class="helper">积分兑换与现金认养分开核对。当前可用服务以农场开放状态为准，物资不会解除照料间隔。</text></view>
   </FarmScreen>
 </template>
