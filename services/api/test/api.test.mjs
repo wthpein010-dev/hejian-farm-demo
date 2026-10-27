@@ -424,10 +424,10 @@ test('schema v1 upgrades preserve existing assets and sessions while creating th
   await f.getApp().close();
   const old = new DatabaseSync(f.file);
   old.prepare('UPDATE idempotency SET success_json = ?').run(JSON.stringify(original.json.data));
-  old.exec('DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
+  old.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; DROP TABLE code_claims; PRAGMA user_version = 1'); old.close();
   await f.restart();
   assert.equal((await f.snapshot(token)).wallet.points, 100);
   const upgraded = new DatabaseSync(f.file, { readOnly: true });
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 4);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 5);
   assert.equal(upgraded.prepare('SELECT COUNT(*) AS count FROM code_claims').get().count, 0); upgraded.close();
 });

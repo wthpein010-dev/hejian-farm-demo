@@ -6,6 +6,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { isDeepStrictEqual } from 'node:util';
 import { decodeReceipt } from '../src/receipt-codec.mjs';
+import { FARM_REGISTRY_TABLE_SQL, FARM_REGISTRY_INDEX_SQL, validateFarmRegistryDatabase } from '../src/farm-registry.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -14,7 +15,7 @@ const Domain = require('../../../prototype/domain.js');
 const DATABASE = 'farm.sqlite';
 const MANIFEST = 'manifest.json';
 const FORMAT = 1;
-const SUPPORTED_SCHEMAS = new Set([2, 3, 4]);
+const SUPPORTED_SCHEMAS = new Set([2, 3, 4, 5]);
 const COLUMNS = {
   server_clock: ['singleton:INTEGER', 'last_time:INTEGER'],
   users: ['id:TEXT', 'environment:TEXT', 'identity_provider:TEXT', 'identity_subject:TEXT', 'display_name:TEXT',
@@ -24,13 +25,18 @@ const COLUMNS = {
   code_claims: ['code_hash:TEXT', 'provider:TEXT', 'status:TEXT', 'created_at:INTEGER', 'updated_at:INTEGER'],
   deletion_confirmations: ['token_hash:TEXT', 'user_id:TEXT', 'session_hash:TEXT', 'expected_revision:INTEGER', 'expires_at:INTEGER'],
   deletion_receipts: ['token_hash:TEXT', 'completed_at:INTEGER'],
+  farm_records: ['environment:TEXT', 'id:TEXT', 'owner_id:TEXT', 'data_json:TEXT', 'version:INTEGER', 'created_at:INTEGER', 'updated_at:INTEGER'],
+  farm_record_events: ['environment:TEXT', 'record_id:TEXT', 'version:INTEGER', 'data_json:TEXT', 'source:TEXT', 'recorded_at:INTEGER'],
+  farm_imports: ['environment:TEXT', 'batch_id:TEXT', 'fingerprint:TEXT', 'result_json:TEXT', 'created_at:INTEGER'],
 };
 const PRIMARY_KEYS = { server_clock: ['singleton'], users: ['id'], sessions: ['token_hash'],
-  idempotency: ['user_id', 'key'], code_claims: ['code_hash'], deletion_confirmations: ['token_hash'], deletion_receipts: ['token_hash'] };
+  idempotency: ['user_id', 'key'], code_claims: ['code_hash'], deletion_confirmations: ['token_hash'], deletion_receipts: ['token_hash'],
+  farm_records: ['environment', 'id'], farm_record_events: ['environment', 'record_id', 'version'], farm_imports: ['environment', 'batch_id'] };
 // A versioned schema contract includes constraints and indexes: table_info and
 // foreign_key_check alone cannot detect removed UNIQUE/CHECK constraints or an
 // added index which changes which future application writes can succeed.
 const TABLE_SQL = {
+  ...FARM_REGISTRY_TABLE_SQL,
   server_clock: `CREATE TABLE server_clock (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), last_time INTEGER NOT NULL)`,
   users: `CREATE TABLE users (id TEXT PRIMARY KEY, environment TEXT NOT NULL, identity_provider TEXT NOT NULL,
     identity_subject TEXT NOT NULL, display_name TEXT NOT NULL, state_json TEXT NOT NULL,
@@ -70,6 +76,8 @@ function validateIndexes(db, tables) {
     columns: ['expires_at'], origin: 'c', unique: 0 };
   if (tables.includes('deletion_confirmations')) expected.deletion_confirmations_user = { table: 'deletion_confirmations',
     sql: 'CREATE INDEX deletion_confirmations_user ON deletion_confirmations(user_id)', columns: ['user_id'], origin: 'c', unique: 0 };
+  if (tables.includes('farm_records')) expected.farm_records_owner = { table: 'farm_records',
+    sql: FARM_REGISTRY_INDEX_SQL.farm_records_owner, columns: ['owner_id', 'environment', 'id'], origin: 'c', unique: 0 };
   const indexes = db.prepare("SELECT name, tbl_name, sql FROM sqlite_schema WHERE type = 'index'").all();
   if (!isDeepStrictEqual(indexes.map(index => index.name).sort(), Object.keys(expected).sort())) fail('INVALID_APPLICATION_SCHEMA');
   for (const index of indexes) {
@@ -272,7 +280,8 @@ function validateDatabase(file, { standalone = false } = {}) {
     if (checks.length !== 1 || checks[0].integrity_check !== 'ok') fail('INTEGRITY_CHECK_FAILED');
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_CHECK_FAILED');
     if (standalone && db.prepare('PRAGMA journal_mode').get().journal_mode !== 'delete') fail('NON_STANDALONE_DATABASE');
-    const expected = Object.keys(COLUMNS).filter(name => schemaVersion >= 3 || !name.startsWith('deletion_')).sort();
+    const expected = Object.keys(COLUMNS).filter(name => (schemaVersion >= 3 || !name.startsWith('deletion_')) &&
+      (schemaVersion >= 5 || !name.startsWith('farm_'))).sort();
     const schema = db.prepare("SELECT name, type, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' AND type != 'index'").all();
     if (schema.some(row => row.type !== 'table') || JSON.stringify(schema.map(row => row.name).sort()) !== JSON.stringify(expected)) fail('INVALID_APPLICATION_SCHEMA');
     for (const table of schema) if (normalizedSql(table.sql) !== normalizedSql(TABLE_SQL[table.name])) fail('INVALID_APPLICATION_SCHEMA');
@@ -282,8 +291,12 @@ function validateDatabase(file, { standalone = false } = {}) {
       if (JSON.stringify(columns.map(column => `${column.name}:${column.type}`)) !== JSON.stringify(COLUMNS[table]) ||
         JSON.stringify(columns.filter(column => column.pk).sort((a, b) => a.pk - b.pk).map(column => column.name)) !== JSON.stringify(PRIMARY_KEYS[table])) fail('INVALID_APPLICATION_SCHEMA');
       const foreignKeys = db.prepare(`PRAGMA foreign_key_list(${table})`).all();
-      const needsUser = ['sessions', 'idempotency', 'deletion_confirmations'].includes(table);
-      if (needsUser ? foreignKeys.length !== 1 || foreignKeys[0].table !== 'users' || foreignKeys[0].from !== 'user_id' || foreignKeys[0].to !== 'id' : foreignKeys.length !== 0) fail('INVALID_APPLICATION_SCHEMA');
+      const expectedKeys = table === 'farm_record_events'
+        ? [{ table: 'farm_records', from: 'environment', to: 'environment' }, { table: 'farm_records', from: 'record_id', to: 'id' }]
+        : table === 'farm_records' ? [{ table: 'users', from: 'owner_id', to: 'id' }]
+          : ['sessions', 'idempotency', 'deletion_confirmations'].includes(table) ? [{ table: 'users', from: 'user_id', to: 'id' }] : [];
+      if (!isDeepStrictEqual(foreignKeys.sort((a, b) => a.seq - b.seq).map(row => ({ table: row.table, from: row.from, to: row.to })), expectedKeys) ||
+        foreignKeys.some(row => row.id !== 0 || row.on_update !== 'NO ACTION' || row.on_delete !== 'NO ACTION' || row.match !== 'NONE')) fail('INVALID_APPLICATION_SCHEMA');
     }
     const clock = db.prepare('SELECT singleton, last_time FROM server_clock').all();
     if (clock.length !== 1 || clock[0].singleton !== 1 || !integer(clock[0].last_time)) fail('INVALID_APPLICATION_DATA');
@@ -295,6 +308,10 @@ function validateDatabase(file, { standalone = false } = {}) {
       u.environment, u.identity_provider, u.display_name, u.revision, u.created_at AS user_created_at
       FROM idempotency AS i JOIN users AS u ON u.id = i.user_id WHERE i.success_json IS NOT NULL`).iterate()) validateReceipt(row, clock[0].last_time, schemaVersion);
     if (db.prepare("SELECT 1 FROM code_claims WHERE status NOT IN ('pending', 'used', 'failed') LIMIT 1").get()) fail('INVALID_APPLICATION_DATA');
+    if (schemaVersion >= 5) {
+      try { validateFarmRegistryDatabase(db, clock[0].last_time); }
+      catch { fail('INVALID_APPLICATION_DATA'); }
+    }
     db.exec('ROLLBACK');
     assertTree(tree);
     return schemaVersion;

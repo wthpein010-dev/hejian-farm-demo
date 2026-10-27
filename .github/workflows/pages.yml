@@ -24,6 +24,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24.15.0'
+          cache: npm
+      - name: Install exact test dependencies without dependency lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Verify audited compiler adapters used by client tests
+        run: npm run verify:dependencies
       - name: Run domain, resilience, API and client tests
         run: node --test
       - name: Check JavaScript syntax
@@ -38,6 +43,9 @@ jobs:
           node --check services/api/src/providers.mjs
           node --check services/api/src/client-address.mjs
           node --check services/api/src/receipt-codec.mjs
+          node --check shared/farm-records.mjs
+          node --check services/api/src/farm-registry.mjs
+          node --check tools/import-farm-records.mjs
           node --check services/api/src/operations.mjs
           node --check services/api/src/server.mjs
           node --check services/api/tools/load-api.mjs

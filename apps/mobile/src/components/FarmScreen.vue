@@ -2,10 +2,10 @@
 import { farmState as state, openProfile, refreshFarm, retryFarmOperation } from '../core/farm';
 import FarmButton from './FarmButton.vue';
 import FarmNavigation from './FarmNavigation.vue';
-defineProps<{ title: string; subtitle?: string; allowGuest?: boolean }>();
+defineProps<{ title: string; subtitle?: string; allowGuest?: boolean; id?: string }>();
 </script>
 <template>
-  <view class="screen">
+  <view :id="id" class="screen">
     <view v-if="state.snapshot?.environment === 'development'" class="environment-note">联调农场 · 示例资产，不产生付款或真实作业</view>
     <view class="screen-heading"><view class="page-title" role="heading" aria-level="1">{{ title }}</view><text v-if="subtitle" class="subtitle">{{ subtitle }}</text></view>
     <view v-if="state.busy" class="status-line" role="status">正在同步田园数据…</view>

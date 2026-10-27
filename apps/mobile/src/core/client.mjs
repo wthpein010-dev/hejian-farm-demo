@@ -1,7 +1,24 @@
 /** Account-scoped API client. Authentication and uncertain requests stay in memory. */
 import { isFarmSnapshot } from './snapshot.mjs';
+import { isFarmPage, isFarmDetail } from '../../../../shared/farm-records.mjs';
 export class FarmApiError extends Error {
   constructor(code, message, status = 0) { super(message); this.name = 'FarmApiError'; this.code = code; this.status = status; }
+}
+
+// Display aggregates are deliberately separate from the strict wire-page cache.
+// A continuation may only append to the exact server cursor it was requested for.
+export function mergeFarmPages(previous, page, cursor = 'start') {
+  if (cursor === 'start') return { ...page, items: [...page.items] };
+  if (!previous || previous.ownerId !== page.ownerId || previous.environment !== page.environment ||
+    previous.kind !== page.kind || previous.nextCursor !== cursor) throw new FarmApiError('READ_SUPERSEDED', '档案列表已更新，请重新加载。');
+  return { ...page, items: [...previous.items, ...page.items] };
+}
+export function mergeFarmDetails(previous, detail, beforeVersion = 0) {
+  if (beforeVersion === 0) return { ...detail, events: [...detail.events] };
+  if (!previous || previous.ownerId !== detail.ownerId || previous.environment !== detail.environment ||
+    previous.record.id !== detail.record.id || previous.nextBeforeVersion !== beforeVersion) throw new FarmApiError('READ_SUPERSEDED', '观测记录已更新，请重新加载。');
+  if (previous.record.version !== detail.record.version) throw new FarmApiError('FARM_RECORD_CHANGED', '农场观测已更新，需要重新读取最新记录。');
+  return { ...detail, events: [...previous.events, ...detail.events] };
 }
 
 export function createFarmClient({ baseURL = '', transport, generateKey = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}` }) {
@@ -11,6 +28,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   }
   let token = '', profile = null, snapshot = null, pending = null, generation = 0, loginAttempt = 0, activeLogins = 0, activeMutation = false;
   let privacy = null, deletionProposal = null, deletionAttempt = 0;
+  let farmPage = null, farmDetail = null, farmPageRead = 0, farmDetailRead = 0;
+  function clearFarmRecords() { farmPage = null; farmDetail = null; farmPageRead++; farmDetailRead++; }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
   function acceptSnapshot(value) {
@@ -55,7 +74,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       throw error('SERVER_UNAVAILABLE', '农场服务暂时繁忙，请稍后重试。', response?.status || 0);
     }
     if (response.status >= 400) {
-      if (response.status === 401 && authenticated) { token = ''; snapshot = null; privacy = null; cancelAccountDeletion(); generation++; }
+      if (response.status === 401 && authenticated) { token = ''; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++; }
       if (response.status === 409 && response.data?.data) acceptSnapshot(response.data.data);
       throw responseFailure(response, authenticated, key, '操作未完成，请刷新后核对。');
     }
@@ -71,7 +90,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
       if (typeof result?.token !== 'string' || !result?.profile?.id) throw error('INVALID_SESSION', '登录回复不完整，请重试。');
       if (pending && pending.accountId !== result.profile.id) throw error('ACCOUNT_MISMATCH', '上次操作仍待核对，请登录操作时的原账户，再核对结果。');
-      token = result.token; profile = result.profile; snapshot = null; privacy = null; cancelAccountDeletion(); generation++;
+      token = result.token; profile = result.profile; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++;
       return profile;
     } catch (failure) {
       if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
@@ -102,7 +121,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     try {
       const receipt = await send(operation.path, 'POST', operation.body, false);
       if (receipt?.deleted !== true || !Number.isSafeInteger(receipt.completedAt) || receipt.completedAt < 0) throw error('SERVER_UNAVAILABLE', '注销结果尚未确认。');
-      token = ''; profile = null; snapshot = null; privacy = null; pending = null;
+      token = ''; profile = null; snapshot = null; privacy = null; pending = null; clearFarmRecords();
       cancelAccountDeletion(); generation++; loginAttempt++;
       return { deleted: true, completedAt: receipt.completedAt };
     } catch (failure) {
@@ -114,7 +133,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
         throw error('RESULT_UNKNOWN', '注销结果尚未确认。请核对上次操作，确认前不要重新注册账户。');
       }
       pending = null;
-      if (failure.status === 401) { token = ''; snapshot = null; privacy = null; generation++; }
+      if (failure.status === 401) { token = ''; snapshot = null; privacy = null; clearFarmRecords(); generation++; }
       throw failure;
     } finally { activeMutation = false; }
   }
@@ -124,6 +143,8 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get snapshot() { return snapshot; },
     get configured() { return !!base; },
     get privacy() { return privacy; },
+    get farmPage() { return farmPage; },
+    get farmDetail() { return farmDetail; },
     get deletionPrepared() { return !!deletionProposal; },
     get pendingCanRetryWithoutAuth() { return pending?.kind === 'deletion'; },
     hasPending() { return !!pending; },
@@ -133,6 +154,28 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       const requestGeneration = generation, result = await send('/bootstrap', 'GET');
       if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
       return acceptSnapshot(result);
+    },
+    async loadFarmPage(kind, cursor = 'start') {
+      requireSession();
+      if (!['plots', 'animals'].includes(kind) || (cursor !== 'start' && (typeof cursor !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(cursor)))) throw error('INVALID_REQUEST', '档案分类或分页位置无效，请重新加载。');
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步田园数据，再查看农场档案。');
+      const read = ++farmPageRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      const value = await send(`/farm/records/${kind}/${cursor}`, 'GET');
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
+      if (read !== farmPageRead) throw error('READ_SUPERSEDED', '档案列表已更新，请以当前选择为准。');
+      if (!isFarmPage(value, ownerId, kind, environment) || (cursor !== 'start' && value.items.some(item => item.id <= cursor))) throw error('SERVER_UNAVAILABLE', '农场档案未能确认，请重新加载。');
+      farmPage = value; return farmPage;
+    },
+    async loadFarmDetail(id, beforeVersion = 0) {
+      requireSession();
+      if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(id) || !Number.isSafeInteger(beforeVersion) || beforeVersion < 0) throw error('INVALID_REQUEST', '档案或分页位置无效，请返回重新选择。');
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步田园数据，再查看农场档案。');
+      const read = ++farmDetailRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      const value = await send(`/farm/record/${id}/${beforeVersion}`, 'GET');
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
+      if (read !== farmDetailRead) throw error('READ_SUPERSEDED', '已选择其他档案，请查看当前对象。');
+      if (!isFarmDetail(value, ownerId, id, environment) || (beforeVersion > 0 && value.events.some(event => event.version >= beforeVersion))) throw error('SERVER_UNAVAILABLE', '观测记录未能确认，请重新加载。');
+      farmDetail = value; return farmDetail;
     },
     async loadPrivacy() {
       const value = await send('/account/privacy', 'GET');
@@ -188,7 +231,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (pending || activeMutation) throw error('PENDING_OPERATION', '请先核对上次操作的结果，再退出账户。');
       const requestToken = token, accountId = profile?.id; loginAttempt++;
       try { if (token) await send('/auth/logout', 'POST', {}); }
-      finally { if (token === requestToken || (!token && profile?.id === accountId)) { token = ''; profile = null; snapshot = null; privacy = null; cancelAccountDeletion(); generation++; } }
+      finally { if (token === requestToken || (!token && profile?.id === accountId)) { token = ''; profile = null; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++; } }
     }
   };
 }

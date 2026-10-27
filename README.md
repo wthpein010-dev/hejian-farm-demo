@@ -80,3 +80,7 @@ node --check prototype/expansion.js
 ## 项目文档
 
 [产品说明](docs/PRODUCT.md) · [验收记录](docs/VERIFICATION.md) · [演示操作说明](prototype/README.md) · [视觉约定](DESIGN.md) · [交互约定](UX-CONTRACT.md)
+
+## 账户农场档案
+
+跨端客户端与API增加[归属档案与观测接入](docs/release/FARM-RECORDS.md)：账户鉴权列表/详情、分页历史、私有原子导入、注销与schema5备份恢复。当前证据来自临时合成账户，尚未接入真实工作人员/设备；公开Pages仍是原型演示。

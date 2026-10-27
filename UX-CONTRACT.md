@@ -42,6 +42,7 @@
 | Domain rules | prototype/domain.js 的纯规则 | docs/PRODUCT.md | 推荐、照料资格／间隔、福利、邮寄脱敏 | 重复、边界、资格与状态一致 |
 | FarmSystems | prototype/systems.js；正式资产由服务事务调用 | docs/release/API-CONTRACT.md | 积分购物、活动、库存与等级 | 原子提交、日界、事件和领取幂等 |
 | Activity receipts | prototype/rewards.js；expansion 成功事务适配 | docs/PRODUCT.md；本文活动明细约定 | 四类活动来源、内存明细、北京时间当天汇总 | 失败不记、重复ID不记、深克隆与跨日 |
+| Farm records | shared/farm-records.mjs；API registry；mobile core/farm | docs/release/FARM-RECORDS.md；CONTEXT.md | 账户列表、对象详情、逐版本观测、明确加载更多 | 归属/环境/游标链、迟到读、跨账户、版本变化刷新 |
 | Extension adapter | prototype/expansion.js 与 app bridge | docs/PRODUCT.md | 商城、活动、仓库、成长、图鉴与消息 | 同一 state、wallet、modal 和 toast |
 | Device state | prototype/app.js 唯一模拟设备状态；跨端未开放 | docs/PRODUCT.md；docs/release/READINESS.md | 在线、离线、无回执、停止 | 启停回执与不确定完成 |
 | Privacy | H5：domain／app 示例邮寄边界；跨端：core 客户端与 API | docs/PRODUCT.md；docs/release/API-CONTRACT.md | H5 脱敏摘要；正式会话仅内存 | storage／URL／日志无秘密与原始地址 |

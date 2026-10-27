@@ -35,6 +35,12 @@
       "style": {
         "navigationBarTitleText": "积分购物车"
       }
+    },
+    {
+      "path": "pages/farm-record/index",
+      "style": {
+        "navigationBarTitleText": "种养档案"
+      }
     }
   ],
   "globalStyle": {

@@ -22,3 +22,7 @@ uni-app{max-width:480px;margin:auto;box-shadow:0 0 40px #244d3d10;background:var
 .action.danger-outline{color:var(--danger);background:var(--paper);border:1px solid var(--danger)}
 .action.danger{background:var(--danger);color:var(--paper);border:1px solid var(--danger)}
 .deletion-confirm{border:2px solid var(--danger)}
+.registry-status{min-height:48px;padding:10px 0;color:var(--secondary);font-size:14px;line-height:1.85}.record-heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;margin:8px 0 12px}.record-heading .section-heading{margin:0;min-width:0;flex:1 1 100px}.record-status{display:block;background:var(--brand-soft);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:4px 9px;font-size:14px;line-height:1.7;max-width:100%}.record-meta{font-size:16px;line-height:1.85;margin:12px 0;color:var(--ink)}.record-meta>text{display:block}.registry-card .action,.record-overview .action{margin-top:16px}.registry-footnote{margin:14px 0}.record-date-list{margin:15px 0}.record-fact{padding:9px 0;border-bottom:1px solid var(--line);font-size:16px;line-height:1.8}.record-fact:last-child{border-bottom:0}.record-fact>text{display:block}.record-value{text-align:right;min-width:0;overflow-wrap:anywhere}.observation-card{border-left:3px solid var(--brand)}
+/* #ifdef H5 */
+.farm-button:hover:not(:disabled){filter:brightness(.96)}.farm-button:active:not(:disabled){filter:brightness(.9)}
+/* #endif */

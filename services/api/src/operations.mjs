@@ -11,6 +11,8 @@ const LATENCY_BUCKETS = Object.freeze([5, 25, 100, 500, 2000, 10000]);
 
 function routeTemplate(pathname) {
   if (ROUTES.has(pathname)) return pathname;
+  if (/^\/api\/v1\/farm\/records\/(plots|animals)\/(start|[a-z0-9][a-z0-9-]{7,63})$/.test(pathname)) return '/api/v1/farm/records/:kind/:cursor';
+  if (/^\/api\/v1\/farm\/record\/[a-z0-9][a-z0-9-]{7,63}\/(0|[1-9][0-9]{0,15})$/.test(pathname)) return '/api/v1/farm/record/:recordId/:beforeVersion';
   if (/^\/api\/v1\/activities\/tasks\/[A-Za-z0-9_-]{1,64}\/claim$/.test(pathname)) return '/api/v1/activities/tasks/:taskId/claim';
   if (/^\/api\/v1\/activities\/achievements\/[A-Za-z0-9_-]{1,64}\/claim$/.test(pathname)) return '/api/v1/activities/achievements/:achievementId/claim';
   return 'unknown';

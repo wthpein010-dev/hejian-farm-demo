@@ -19,3 +19,21 @@ export interface PrivacyReport {
   createdAt: number; updatedAt: number; deletionSupported: boolean;
   dataCategories: Array<{ id: string; title: string; description: string }>;
 }
+export type FarmRegistryKind = 'plots' | 'animals';
+export type FarmRecordStatus = 'planned' | 'growing' | 'ready' | 'archived';
+export interface FarmRecord {
+  id: string; ownerId: string; environment: 'development' | 'production'; kind: 'plot' | 'animal';
+  name: string; unitLabel: string; cycleRef: string; status: FarmRecordStatus;
+  startedAt: number | null; expectedHarvestAt: number | null; observedAt: number;
+  measurements: { areaM2?: number; moisturePercent?: number; weightKg?: number; headCount?: number };
+  version: number; createdAt: number; updatedAt: number;
+}
+export interface FarmRegistryPage {
+  recordFormat: 1; ownerId: string; environment: 'development' | 'production'; kind: FarmRegistryKind;
+  items: FarmRecord[]; nextCursor: string | null; serverTime: number;
+}
+export interface FarmRecordEvent { version: number; recordedAt: number; source: string; record: FarmRecord; }
+export interface FarmRegistryDetail {
+  recordFormat: 1; ownerId: string; environment: 'development' | 'production'; record: FarmRecord;
+  events: FarmRecordEvent[]; nextBeforeVersion: number | null; serverTime: number;
+}

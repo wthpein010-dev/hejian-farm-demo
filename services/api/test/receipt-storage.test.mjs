@@ -80,6 +80,7 @@ for (const schema of [2, 3]) {
   test(`legacy schema${schema} cannot claim to contain a versioned compact receipt`, async t => {
     const f = await fixture(t), source = await f.service(); await checkout(source); await source.close();
     database(f.databasePath, db => {
+      db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; ');
       if (schema === 2) db.exec('DROP TABLE deletion_confirmations; DROP TABLE deletion_receipts');
       db.exec(`PRAGMA user_version = ${schema}`);
     });
@@ -107,10 +108,10 @@ const compact = (text, original) => {
 };
 const refusedReceipt = failure => ['INVALID_APPLICATION_RECEIPT', 'INVALID_APPLICATION_DATA'].includes(failure?.code);
 
-test('schema4 compact receipts still replay the original result after later writes and a real service restart', async t => {
+test('schema5 compact receipts still replay the original result after later writes and a real service restart', async t => {
   const f = await fixture(t), first = await f.service(), scenario = await checkout(first);
   const { auth, key, body, original } = scenario;
-  assert.equal(version(f.databasePath), 4);
+  assert.equal(version(f.databasePath), 5);
   compact(stored(f.databasePath, auth.profile.id, key), original);
   const changed = await first.request('/activities/sign-in', { token: auth.token, key: 'receipt-storage-later-signin', body: { expectedRevision: 2 } });
   assert.equal(changed.status, 200); assert.equal(changed.json.data.wallet.points, 60);
@@ -127,21 +128,22 @@ test('schema4 compact receipts still replay the original result after later writ
   assert.deepEqual(await reopened.snapshot(nextLogin.token), current);
 });
 
-test('a canonical schema3 raw-receipt fixture upgrades without rewriting old receipts, assets or code claims', async t => {
+for (const legacySchema of [3, 4]) {
+test(`a canonical schema${legacySchema} raw-receipt fixture upgrades without rewriting old receipts, assets or code claims`, async t => {
   const f = await fixture(t), initial = await f.service(), scenario = await checkout(initial);
   await initial.close();
   const rawCart = JSON.stringify(scenario.cartSnapshot), rawCheckout = JSON.stringify(scenario.original);
-  // The SQL layout is unchanged. Explicit raw JSON plus user_version=3 recreates
-  // the persisted representation accepted by the previous service generation.
+  // Remove schema5-only tables to recreate the actual previous layout.
+  // Raw historical receipts remain byte-for-byte unchanged during upgrade.
   const before = database(f.databasePath, db => {
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCart, scenario.auth.profile.id, scenario.cartKey);
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCheckout, scenario.auth.profile.id, scenario.key);
     db.prepare('INSERT INTO code_claims VALUES (?, ?, ?, ?, ?)').run('c'.repeat(64), 'weixin', 'used', NOW, NOW);
-    db.exec('PRAGMA user_version = 3');
+    db.exec(`DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = ${legacySchema}`);
     return { user: db.prepare('SELECT * FROM users').get(), claims: db.prepare('SELECT * FROM code_claims').all() };
   });
   const upgraded = await f.service();
-  assert.equal(version(f.databasePath), 4);
+  assert.equal(version(f.databasePath), 5);
   assert.deepEqual(database(f.databasePath, db => ({ user: db.prepare('SELECT * FROM users').get(),
     claims: db.prepare('SELECT * FROM code_claims').all() })), before);
   assert.equal(stored(f.databasePath, scenario.auth.profile.id, scenario.cartKey), rawCart);
@@ -154,7 +156,10 @@ test('a canonical schema3 raw-receipt fixture upgrades without rewriting old rec
   assert.equal(stored(f.databasePath, scenario.auth.profile.id, scenario.key), rawCheckout, 'reading an old result does not silently rewrite it');
 });
 
-test('schema4 backup and isolated restore preserve mixed raw/compact history while revoking sessions and deletion confirmations', async t => {
+}
+
+for (const storedSchema of [4, 5]) {
+test(`schema${storedSchema} backup and isolated restore preserve mixed raw/compact history while revoking sessions and deletion confirmations`, async t => {
   const f = await fixture(t), source = await f.service(), scenario = await checkout(source);
   const rawCart = JSON.stringify(scenario.cartSnapshot);
   database(f.databasePath, db => {
@@ -165,9 +170,13 @@ test('schema4 backup and isolated restore preserve mixed raw/compact history whi
   compact(compressedCheckout, scenario.original);
   assert.equal((await source.request('/account/deletion/prepare', { token: scenario.auth.token, body: { expectedRevision: 2 } })).status, 200);
   const backupDirectory = f.output('mixed-backup'), outputDirectory = f.output('mixed-restored');
+  if (storedSchema === 4) {
+    await source.close();
+    database(f.databasePath, db => db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = 4'));
+  }
   const backup = await createBackup({ databasePath: f.databasePath, outputDirectory: backupDirectory });
-  assert.equal(backup.schemaVersion, 4);
-  assert.equal((await verifyBackup({ backupDirectory })).schemaVersion, 4);
+  assert.equal(backup.schemaVersion, storedSchema);
+  assert.equal((await verifyBackup({ backupDirectory })).schemaVersion, storedSchema);
   const originalBackupBytes = await readFile(path.join(backupDirectory, 'farm.sqlite'));
   const report = await restoreBackup({ backupDirectory, outputDirectory });
   assert.equal(report.sessionsInvalidated, true);
@@ -189,6 +198,8 @@ test('schema4 backup and isolated restore preserve mixed raw/compact history whi
   }
   assert.deepEqual(await recovered.snapshot(newSession.token), scenario.original);
 });
+
+}
 
 for (const corruption of ['unknown-format', 'wrong-checksum', 'truncated-payload']) {
   test(`invalid encoded history is rejected by HTTP replay and verified backup restore: ${corruption}`, async t => {

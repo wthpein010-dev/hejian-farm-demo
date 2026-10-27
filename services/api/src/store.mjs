@@ -4,6 +4,8 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { encodeReceipt, decodeReceipt } from './receipt-codec.mjs';
+import { normalizeFarmBatch } from '../../../shared/farm-records.mjs';
+import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm-registry.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -14,6 +16,7 @@ const PRIVACY_CATEGORIES = [
   { id: 'account', title: '账户资料', description: '账户标识、显示名称及创建与更新时间' },
   { id: 'assets', title: '田园资产与活动', description: '积分、饲料、购物车、库存、签到与活动进度' },
   { id: 'history', title: '操作记录', description: '兑换和奖励回执、用于防止重复记账的操作记录' },
+  { id: 'farm-records', title: '农场归属与观测记录', description: '归属档案、种养轮次及农场来源的观测历史' },
   { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
 ];
 
@@ -32,6 +35,7 @@ export class FarmStore {
   #config;
   #closed = false;
   #statements = new Map();
+  #farmRegistry;
 
   constructor(config) {
     this.#config = config;
@@ -39,7 +43,7 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 4) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      if (schema > 5) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -96,8 +100,10 @@ export class FarmStore {
         token_hash TEXT PRIMARY KEY,
         completed_at INTEGER NOT NULL
       );
-      PRAGMA user_version = 4;
+      ${FARM_REGISTRY_SQL}
+      PRAGMA user_version = 5;
     `);
+      this.#farmRegistry = createFarmRegistry({ prepare: sql => this.#prepare(sql), environment: config.mode });
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
 
@@ -229,6 +235,21 @@ export class FarmStore {
     return this.#transaction(() => { const row = this.#user(userId); return this.#snapshot(row, this.#sync(row, now), now); });
   }
 
+  farmPage(userId, kind, cursor = 'start', now) {
+    return this.#transaction(() => { this.#user(userId); return this.#farmRegistry.page(userId, kind, cursor, now); });
+  }
+
+  farmDetail(userId, id, beforeVersion = 0, now) {
+    return this.#transaction(() => { this.#user(userId); return this.#farmRegistry.detail(userId, id, beforeVersion, now); });
+  }
+
+  importFarmBatch(batch, now) {
+    let normalized;
+    try { normalized = normalizeFarmBatch(batch, { environment: this.#config.mode, now }); }
+    catch { throw new FarmRegistryError('INVALID_FARM_DATA'); }
+    return this.#transaction(() => this.#farmRegistry.applyBatch(normalized, now));
+  }
+
   privacy(userId) {
     const row = this.#user(userId);
     return { profile: { id: row.id, displayName: row.display_name }, createdAt: row.created_at,
@@ -272,6 +293,7 @@ export class FarmStore {
       this.#prepare('DELETE FROM sessions WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM idempotency WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
+      this.#farmRegistry.deleteOwner(row.id);
       this.#prepare('DELETE FROM users WHERE id = ?').run(row.id);
       this.#prepare('INSERT INTO deletion_receipts (token_hash, completed_at) VALUES (?, ?)').run(tokenHash, now);
       return { status: 200, data: { deleted: true, completedAt: now } };

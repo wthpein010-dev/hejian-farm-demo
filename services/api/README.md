@@ -2,7 +2,7 @@
 
 Node.js 24，使用内置 HTTP、SQLite 和 crypto，无第三方运行依赖。对应 [API v1 契约](../../docs/release/API-CONTRACT.md)。此服务建立持久账户、资产和事务的联调闭环，并实现微信／抖音官方身份 HTTP 适配代码；当前尚未使用真实凭据完成官方联调，也未接入真实农场、支付、广告或物流。
 
-当前数据库schema4使用[无损历史回执格式](RECEIPTS.md)，兼容旧原始JSON；备份支持schema2/3/4。原key的历史结果保持不变，旧服务不得打开新格式库或手工降级版本。
+当前数据库schema5增加[账户归属档案与观测](../../docs/release/FARM-RECORDS.md)，金融回执继续使用schema4引入的[无损格式](RECEIPTS.md)，兼容旧原始JSON；备份支持schema2/3/4/5。原key的历史结果保持不变，旧服务不得打开新格式库或手工降级版本。
 
 ## 本地启动
 
