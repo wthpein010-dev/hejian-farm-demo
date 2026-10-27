@@ -4,13 +4,14 @@ import { onLoad, onShow } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import FarmButton from '../../components/FarmButton.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
-import { farmState as state, loadFarmRecord, openFarmRegistry, openProfile, farmRecordDate, farmRecordStatus, farmRecordUnitLabel, farmMeasurements } from '../../core/farm';
+import FarmPlantingRequest from '../../components/FarmPlantingRequest.vue';
+import { farmState as state, loadFarmRecord, loadFarmPlantingRecord, openFarmRegistry, openProfile, farmRecordDate, farmRecordStatus, farmRecordUnitLabel, farmMeasurements } from '../../core/farm';
 
 const recordId = ref(''), routeError = ref('');
 const detail = computed(() => state.farmRegistryDetail?.record.id === recordId.value ? state.farmRegistryDetail : null);
 const record = computed(() => detail.value?.record || null);
 let requestedBeforeVersion = 0;
-function load(beforeVersion = 0) { requestedBeforeVersion = beforeVersion; void loadFarmRecord(recordId.value, beforeVersion); }
+async function load(beforeVersion = 0) { requestedBeforeVersion = beforeVersion; if (await loadFarmRecord(recordId.value, beforeVersion) && beforeVersion === 0 && record.value?.kind === 'plot') await loadFarmPlantingRecord(recordId.value); }
 onLoad(query => {
   const id = query?.id;
   if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(id)) { routeError.value = '档案位置无效，请返回我的农场重新选择。'; return; }
@@ -36,6 +37,7 @@ onShow(() => { if (recordId.value && state.authenticated) load(); });
           <view class="record-date-list"><view class="record-fact"><text class="helper">本轮开始</text><text>{{ farmRecordDate(record.startedAt) }}</text></view><view class="record-fact"><text class="helper">预计收获</text><text>{{ farmRecordDate(record.expectedHarvestAt) }}</text></view><view class="record-fact"><text class="helper">最近观测</text><text>{{ farmRecordDate(record.observedAt) }}</text></view></view>
           <FarmButton class="action secondary" :disabled="state.farmRecordBusy" @tap="load()">刷新本轮档案</FarmButton>
         </view>
+        <FarmPlantingRequest :record="record" />
         <view class="panel">
           <view class="section-heading" role="heading" aria-level="2">最近测量</view>
           <view v-for="measurement in farmMeasurements(record)" :key="measurement.label" class="summary-row"><text>{{ measurement.label }}</text><text class="record-value">{{ measurement.value }}</text></view>

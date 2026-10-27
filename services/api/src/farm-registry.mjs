@@ -133,7 +133,7 @@ export function createFarmRegistry({ prepare, environment }) {
       return detail;
     },
     // The Store owns BEGIN IMMEDIATE, including all prechecks and this receipt.
-    applyBatch(batch, now) {
+    applyBatch(batch, now, beforeApply) {
       if (!validTime(now)) invalid();
       let normalized;
       try {
@@ -149,6 +149,13 @@ export function createFarmRegistry({ prepare, environment }) {
       if (previous) {
         if (previous.fingerprint !== fingerprint) throw new FarmRegistryError('IMPORT_CONFLICT');
         return { ...importResult(previous.result_json), replayed: true };
+      }
+      // Store supplies the active-work guard only for an external import. An
+      // old successful batch must replay before that guard; the planting
+      // module's verified completion uses the same registry without this hook.
+      if (beforeApply !== undefined) {
+        if (typeof beforeApply !== 'function') invalid();
+        beforeApply();
       }
       const pending = []; let created = 0, updated = 0;
       for (const entry of normalized.entries) {

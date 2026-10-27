@@ -89,7 +89,9 @@ production 平台账户的积分商城和活动同样关闭，须在真实经营
 
 ## 嵌入与测试接口
 
-论坛帖子与评论先待审、通过后公开，支持作者撤回、举报状态和凭可见内容屏蔽陌生作者，详见[FORUM](../../docs/release/FORUM.md)。`tools/moderate-forum.mjs`仅对明确既有schema7/私有目录操作，队列写私有新文件、审核批次原子提交，stdout不含正文。操作标签不等同真实人员认证，没有管理HTTP或production开启开关。
+论坛帖子与评论先待审、通过后公开，支持作者撤回、举报状态和凭可见内容屏蔽陌生作者，详见[FORUM](../../docs/release/FORUM.md)。`tools/moderate-forum.mjs`仅对明确既有schema7/8私有目录操作，schema7显式保留版本不自动迁移；队列写私有新文件、审核批次原子提交，stdout不含正文。操作标签不等同真实人员认证，没有管理HTTP或production开启开关。
+
+schema8新增[播种申请与授权农务](../../docs/release/PLANTING.md)：本人planned地块申请、按档案dispatch/execute权限、接单/指派/开工/完成及人工核实停工，实际SQLite事务与HTTP幂等。生产和非开发身份关闭，不是付费认养。`tools/provision-planting.mjs --environment development --database <absolute-private-existing-schema8-db> --input <absolute-private-json>`只读严格检查后按当前版本原子配置；输入及所在目录必须私有，命令参数不含JSON正文或账户名单。开工前客户可取消，已开工人工停工须dispatch明确核实；恢复禁用全部计划/人员权限。active作业保护档案导入和账户注销；回执与当前详情分开，不改变金融资产/奖励。
 
 schema6新增独立农友名片/关系/屏蔽及最小命令账，`GET /friends`与`POST /friends/commands`以服务器账户、环境和独立expectedVersion为准；原回执查找优先，旧命令不能复活已清关系。仅开发身份的development沙盒开放，真实平台身份及production均关闭。它不改变金融资产/revision或授权好友访问私人农场。名片开通、限额、注销与备份及未完成的生产门槛见[FRIENDS](../../docs/release/FRIENDS.md)。
 

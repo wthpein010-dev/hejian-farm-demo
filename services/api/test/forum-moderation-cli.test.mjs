@@ -84,6 +84,28 @@ test('queue export uses a new private file and prints only fixed counts', t => {
   assert.deepEqual(readFileSync(f.output), original); assert.equal(result.output.includes(f.directory), false);
 });
 
+test('moderation accepts a fully verified schema7 without silently migrating its database', t => {
+  const f = fixture(t), db = new DatabaseSync(f.database);
+  db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  const result = f.run(f.exportArgs()); assert.equal(result.status, 0, result.output);
+  const checked = new DatabaseSync(f.database, { readOnly: true });
+  try {
+    assert.equal(checked.prepare('PRAGMA user_version').get().user_version, 7);
+    assert.equal(checked.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name LIKE 'planting_%'").get().n, 0);
+  } finally { checked.close(); }
+});
+
+test('schema-preserving offline Store option rejects a different actual schema and production before changing bytes', t => {
+  const f = fixture(t), original = readFileSync(f.database);
+  assert.throws(() => new FarmStore(f.config, { preserveSchemaVersion: 7 }));
+  assert.deepEqual(readFileSync(f.database), original);
+  const db = new DatabaseSync(f.database);
+  db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; PRAGMA user_version=7'); db.close();
+  const legacy = readFileSync(f.database);
+  assert.throws(() => new FarmStore(normalizeConfig({ databasePath: f.database, mode: 'production' }), { preserveSchemaVersion: 7 }));
+  assert.deepEqual(readFileSync(f.database), legacy);
+});
+
 test('moderation never creates missing databases or mutates non-service and future databases', t => {
   const f = fixture(t);
   rmSync(f.database); fixedFailure(f.run(f.exportArgs()), 'FILE_UNAVAILABLE'); assert.equal(existsSync(f.database), false);

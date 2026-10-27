@@ -73,6 +73,14 @@
       }
     },
     {
+      "path": "pages/planting/index",
+      "style": { "navigationBarTitleText": "播种申请" }
+    },
+    {
+      "path": "pages/planting-order/index",
+      "style": { "navigationBarTitleText": "播种作业详情" }
+    },
+    {
       "path": "pages/inventory/index",
       "style": {
         "navigationBarTitleText": "我的仓库"

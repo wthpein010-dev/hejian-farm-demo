@@ -34,10 +34,12 @@ function verifyServiceDatabase(file, held) {
   try {
     assertPrivateHeld(held); assertSafeSqliteCompanions(file);
     // Moderation does not upgrade an old running database. The service must
-    // already have initialized schema7; the backup module owns the exact DDL,
+    // already have initialized schema7/8; the backup module owns the exact DDL,
     // indexes and relational/data integrity checks shared by all offline tools.
-    if (inspectApplicationDatabase(file) !== 7) fail('DATABASE_UNAVAILABLE');
+    const schema = inspectApplicationDatabase(file);
+    if (![7, 8].includes(schema)) fail('DATABASE_UNAVAILABLE');
     assertPrivateHeld(held); assertSafeSqliteCompanions(file);
+    return schema;
   } catch (error) { if (error instanceof PrivateFileError) throw error; fail('DATABASE_UNAVAILABLE'); }
 }
 
@@ -51,8 +53,9 @@ export function runForumModeration(args) {
   const held = holdPrivateFile(options.database, true); let store;
   const verifyHeld = () => { assertPrivateHeld(held); assertSafeSqliteCompanions(options.database); };
   try {
-    verifyServiceDatabase(options.database, held); verifyHeld();
-    store = new FarmStore(normalizeConfig({ mode: 'development', databasePath: options.database })); verifyHeld();
+    const schema = verifyServiceDatabase(options.database, held); verifyHeld();
+    store = new FarmStore(normalizeConfig({ mode: 'development', databasePath: options.database }),
+      schema === 7 ? { preserveSchemaVersion: 7 } : undefined); verifyHeld();
     const now = store.serverNow(); verifyHeld();
     if (options.apply) {
       const result = store.applyForumModeration(batch, now); verifyHeld();

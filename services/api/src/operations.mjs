@@ -6,6 +6,7 @@ const ROUTES = new Set([
   '/api/v1/account/checkout-receipt',
   '/api/v1/friends', '/api/v1/friends/commands',
   '/api/v1/forum/status', '/api/v1/forum/commands',
+  '/api/v1/planting/status', '/api/v1/planting/commands', '/api/v1/staff/planting/commands',
   '/api/v1/account/deletion/prepare', '/api/v1/account/deletion/confirm', '/api/v1/cart/items',
   '/api/v1/checkout', '/api/v1/events/shop-visit', '/api/v1/activities/sign-in', '/api/v1/activities/season/claim',
 ]);
@@ -14,6 +15,9 @@ const LATENCY_BUCKETS = Object.freeze([5, 25, 100, 500, 2000, 10000]);
 
 function routeTemplate(pathname) {
   if (ROUTES.has(pathname)) return pathname;
+  if (/^\/api\/v1\/planting\/record\/[a-z0-9][a-z0-9-]{7,63}$/.test(pathname)) return '/api/v1/planting/record/:recordId';
+  if (/^\/api\/v1\/(staff\/)?planting\/orders\/(start|[a-f0-9]{32})$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/planting/orders/:cursor' : '/api/v1/planting/orders/:cursor';
+  if (/^\/api\/v1\/(staff\/)?planting\/order\/[a-f0-9]{32}$/.test(pathname)) return pathname.includes('/staff/') ? '/api/v1/staff/planting/order/:orderId' : '/api/v1/planting/order/:orderId';
   if (/^\/api\/v1\/forum\/posts\/(all|harvest|questions|chat)\/(start|[a-f0-9]{32})$/.test(pathname)) return '/api/v1/forum/posts/:circle/:cursor';
   if (/^\/api\/v1\/forum\/(mine|reports)\/(start|[a-f0-9]{32})$/.test(pathname)) return pathname.includes('/mine/') ? '/api/v1/forum/mine/:cursor' : '/api/v1/forum/reports/:cursor';
   if (/^\/api\/v1\/forum\/post\/[a-f0-9]{32}\/(start|[a-f0-9]{32})$/.test(pathname)) return '/api/v1/forum/post/:id/:cursor';

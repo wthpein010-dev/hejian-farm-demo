@@ -4,7 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { onShow, onHide } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import FarmSignIn from '../../components/FarmSignIn.vue';
-import { farmState as state, sandboxLoginEnabled, platformProvider, loginDevelopment, loginPlatform, logoutFarm, onFarmPageShow, refreshFarm, loadFarmPrivacy, prepareFarmDeletion, cancelFarmDeletion, deleteFarmAccount, openInventory, openExchangeHistory } from '../../core/farm';
+import { farmState as state, sandboxLoginEnabled, platformProvider, loginDevelopment, loginPlatform, logoutFarm, onFarmPageShow, refreshFarm, loadFarmPrivacy, prepareFarmDeletion, cancelFarmDeletion, deleteFarmAccount, openInventory, openExchangeHistory, loadFarmPlantingStatus, openPlantingOrders } from '../../core/farm';
 const account = ref('');
 const accountValid = computed(() => /^[A-Za-z0-9_-]{3,40}$/.test(account.value));
 async function connect() { if (accountValid.value) await loginDevelopment(account.value); }
@@ -24,7 +24,8 @@ async function cancelDeletion() { cancelFarmDeletion(); await focusPrivacy('dele
 async function confirmDeletion() { if (await deleteFarmAccount()) await focusPrivacy('account-login-title'); }
 watch(() => state.authenticated, authenticated => { if (!authenticated && !state.pending) void focusPrivacy('account-login-title'); });
 onHide(cancelFarmDeletion);
-onShow(onFarmPageShow);
+onShow(() => { onFarmPageShow(); if (state.authenticated) void loadFarmPlantingStatus(); });
+watch(() => state.authenticated, authenticated => { if (authenticated) void loadFarmPlantingStatus(); });
 </script>
 <template>
   <FarmScreen title="我的" allow-guest warm>
@@ -40,6 +41,7 @@ onShow(onFarmPageShow);
       <view class="asset-row profile-assets"><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.points }}</text><text class="asset-label">田园积分</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.wallet.feed }}</text><text class="asset-label">饲料份数</text></view><view class="asset-cell"><text class="asset-number">{{ state.snapshot.system.purchases.length }}</text><text class="asset-label">积分兑换</text></view></view>
       <FarmSignIn show-progress />
       <view class="panel profile-menu"><FarmButton class="text-action" @tap="openInventory"><text>查看当前仓库</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton><FarmButton class="text-action" @tap="openExchangeHistory"><text>查看全部兑换记录</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton></view>
+      <view class="panel profile-menu"><FarmButton class="text-action" @tap="openPlantingOrders('customer')"><text>我的播种申请</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton><FarmButton v-if="state.plantingStatus?.hasStaffAccess" class="text-action" @tap="openPlantingOrders('staff')"><text>农务工作台</text><text class="profile-menu-arrow" aria-hidden="true">›</text></FarmButton></view>
       <FarmButton class="action secondary profile-sync" :disabled="state.busy" @tap="refreshFarm">同步最新田园数据</FarmButton>
             <view class="panel">
         <view class="section-heading">账户与隐私</view>

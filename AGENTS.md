@@ -87,3 +87,11 @@ shared/exchanges.mjs拥有严格只读历史投影、资源标签与wire校验�
 ## 社交主页实现
 
 prototype/social.js的FarmSocial拥有纯内存圈子/帖子/评论/好友规则；community.js适配home/community/post/friends/friend页面，复用app的唯一dialog/frame/toast及导航。social.css仅消费canonical token；所有新文字/属性转义。社交操作不改积分/设备/广告或邀请资格。示例帖子/人物只按固定ID深链；本页自发帖只分享社区入口，不把正文/草稿放URL、storage、history或网络。历史仅白名单导航id/分类；取消清理、失败留稿、IME候选确认不能误发。正式移动工程本轮同步主页命名/视觉，生产社交仍关闭，不把H5示例好友当真实关系或实际审核。
+
+## 持久播种申请与农务作业
+
+契约见[PLANTING](docs/release/PLANTING.md)，本轮计划`.scratch/durable-planting/`。shared/planting.mjs拥有严格wire，services/api/src/planting.mjs拥有schema8五表、授权/状态/原命令账、备份校验和恢复禁权。只处理私有可信配置且已归属客户的planned作物档案，不把unitLabel当库存，不增加假支付/农时。production及非development身份失败关闭。
+
+dispatch接单/派工，当前assignee+execute开工/完成；按记录每次重读权限。完成在同事务核对原档案版本/归属/轮次并新增growing历史，不复制旧测量/旧预测，不动financial Snapshot/revision/奖励。外部导入原批次先回放，新改写才检查active锁；不可在Store外抢先guard破坏原key语义。cancel-work是明确人工核实停工并禁用plan，非设备停止ACK，不能宣称地块未播种。
+
+未知命令复用唯一pending，原最小回执和当前详情分开；冷启动从当前档案/列表防重不等于恢复原key，此上线缺口须如实保留。独立工作流变化撤销相关注销准备；active本人/受派作业阻断注销，结束员工引用匿名化。恢复清session/注销准备并禁用plan、撤销grant/递增版本，防旧备份复活权限；仍需最新撤权/注销清单和保留/容量政策。私有配置CLI只既有schema8/私有文件；旧论坛工具可显式保留经验证schema7，HTTP始终升级8。所有数据合成、不迁移运行库。

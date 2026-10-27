@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
-import { isForumId } from './client.mjs';
+import { isForumId, isPlantingId } from './client.mjs';
+import type { PlantingAudience, PlantingStatus, PlantingRecord, PlantingPage, PlantingDetail, PlantingCommand, PlantingReceipt, PlantingState, PlantingAction } from './types';
 import { requestNavigation } from './navigation.mjs';
 import type { ForumStatus, ForumPage, ForumDetail, ForumReports, ForumCommand, ForumReceipt, ForumState, ForumCircle, ForumReason } from './types';
 import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail, FriendsView, FriendCommand, FriendCommandReceipt } from './types';
@@ -23,6 +24,9 @@ export const farmState = reactive({
   forumStatus: null as ForumStatus | null, forumPage: null as ForumPage | null, forumDetail: null as ForumDetail | null, forumReports: null as ForumReports | null,
   forumBusy: false, forumError: '', forumMessage: '', forumDetailBusy: false, forumDetailError: '',
   forumSubmission: null as { action: 'submit-post' | 'submit-comment' } | null,
+  plantingStatus: null as PlantingStatus | null, plantingRecord: null as PlantingRecord | null, plantingPage: null as PlantingPage | null, plantingDetail: null as PlantingDetail | null,
+  plantingAudience: 'customer' as PlantingAudience, plantingDetailAudience: 'customer' as PlantingAudience,
+  plantingBusy: false, plantingDetailBusy: false, plantingRecordBusy: false, plantingError: '', plantingDetailError: '', plantingRecordError: '', plantingMessage: '', plantingConfirmedOrderId: '',
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -37,6 +41,13 @@ provider = 'toutiao';
 export const platformProvider = provider as 'weixin' | 'toutiao' | null;
 let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRead = 0, friendsRead = 0, exchangeSelection = '', synchronizedProfile: unknown = null;
 let forumRead = 0, forumDetailRead = 0, forumSelection = { scope: 'public' as 'public' | 'mine' | 'reports', circle: 'all' as 'all' | ForumCircle }, forumPostId = '';
+let plantingRead = 0, plantingDetailRead = 0, plantingRecordRead = 0, plantingStatusRead = 0;
+let plantingAudience: PlantingAudience = 'customer', plantingOrderId = '', plantingRecordId = '', plantingClock: { serverTime: number; receivedAt: number } | null = null;
+function invalidatePlantingViews() {
+  plantingRead++; plantingDetailRead++; plantingRecordRead++; plantingStatusRead++;
+  farmState.plantingStatus = null; farmState.plantingRecord = null; farmState.plantingPage = null; farmState.plantingDetail = null;
+  farmState.plantingBusy = false; farmState.plantingDetailBusy = false; farmState.plantingRecordBusy = false;
+}
 function invalidateForumViews(message = '') {
   forumRead++; forumDetailRead++;
   farmState.forumStatus = null; farmState.forumPage = null; farmState.forumDetail = null; farmState.forumReports = null;
@@ -63,6 +74,8 @@ function syncClientState() {
     forumRead++; forumDetailRead++; farmState.forumStatus = null; farmState.forumPage = null; farmState.forumDetail = null; farmState.forumReports = null;
     farmState.forumBusy = false; farmState.forumDetailBusy = false; farmState.forumError = ''; farmState.forumDetailError = ''; farmState.forumMessage = ''; forumPostId = '';
     farmState.forumSubmission = null;
+    invalidatePlantingViews(); plantingOrderId = ''; plantingRecordId = ''; plantingAudience = 'customer'; plantingClock = null;
+    farmState.plantingError = ''; farmState.plantingDetailError = ''; farmState.plantingRecordError = ''; farmState.plantingMessage = ''; farmState.plantingConfirmedOrderId = '';
   }
   farmState.snapshot = client.snapshot as Snapshot | null;
   farmState.privacy = client.privacy as PrivacyReport | null;
@@ -79,6 +92,10 @@ function syncClientState() {
   if (!client.forumPage) farmState.forumPage = null;
   if (!client.forumDetail) farmState.forumDetail = null;
   if (!client.forumReports) farmState.forumReports = null;
+  if (!client.plantingStatus) farmState.plantingStatus = null;
+  if (!client.plantingRecord) farmState.plantingRecord = null;
+  if (!client.plantingPage) farmState.plantingPage = null;
+  if (!client.plantingDetail) farmState.plantingDetail = null;
 }
 
 async function run(operation: () => Promise<unknown>, message = '') {
@@ -98,7 +115,8 @@ export const retryFarmOperation = () => {
     const result = await client.retryPending();
     if (kind === 'friends') await completeFriendsCommand(result as FriendCommandReceipt);
     if (kind === 'forum') await completeForumCommand(result as ForumReceipt);
-  }, ['friends', 'forum'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+    if (kind === 'planting') await completePlantingCommand(result as PlantingReceipt);
+  }, ['friends', 'forum', 'planting'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
 };
 export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
 export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
@@ -342,6 +360,92 @@ export async function loadFarmRecord(id: string, beforeVersion = 0) {
 export function openFarmRecord(id: string) {
   if (/^[a-z0-9][a-z0-9-]{7,63}$/.test(id)) uni.navigateTo({ url: `/pages/farm-record/index?id=${id}` });
 }
+function acceptPlantingClock(view: PlantingStatus | PlantingRecord | PlantingPage | PlantingDetail) { plantingClock = { serverTime: view.serverTime, receivedAt: Date.now() }; }
+export function plantingNow() {
+  if (!plantingClock) throw new Error('请先刷新作业时间，再核对实际操作。');
+  return Math.min(8640000000000000, plantingClock.serverTime + Math.max(0, Date.now() - plantingClock.receivedAt));
+}
+export function plantingStateLabel(state: PlantingState) { return { requested: '等待农场接单', accepted: '已接单，待派工', assigned: '已派工，待开工', working: '农务作业中', completed: '播种已回传完成', cancelled: '作业已取消' }[state]; }
+export function plantingActionLabel(action: PlantingAction) { return { request: '客户申请', cancel: '客户取消', accept: '农场接单', assign: '安排农务员', start: '确认开工', complete: '回传完成', 'cancel-work': '核实人工停工' }[action]; }
+export async function loadFarmPlantingStatus() {
+  syncClientState(); const read = ++plantingStatusRead, account = client.profile;
+  farmState.plantingStatus = null;
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== plantingStatusRead || account !== client.profile) return false;
+    const value = await client.loadPlantingStatus() as PlantingStatus;
+    if (read !== plantingStatusRead || account !== client.profile || value !== client.plantingStatus) return false;
+    farmState.plantingStatus = value; acceptPlantingClock(value); return true;
+  } catch { syncClientState(); return false; }
+}
+export async function loadFarmPlantingOrders(audience: PlantingAudience = 'customer', cursor = 'start') {
+  syncClientState(); const read = ++plantingRead, account = client.profile;
+  if (farmState.plantingAudience !== audience) farmState.plantingPage = null;
+  plantingAudience = audience; farmState.plantingAudience = audience; farmState.plantingBusy = true; farmState.plantingError = '';
+  try {
+    if (!await loadFarmPlantingStatus()) throw new Error('播种服务状态未能确认，请刷新重试。');
+    if (read !== plantingRead || account !== client.profile) return false;
+    if (!farmState.plantingStatus?.available) { farmState.plantingPage = null; return true; }
+    const page = await client.loadPlantingPage(audience, cursor) as PlantingPage;
+    if (read !== plantingRead || account !== client.profile || page !== client.plantingPage) return false;
+    farmState.plantingPage = { ...page, items: appendForum(farmState.plantingPage, page, cursor) }; acceptPlantingClock(page); return true;
+  } catch (failure) { if (read === plantingRead && account === client.profile) farmState.plantingError = failure instanceof Error ? failure.message : '作业列表读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === plantingRead) farmState.plantingBusy = false; }
+}
+export async function loadFarmPlantingOrder(id: string, audience: PlantingAudience = 'customer') {
+  syncClientState(); const read = ++plantingDetailRead, account = client.profile;
+  plantingOrderId = id; plantingAudience = audience; farmState.plantingDetailAudience = audience;
+  farmState.plantingDetail = null; farmState.plantingDetailBusy = true; farmState.plantingDetailError = '';
+  try {
+    if (!await loadFarmPlantingStatus()) throw new Error('播种服务状态未能确认，请刷新重试。');
+    if (read !== plantingDetailRead || account !== client.profile) return false;
+    if (!farmState.plantingStatus?.available) return true;
+    const detail = await client.loadPlantingDetail(id, audience) as PlantingDetail;
+    if (read !== plantingDetailRead || account !== client.profile || detail !== client.plantingDetail) return false;
+    farmState.plantingDetail = detail; acceptPlantingClock(detail); return true;
+  } catch (failure) { if (read === plantingDetailRead && account === client.profile) farmState.plantingDetailError = failure instanceof Error ? failure.message : '作业详情读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === plantingDetailRead) farmState.plantingDetailBusy = false; }
+}
+export async function loadFarmPlantingRecord(id: string) {
+  syncClientState(); const read = ++plantingRecordRead, account = client.profile;
+  plantingRecordId = id; farmState.plantingRecord = null; farmState.plantingRecordBusy = true; farmState.plantingRecordError = '';
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== plantingRecordRead || account !== client.profile) return false;
+    const value = await client.loadPlantingRecord(id) as PlantingRecord;
+    if (read !== plantingRecordRead || account !== client.profile || value !== client.plantingRecord) return false;
+    farmState.plantingRecord = value; acceptPlantingClock(value); return true;
+  } catch (failure) { if (read === plantingRecordRead && account === client.profile) farmState.plantingRecordError = failure instanceof Error ? failure.message : '申请资格读取失败，请重试。'; return false; }
+  finally { syncClientState(); if (read === plantingRecordRead) farmState.plantingRecordBusy = false; }
+}
+const plantingRefusals: Record<string, string> = { PLANTING_UNAVAILABLE: '播种作业暂未开放。', NOT_FOUND: '作业已不可访问，请刷新列表。', PLAN_DISABLED: '农场暂未开放这块田的播种，请联系农场核查。', RECORD_CHANGED: '地块档案已更新，请查看最新档案后重新决定。', ORDER_CHANGED: '作业状态刚刚更新，请查看最新进展后重新决定。', INVALID_STATE: '当前状态无法执行此操作，请刷新核对。', ACTIVE_ORDER_EXISTS: '本轮已有未结束作业，请查看当前申请。', ASSIGNEE_UNAVAILABLE: '所选农务员授权已变化，请刷新候选名单。', TOO_EARLY: '尚未到农场安排的最早开工时间。', INVALID_PERFORMED_AT: '实际操作时间未能确认，请刷新作业核对。', EVENT_LIMIT: '当前作业记录已达限制，请由农场核查。', IDEMPOTENCY_CONFLICT: '操作记录有冲突，请核对原操作。' };
+async function completePlantingCommand(receipt: PlantingReceipt) {
+  syncClientState();
+  farmState.plantingConfirmedOrderId = receipt.outcome === 'applied' ? receipt.orderId || '' : '';
+  farmState.plantingMessage = receipt.outcome === 'applied' ? ({ request: '播种申请已保存，等待农场接单。', cancel: '播种申请已取消。', accept: '已接单，等待安排农务员。', assign: '派工已保存，请查看最新作业进展。', start: '开工已登记，实际作业仍由农场执行。', complete: '播种完成已回传，地块档案已更新。', 'cancel-work': '人工停工已记录，农场重新核查前暂停新申请。' }[receipt.action]) : plantingRefusals[receipt.code] || '操作未完成，请刷新后核对。';
+  // A confirmed original command is final even when any subsequent GET fails.
+  const audience = plantingAudience, selectedOrder = plantingOrderId, selectedRecord = plantingRecordId;
+  await loadFarmPlantingOrders(audience);
+  if (selectedOrder) await loadFarmPlantingOrder(selectedOrder, audience);
+  if (selectedRecord) { await loadFarmPlantingRecord(selectedRecord); if (receipt.action === 'complete') await loadFarmRecord(selectedRecord); }
+}
+export async function commandFarmPlanting(command: PlantingCommand, audience: PlantingAudience = 'customer') {
+  if (farmState.busy || farmState.pending) return false;
+  plantingAudience = audience; invalidatePlantingViews(); farmState.plantingMessage = ''; farmState.plantingConfirmedOrderId = '';
+  let applied = false;
+  const confirmed = await run(async () => { const receipt = await client.commandPlanting(command, audience) as PlantingReceipt; applied = receipt.outcome === 'applied'; await completePlantingCommand(receipt); });
+  return confirmed && applied;
+}
+export function openPlantingOrders(audience: PlantingAudience = 'customer') {
+  if (!['customer', 'staff'].includes(audience)) return;
+  requestNavigation(() => {
+    const pages = getCurrentPages(), position = pages.map(page => page.route).lastIndexOf('pages/planting/index');
+    const fallback = () => uni.navigateTo({ url: `/pages/planting/index?audience=${audience}` });
+    if (position >= 0 && plantingAudience === audience && position < pages.length - 1) uni.navigateBack({ delta: pages.length - 1 - position, fail: fallback }); else fallback();
+  });
+}
+export function openPlantingOrder(id: string, audience: PlantingAudience = 'customer') { if (isPlantingId(id) && ['customer', 'staff'].includes(audience)) requestNavigation(() => uni.navigateTo({ url: `/pages/planting-order/index?id=${id}&audience=${audience}` })); }
+export function returnFromPlanting() { requestNavigation(() => { const fallback = () => uni.switchTab({ url: '/pages/profile/index' }); if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback }); else fallback(); }); }
 export function openFarmRegistry() {
   const fallback = () => uni.switchTab({ url: '/pages/farm/index' });
   if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback });

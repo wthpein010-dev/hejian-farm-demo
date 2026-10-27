@@ -11,6 +11,8 @@ import { ExchangeCursorError, isExchangeId } from '../../../shared/exchanges.mjs
 import { isFriendCommand } from '../../../shared/friends.mjs';
 import { isForumCommand, isForumId } from '../../../shared/forum.mjs';
 import { ForumError } from './forum.mjs';
+import { isPlantingCommand, isPlantingId } from '../../../shared/planting.mjs';
+import { PlantingError } from './planting.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -197,6 +199,34 @@ export function createApp(options = {}) {
         if (store.authenticate(token, instant) !== userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
         return instant;
       };
+      const plantingCommands = /^\/(staff\/)?planting\/commands$/.exec(route);
+      if (plantingCommands) {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const key = request.headers['idempotency-key'], audience = plantingCommands[1] ? 'staff' : 'customer';
+        if (typeof key !== 'string' || !SAFE_ID.test(key)) throw invalid();
+        const body = await jsonBody(request);
+        if (!isPlantingCommand(body, audience)) throw invalid();
+        send(200, { data: store.plantingCommand(userId, audience, key, body, refreshSession()) }); return;
+      }
+      if (route.startsWith('/planting/') || route.startsWith('/staff/planting/')) {
+        let data;
+        const page = /^\/(staff\/)?planting\/orders\/([^/]+)$/.exec(route);
+        const detail = /^\/(staff\/)?planting\/order\/([^/]+)$/.exec(route);
+        const record = /^\/planting\/record\/([a-z0-9][a-z0-9-]{7,63})$/.exec(route);
+        if (route !== '/planting/status' && !record && !page && !detail) throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        if (route === '/planting/status') data = store.plantingStatus(userId, refreshSession());
+        else if (record) data = store.plantingRecord(userId, record[1], refreshSession());
+        else if (page) {
+          if (page[2] !== 'start' && !isPlantingId(page[2])) throw invalid();
+          data = store.plantingPage(userId, page[1] ? 'staff' : 'customer', page[2], refreshSession());
+        } else if (detail) {
+          if (!isPlantingId(detail[2])) throw invalid();
+          data = store.plantingDetail(userId, detail[1] ? 'staff' : 'customer', detail[2], refreshSession());
+        } else throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
+        if (!data) throw new RequestError(404, 'NOT_FOUND', '未找到此播种记录');
+        send(200, { data }); return;
+      }
       if (route === '/forum/commands') {
         if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
         const key = request.headers['idempotency-key'];
@@ -316,6 +346,8 @@ export function createApp(options = {}) {
       else if (error instanceof ExchangeCursorError) send(400, { error: { code: error.code, message: error.message } });
       else if (error instanceof FarmRegistryError && error.code === 'NOT_FOUND') send(404, { error: { code: error.code, message: error.message } });
       else if (error instanceof ForumError && error.code === 'INVALID_CURSOR') send(400, { error: { code: 'INVALID_REQUEST', message: '社区请求无效，请刷新后重试' } });
+      else if (error instanceof PlantingError && error.code === 'NOT_FOUND') send(404, { error: { code: 'NOT_FOUND', message: '未找到此播种记录' } });
+      else if (error instanceof PlantingError && error.code === 'PLANTING_UNAVAILABLE') send(503, { error: { code: error.code, message: '播种作业尚未开放，请稍后再来' } });
       else if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });
     }

@@ -4,6 +4,8 @@ import { isFarmPage, isFarmDetail } from '../../../../shared/farm-records.mjs';
 import { isExchangeId, isExchangePage, isExchangeDetail } from '../../../../shared/exchanges.mjs';
 import { isFriendsView, isFriendCommandReceipt, isFriendCommand } from '../../../../shared/friends.mjs';
 import { isForumStatus, isForumPage, isForumDetail, isForumReports, isForumCommand, isForumCommandReceipt, isForumId } from '../../../../shared/forum.mjs';
+import { isPlantingStatus, isPlantingRecord, isPlantingPage, isPlantingDetail, isPlantingReceipt, isPlantingCommand, isPlantingId } from '../../../../shared/planting.mjs';
+export { isPlantingId };
 export { isForumId };
 export { isExchangeId };
 export class FarmApiError extends Error {
@@ -49,6 +51,12 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   let friendsView = null, friendsRead = 0, friendsVersion = -1;
   let forumStatus = null, forumPage = null, forumDetail = null, forumReports = null;
   let forumStatusRead = 0, forumPageRead = 0, forumDetailRead = 0, forumReportsRead = 0;
+  let plantingStatus = null, plantingRecord = null, plantingPage = null, plantingDetail = null;
+  let plantingStatusRead = 0, plantingRecordRead = 0, plantingPageRead = 0, plantingDetailRead = 0;
+  function clearPlanting() {
+    plantingStatus = null; plantingRecord = null; plantingPage = null; plantingDetail = null;
+    plantingStatusRead++; plantingRecordRead++; plantingPageRead++; plantingDetailRead++;
+  }
   function clearFriendsView() { friendsView = null; friendsRead++; }
   function clearForum() {
     forumStatus = null; forumPage = null; forumDetail = null; forumReports = null;
@@ -60,6 +68,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     confirmedCheckout = null; exchangeDetailOperationKey = '';
     friendsView = null; friendsRead++; friendsVersion = -1;
     clearForum();
+    clearPlanting();
   }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
@@ -191,6 +200,26 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     if (cursor !== 'start' && !isForumId(cursor)) throw error('INVALID_REQUEST', '社区分页位置无效，请刷新。');
     return { ownerId: profile.id, environment: snapshot.environment, generation };
   }
+  function plantingReadContext(audience = 'customer', cursor = 'start') {
+    requireSession();
+    if (!['customer', 'staff'].includes(audience) || (cursor !== 'start' && !isPlantingId(cursor))) throw error('INVALID_REQUEST', '作业入口或分页位置无效，请返回重新选择。');
+    if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再查看播种作业。');
+    if (activeMutation) throw error('PENDING_OPERATION', '正在核对操作，请稍后刷新作业。');
+    return { ownerId: profile.id, environment: snapshot.environment, generation };
+  }
+  async function submitPlanting(operation) {
+    activeMutation = true; clearPlanting();
+    try {
+      const value = await send(operation.audience === 'staff' ? '/staff/planting/commands' : '/planting/commands', 'POST', operation.body, true, operation.key, false);
+      if (!isPlantingReceipt(value, operation.accountId, operation.environment, operation.key, operation.body.action)) throw error('SERVER_UNAVAILABLE', '播种操作回执未能确认。');
+      // Original receipts confirm commands only, never current permissions/orders.
+      pending = null; clearPlanting(); return value;
+    } catch (failure) {
+      pending = operation;
+      if (failure.status === 401) throw failure;
+      throw error('RESULT_UNKNOWN', '播种操作结果尚未确认。请核对上次操作，避免重复提交。');
+    } finally { activeMutation = false; }
+  }
   async function submitDeletion(operation) {
     activeMutation = true;
     try {
@@ -227,6 +256,10 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get forumPage() { return forumPage; },
     get forumDetail() { return forumDetail; },
     get forumReports() { return forumReports; },
+    get plantingStatus() { return plantingStatus; },
+    get plantingRecord() { return plantingRecord; },
+    get plantingPage() { return plantingPage; },
+    get plantingDetail() { return plantingDetail; },
     get pendingKind() { return pending?.kind || (pending ? 'assets' : null); },
     get hasConfirmedCheckout() { return !!confirmedCheckout && !!token && confirmedCheckout.accountId === profile?.id; },
     get deletionPrepared() { return !!deletionProposal; },
@@ -299,6 +332,47 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (!isForumCommand(command)) throw error('INVALID_REQUEST', '请检查内容长度和格式，再提交审核。');
       cancelAccountDeletion();
       return submitForum({ kind: 'forum', accountId: profile.id, environment: snapshot.environment, key: generateKey(), body: JSON.parse(JSON.stringify(command)) });
+    },
+    async loadPlantingStatus() {
+      const context = plantingReadContext(), read = ++plantingStatusRead;
+      plantingStatus = null;
+      const value = await send('/planting/status', 'GET', undefined, true, '', false);
+      if (read !== plantingStatusRead || context.generation !== generation) throw error('READ_SUPERSEDED', '播种服务状态已更新，请刷新。');
+      if (!isPlantingStatus(value, context.ownerId, context.environment)) throw error('SERVER_UNAVAILABLE', '播种服务状态未能确认，请重新读取。');
+      if (!value.available) clearPlanting();
+      plantingStatus = value; return value;
+    },
+    async loadPlantingRecord(id) {
+      const context = plantingReadContext(), read = ++plantingRecordRead;
+      if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(id)) throw error('INVALID_REQUEST', '种植档案位置无效。');
+      plantingRecord = null;
+      const value = await send(`/planting/record/${id}`, 'GET', undefined, true, '', false);
+      if (read !== plantingRecordRead || context.generation !== generation) throw error('READ_SUPERSEDED', '已选择其他档案，请刷新当前对象。');
+      if (!isPlantingRecord(value, context.ownerId, context.environment, id)) throw error('SERVER_UNAVAILABLE', '播种申请资格未能确认，请重新读取。');
+      plantingRecord = value; return value;
+    },
+    async loadPlantingPage(audience = 'customer', cursor = 'start') {
+      const context = plantingReadContext(audience, cursor), read = ++plantingPageRead;
+      const value = await send(`${audience === 'staff' ? '/staff' : ''}/planting/orders/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== plantingPageRead || context.generation !== generation) throw error('READ_SUPERSEDED', '作业列表已更新，请查看当前入口。');
+      if (!isPlantingPage(value, context.ownerId, context.environment) || (cursor !== 'start' && value.items.some(item => item.id <= cursor))) throw error('SERVER_UNAVAILABLE', '播种作业列表未能确认，请刷新。');
+      plantingPage = value; return value;
+    },
+    async loadPlantingDetail(id, audience = 'customer') {
+      const context = plantingReadContext(audience), read = ++plantingDetailRead;
+      if (!isPlantingId(id)) throw error('INVALID_REQUEST', '作业编号无效，请重新选择。');
+      plantingDetail = null;
+      const value = await send(`${audience === 'staff' ? '/staff' : ''}/planting/order/${id}`, 'GET', undefined, true, '', false);
+      if (read !== plantingDetailRead || context.generation !== generation) throw error('READ_SUPERSEDED', '已选择其他作业，请查看当前对象。');
+      if (!isPlantingDetail(value, context.ownerId, context.environment, id)) throw error('SERVER_UNAVAILABLE', '播种作业详情未能确认，请重新读取。');
+      plantingDetail = value; return value;
+    },
+    async commandPlanting(command, audience = 'customer') {
+      requireSession(); requireIdle();
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再操作播种作业。');
+      if (!['customer', 'staff'].includes(audience) || !isPlantingCommand(command, audience)) throw error('INVALID_REQUEST', '播种操作无效，请刷新后重新选择。');
+      cancelAccountDeletion();
+      return submitPlanting({ kind: 'planting', audience, accountId: profile.id, environment: snapshot.environment, key: generateKey(), body: JSON.parse(JSON.stringify(command)) });
     },
     async loadFarmPage(kind, cursor = 'start') {
       requireSession();
@@ -411,6 +485,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (pending.accountId !== profile.id) throw error('ACCOUNT_MISMATCH', '请登录原来的账户，再核对上次操作。');
       if (pending.kind === 'friends') return submitFriends(pending);
       if (pending.kind === 'forum') return submitForum(pending);
+      if (pending.kind === 'planting') return submitPlanting(pending);
       return submit(pending, true);
     },
     async logout() {

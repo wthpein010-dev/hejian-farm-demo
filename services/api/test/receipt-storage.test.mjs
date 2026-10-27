@@ -80,7 +80,7 @@ for (const schema of [2, 3]) {
   test(`legacy schema${schema} cannot claim to contain a versioned compact receipt`, async t => {
     const f = await fixture(t), source = await f.service(); await checkout(source); await source.close();
     database(f.databasePath, db => {
-      db.exec('DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; ');
+      db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; ');
       if (schema === 2) db.exec('DROP TABLE deletion_confirmations; DROP TABLE deletion_receipts');
       db.exec(`PRAGMA user_version = ${schema}`);
     });
@@ -108,10 +108,10 @@ const compact = (text, original) => {
 };
 const refusedReceipt = failure => ['INVALID_APPLICATION_RECEIPT', 'INVALID_APPLICATION_DATA'].includes(failure?.code);
 
-test('schema7 compact receipts still replay the original result after later writes and a real service restart', async t => {
+test('schema8 compact receipts still replay the original result after later writes and a real service restart', async t => {
   const f = await fixture(t), first = await f.service(), scenario = await checkout(first);
   const { auth, key, body, original } = scenario;
-  assert.equal(version(f.databasePath), 7);
+  assert.equal(version(f.databasePath), 8);
   compact(stored(f.databasePath, auth.profile.id, key), original);
   const changed = await first.request('/activities/sign-in', { token: auth.token, key: 'receipt-storage-later-signin', body: { expectedRevision: 2 } });
   assert.equal(changed.status, 200); assert.equal(changed.json.data.wallet.points, 60);
@@ -139,11 +139,11 @@ test(`a canonical schema${legacySchema} raw-receipt fixture upgrades without rew
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCart, scenario.auth.profile.id, scenario.cartKey);
     db.prepare('UPDATE idempotency SET success_json = ? WHERE user_id = ? AND key = ?').run(rawCheckout, scenario.auth.profile.id, scenario.key);
     db.prepare('INSERT INTO code_claims VALUES (?, ?, ?, ?, ?)').run('c'.repeat(64), 'weixin', 'used', NOW, NOW);
-    db.exec(`DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = ${legacySchema}`);
+    db.exec(`DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands; DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation; DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles; DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports; PRAGMA user_version = ${legacySchema}`);
     return { user: db.prepare('SELECT * FROM users').get(), claims: db.prepare('SELECT * FROM code_claims').all() };
   });
   const upgraded = await f.service();
-  assert.equal(version(f.databasePath), 7);
+  assert.equal(version(f.databasePath), 8);
   assert.deepEqual(database(f.databasePath, db => ({ user: db.prepare('SELECT * FROM users').get(),
     claims: db.prepare('SELECT * FROM code_claims').all() })), before);
   assert.equal(stored(f.databasePath, scenario.auth.profile.id, scenario.cartKey), rawCart);
@@ -158,7 +158,7 @@ test(`a canonical schema${legacySchema} raw-receipt fixture upgrades without rew
 
 }
 
-for (const storedSchema of [4, 5, 6, 7]) {
+for (const storedSchema of [4, 5, 6, 7, 8]) {
 test(`schema${storedSchema} backup and isolated restore preserve mixed raw/compact history while revoking sessions and deletion confirmations`, async t => {
   const f = await fixture(t), source = await f.service(), scenario = await checkout(source);
   const rawCart = JSON.stringify(scenario.cartSnapshot);
@@ -170,10 +170,11 @@ test(`schema${storedSchema} backup and isolated restore preserve mixed raw/compa
   compact(compressedCheckout, scenario.original);
   assert.equal((await source.request('/account/deletion/prepare', { token: scenario.auth.token, body: { expectedRevision: 2 } })).status, 200);
   const backupDirectory = f.output('mixed-backup'), outputDirectory = f.output('mixed-restored');
-  if (storedSchema < 7) {
+  if (storedSchema < 8) {
     await source.close();
     database(f.databasePath, db => {
-      db.exec('DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation');
+      db.exec('DROP TABLE planting_events; DROP TABLE planting_orders; DROP TABLE planting_grants; DROP TABLE planting_plans; DROP TABLE planting_commands;');
+      if (storedSchema < 7) db.exec('DROP TABLE forum_commands; DROP TABLE forum_reports; DROP TABLE forum_content; DROP TABLE forum_usage; DROP TABLE forum_moderation');
       if (storedSchema < 6) db.exec('DROP TABLE friends_commands; DROP TABLE friends_blocks; DROP TABLE friends_relations; DROP TABLE friends_profiles');
       if (storedSchema === 4) db.exec('DROP TABLE IF EXISTS farm_record_events; DROP TABLE IF EXISTS farm_records; DROP TABLE IF EXISTS farm_imports');
       db.exec(`PRAGMA user_version = ${storedSchema}`);
