@@ -30,3 +30,5 @@ ChatGPT内置浏览器＋本机Vite5174/SQLite API8787，私有目录创建后�
 ## 发布边界
 
 仍仅独立`wthpein010-dev/hejian-farm-demo`与Pages，当前身份/写权限和main已现场核实。提交/CI/线上结果按实际回执补记；不接Hub或其他网站。Pages继续只部署prototype内存演示，账户论坛API没有部署公网。生产内容安全/运营身份、平台分享/通知/邀请、真实农场/设备/视频/支付履约、运维容量与最新撤销删除清单、签名真机及官方上架仍未完成。
+
+功能提交`846373a4b3e10d998f8e53cf3888b0fd6503605d`已推独立main，[工作流40464302825](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40464302825) verify/verify-mobile/deploy全部成功，Linux684/684、0失败/跳过，四端资源和依赖0已知漏洞通过。部署后59个公网HTML/CSS/JS/图片/影片等资源与该Git blob逐字节一致，旧视频Range206/1024字节；本轮未改prototype或重制影片，不把旧24秒截图讲解称为新论坛视频。D:/farm与托管工作区均已快进该功能提交。

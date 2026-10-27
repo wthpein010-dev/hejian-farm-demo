@@ -1,5 +1,15 @@
 # 上线推进证据（2026-10-27）
 
+## 持久论坛与私有预审
+
+功能提交`846373a4b3e10d998f8e53cf3888b0fd6503605d`已推独立main，[CI40464302825](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40464302825) verify/verify-mobile/deploy全成功。schema7帖子/评论预审、本人管理/撤回、举报处置、陌生作者屏蔽、私有CLI当前状态/版本导出与审核闭环完成开发沙盒验证；生产和非沙盒仍关闭。完整协议与证据见[FORUM](FORUM.md)及[验收](FORUM-VERIFICATION.md)。
+
+最终本机684项：682通过/0失败/2既有Windows POSIX跳过；四端资源、类型/依赖边界、token/12图摘要、0已知漏洞、UI strict0通过。两账户浏览器验证待审隔离、帖子/评论批准后可见、举报隐藏与复核恢复、陌生作者双向屏蔽/解除和跨域旧缓存清理；真实HTTP验证父帖撤回擦除子评论及旧批准不复活。320/390短屏原生字段与安全确认可用；OS输入法/真机/软键盘等未冒称通过。独立复审无剩余P1/P2。
+
+权限/原key/审核版本/父帖上下文/只读检查/ACL与不覆盖/注销/备份/旧schema2–6、伪标未来库、原schema6 Store拒7且文件不变均有实际证据。旧收据快捷丢稿、隐藏DOM ID、末页焦点、跨域读代际等发现均先回归再修复；没有缩小正式上线目标。
+
+现场身份wthpein010-dev及push/admin、远端main和Pages成功已核实。59公网资源逐字节匹配功能Git blob，视频Range206/1024字节；H5运行资源未改、视频沿用。API/持久社区未部署公网，真实审核人员/内容安全、平台分享/SDK/邀请通知、真实农场设备/视频/广告支付/履约、生产容量/保留及删除清单、签名真机/官方上架仍待验，本回合为progress。
+
 ## 跨端持久农友
 
 功能提交`726c6ccb360ce00775a0cc81aa445f9efc6ebf35`已推送独立main；[CI40458103669](https://github.com/wthpein010-dev/hejian-farm-demo/actions/runs/40458103669) verify/verify-mobile/deploy全成功，Linux602/602、0失败/跳过，四端资源与依赖0已知漏洞通过。本机600通过/2既有Windows跳过/0失败。身份wthpein010-dev、仓库push/admin、远端main与Pages部署均现场核实；59公网资源与该Git blob逐字节一致，沿用视频Range206/1024字节，不把未重制的旧视频称作新版社交演示。
