@@ -1,6 +1,6 @@
 # 合耕小舍截图讲解
 
-2026-10-27本轮媒体以“合耕小舍”暖黄色版实际390×640页面截图为输入，包含农场、商城、主页签到、社区、我的资产与签到，以及猪视角。内容为页面截图讲解，非连续录屏或直播。
+2026-10-27本轮媒体以“合耕小舍”暖黄色版实际390×640页面截图为输入，包含农场、选种商城、种植订单、工作人员演示、输入提示和猪视角。内容为页面截图讲解，非连续录屏或直播。
 
 本轮 `walkthrough.mp4` 的规格为 **24 秒的界面截图讲解，不是连续实机录屏**：六张实际 Demo 界面截图依次展示，每张 4 秒。没有模拟点击轨迹、伪造设备回执或声称实时监控；成片生成后仍须核对实际媒体信息和播放结果。
 
@@ -15,7 +15,7 @@ python tools/make_walkthrough.py
 也可明确指定输入和输出：
 
 ```powershell
-python tools/make_walkthrough.py --screenshots .scratch/ui-polish/screenshots --output prototype/video/walkthrough.mp4
+python tools/make_walkthrough.py --screenshots .scratch/farm-workflow/screenshots --output prototype/video/walkthrough.mp4
 ```
 
 依赖使用当前机器已安装的 Pillow 与 imageio_ffmpeg。脚本通过 `imageio_ffmpeg.get_ffmpeg_exe()` 查找现有 FFmpeg，不下载软件；中文字幕使用 `C:/Windows/Fonts/msyh.ttc`。
@@ -25,13 +25,13 @@ python tools/make_walkthrough.py --screenshots .scratch/ui-polish/screenshots --
 | 截图 | 时间 | 单行字幕 |
 | --- | --- | --- |
 | `01-farm.png` | 00:00–00:04 | 我的农场：查看种养，按需照料 |
-| `02-shop.png` | 00:04–00:08 | 农场商城：当季认养与积分物资 |
-| `03-home.png` | 00:08–00:12 | 合耕小舍：每日签到与田园动态 |
-| `04-community.png` | 00:12–00:16 | 田园社区：发帖、交流与分享 |
-| `05-profile.png` | 00:16–00:20 | 我的：资产与每日签到 |
+| `02-shop.png` | 00:04–00:08 | 农场商城：选品种、指定地块 |
+| `03-orders.png` | 00:08–00:12 | 种植订单：查看次日作业安排 |
+| `04-workbench.png` | 00:12–00:16 | 工作人员：接单、派工与播种回传 |
+| `05-input-hints.png` | 00:16–00:20 | 填写信息：灰字提示，输入后隐藏 |
 | `06-pig-pov.png` | 00:20–00:24 | 猪的第一视角：静态场景体验 |
 
-默认输入目录为 `.scratch/ui-polish/screenshots`。脚本先检查六张截图是否齐全，缺图直接退出，不轮询、不自行截图。输入保持完整 UI，等比缩放置于 `#f8f8f6` 浅灰底中，四周按需要补边；字幕使用 `#292720`，分隔线为 `#ebe8df`。每一时刻只新增一行底部字幕，不缩放裁切 UI。构建用的临时帧在输出目录内创建并自动清理；`.scratch` 截图不属于发布包。
+默认输入目录为 `.scratch/farm-workflow/screenshots`。脚本先检查六张截图是否齐全，缺图直接退出，不轮询、不自行截图。输入保持完整 UI，等比缩放置于 `#f8f8f6` 浅灰底中，四周按需要补边；字幕使用 `#292720`，分隔线为 `#ebe8df`。每一时刻只新增一行底部字幕，不缩放裁切 UI。构建用的临时帧在输出目录内创建并自动清理；`.scratch` 截图不属于发布包。
 
 ## 输出与播放
 
@@ -39,7 +39,7 @@ python tools/make_walkthrough.py --screenshots .scratch/ui-polish/screenshots --
 - `poster.webp`：与视频首帧一致的封面。
 - `index.html`：使用原生视频控件的独立播放器，支持内联播放，默认只预加载元数据；可返回 H5 体验。
 
-播放器的 MP4、后备直链、封面与样式带 `?v=20261027-warm1`，避免本轮更新继续使用旧缓存；文件本身仍用原文件名。
+播放器的 MP4、后备直链、封面与样式带 `?v=20261027-work1`，避免本轮更新继续使用旧缓存；文件本身仍用原文件名。
 
 通过项目已有静态服务器打开 `prototype/video/`。当前 H5 中的设备、摄像头、广告、收益及履约数据均为模拟；生成视频不代表微信／抖音小程序已提交或上架。
 

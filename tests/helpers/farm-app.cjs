@@ -131,7 +131,7 @@ function createApp(hash = '', options = {}) {
     if (name === 'app.js') {
       const end = source.lastIndexOf('})();');
       assert.notEqual(end, -1, 'test harness expects the app closure');
-      source = source.slice(0, end) + 'globalThis.__farmProbe = { get state() { return state; }, get modal() { return modal; }, render };\n' + source.slice(end);
+      source = source.slice(0, end) + 'globalThis.__farmProbe = { get state() { return state; }, get modal() { return modal; }, render, completeOrder: typeof completeOrder === "function" ? completeOrder : null };\n' + source.slice(end);
     }
     try { vm.runInContext(source, context, { filename: name }); }
     catch (error) {
@@ -160,6 +160,7 @@ function createApp(hash = '', options = {}) {
     get clipboardWrites() { return [...clipboardWrites]; }, get url() { return location.href; },
     get scrollTop() { return document.querySelector('.app-scroll').scrollTop; },
     setScrollTop(top) { document.querySelector('.app-scroll').scrollTop = top; },
+    completeWork(nextOrder) { assert.ok(context.__farmProbe.completeOrder, 'the actual app completion boundary exists'); return context.__farmProbe.completeOrder(nextOrder); },
     get historyState() { return history.state; },
     controls,
     async click(name) {

@@ -76,7 +76,7 @@
   }
   function renderPage(view){return ({home,community,post:postPage,friends:friendsPage,friend:friendPage}[view]||(()=>null))();}
   function field(name,label,value,help,errors,multiline=false,max=600){
-   const id=`s-${name}`,error=errors[name],attrs=`id="${id}" name="${name}" data-focus-key="${id}" maxlength="${max}" aria-invalid="${!!error}" aria-describedby="${id}-help${error?' '+id+'-error':''}" autocomplete="off"`;
+   const id=`s-${name}`,error=errors[name],hint=name==='title'?'例：今天的小番茄长大了':max===240?'写下你的想法，友善交流':'分享今天的种养日常',attrs=`id="${id}" name="${name}" data-focus-key="${id}" maxlength="${max}" placeholder="${esc(hint)}" aria-invalid="${!!error}" aria-describedby="${id}-help${error?' '+id+'-error':''}" autocomplete="off"`;
    return `<div class="social-field"><label for="${id}">${label}</label>${multiline?`<textarea ${attrs} class="resize-none" rows="5">${esc(value)}</textarea>`:`<input ${attrs} type="text" value="${esc(value)}">`}<p id="${id}-help" class="helper">${help}</p>${error?`<p id="${id}-error" class="social-error" role="alert">${esc(error)}</p>`:''}</div>`;
   }
   function renderModal(m){

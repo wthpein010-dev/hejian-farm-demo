@@ -22,10 +22,10 @@ INK = "#292720"
 FONT_PATH = Path("C:/Windows/Fonts/msyh.ttc")
 SCENES = (
     ("01-farm.png", "我的农场：查看种养，按需照料"),
-    ("02-shop.png", "农场商城：当季认养与积分物资"),
-    ("03-home.png", "合耕小舍：每日签到与田园动态"),
-    ("04-community.png", "田园社区：发帖、交流与分享"),
-    ("05-profile.png", "我的：资产与每日签到"),
+    ("02-shop.png", "农场商城：选品种、指定地块"),
+    ("03-orders.png", "种植订单：查看次日作业安排"),
+    ("04-workbench.png", "工作人员：接单、派工与播种回传"),
+    ("05-input-hints.png", "填写信息：灰字提示，输入后隐藏"),
     ("06-pig-pov.png", "猪的第一视角：静态场景体验"),
 )
 
@@ -37,8 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--screenshots",
         type=Path,
-        default=PROJECT_ROOT / ".scratch" / "ui-polish" / "screenshots",
-        help="六张 PNG 截图所在目录。默认：项目 .scratch/ui-polish/screenshots",
+        default=PROJECT_ROOT / ".scratch" / "farm-workflow" / "screenshots",
+        help="六张 PNG 截图所在目录。默认：项目 .scratch/farm-workflow/screenshots",
     )
     parser.add_argument(
         "--output",

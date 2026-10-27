@@ -103,7 +103,14 @@ test('a completed previous crop shipment does not block a new cultivation cycle 
   await app.click('我的农场'); await app.click('地块2'); await app.click('为这块地选种');
   await app.click('选择樱桃萝卜'); await app.click('确认认养 · 演示下单');
   app.flushTimeout(500); await app.click('查看认养订单');
-  await app.click('模拟工作人员完成播种');
+  const workOrderId = app.state.orders[0].id;
+  await app.click('我的'); await app.click(/农场工作台/);
+  await app.click(c => c.dataset.action === 'w-accept' && c.dataset.order === workOrderId);
+  await app.click(c => c.dataset.action === 'w-assign' && c.dataset.worker === 'team-1');
+  await app.click(c => c.dataset.action === 'w-next-day');
+  await app.click(c => c.dataset.action === 'w-start' && c.dataset.order === workOrderId);
+  await app.click(c => c.dataset.action === 'w-complete' && c.dataset.order === workOrderId);
+  await app.click(c => c.dataset.action === 'w-confirm-complete' && c.dataset.order === workOrderId);
   await app.click('我的农场');
   assert.doesNotMatch(app.html, /<h3>地块2 空闲地块<\/h3>/, 'a planted second cycle is not described as an empty plot');
   const current = app.state.plots.find(p => p.id === 'A02');

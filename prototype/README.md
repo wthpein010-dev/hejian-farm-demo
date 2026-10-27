@@ -71,3 +71,9 @@ node --check prototype/expansion.js
 [项目首页](https://github.com/wthpein010-dev/hejian-farm-demo) · [产品说明](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/PRODUCT.md) · [验收记录](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/docs/VERIFICATION.md) · [视觉约定](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/DESIGN.md) · [交互契约](https://github.com/wthpein010-dev/hejian-farm-demo/blob/main/UX-CONTRACT.md)
 
 真实农时、养殖与处理、硬件协议、安全隔离、费用、支付、平台 SDK、视频权限、地址保存和物流仍待生产阶段核定，详见产品说明的未决项。
+
+## 种植作业与输入提示
+
+商城选择品种与空地后创建演示订单；“我的→农场工作台”可接单、分配田园一组/二组、体验次日办理、开工及确认回传。客户订单页只读进度和作业记录，不直接完成播种。体验次日只改作业演示日期，不推进签到/钱包/照料时间；全部仍本页内存，不是真实运营后台。
+
+可填写控件使用原生灰字placeholder，输入后隐藏、清空后恢复，label和必要帮助/错误保留。新媒体以.scratch/farm-workflow/screenshots为输入。

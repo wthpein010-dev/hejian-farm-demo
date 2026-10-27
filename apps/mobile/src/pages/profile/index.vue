@@ -5,7 +5,7 @@ import { onShow, onHide } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import FarmSignIn from '../../components/FarmSignIn.vue';
 import { farmState as state, sandboxLoginEnabled, platformProvider, loginDevelopment, loginPlatform, logoutFarm, onFarmPageShow, refreshFarm, loadFarmPrivacy, prepareFarmDeletion, cancelFarmDeletion, deleteFarmAccount, openInventory, openExchangeHistory } from '../../core/farm';
-const account = ref('reviewer');
+const account = ref('');
 const accountValid = computed(() => /^[A-Za-z0-9_-]{3,40}$/.test(account.value));
 async function connect() { if (accountValid.value) await loginDevelopment(account.value); }
 async function focusPrivacy(id: string) {
@@ -33,7 +33,7 @@ onShow(onFarmPageShow);
       <view id="account-login-title" class="section-heading" tabindex="-1">登录合耕小舍</view><text class="body-copy">田园资产和兑换记录随账户保存，换页或刷新不会重新发放奖励。</text>
       <FarmButton v-if="platformProvider" class="action" style="margin-top:20px" :disabled="state.busy || !state.configured" @tap="loginPlatform">{{ platformProvider === 'weixin' ? '微信登录' : '抖音登录' }}</FarmButton>
       <text v-else-if="!sandboxLoginEnabled" class="helper" style="margin-top:16px">账户服务准备中，请从已开放的小程序进入。</text>
-      <template v-if="sandboxLoginEnabled"><view class="notice" style="margin-top:20px"><text>本机联调入口，仅用于测试示例账户，不是正式用户登录。</text></view><label class="form-label" for="review-account">联调账户名称</label><input id="review-account" v-model="account" class="text-input" maxlength="40" confirm-type="done" :disabled="state.busy" aria-label="联调账户名称" @confirm="connect" /><text class="helper">3–40位英文字母、数字、下划线或连字符；请勿填写真实手机号、地址或密码。</text><FarmButton class="action" style="margin-top:16px" :disabled="state.busy || !accountValid || !state.configured" @tap="connect">连接联调账户</FarmButton></template>
+      <template v-if="sandboxLoginEnabled"><view class="notice" style="margin-top:20px"><text>本机联调入口，仅用于测试示例账户，不是正式用户登录。</text></view><label class="form-label" for="review-account">联调账户名称</label><input id="review-account" v-model="account" placeholder="例：farm_demo（示例账户）" placeholder-style="color: var(--secondary); opacity: 1;" placeholder-class="input-placeholder" class="text-input" maxlength="40" confirm-type="done" :disabled="state.busy" aria-label="联调账户名称" @confirm="connect" /><text class="helper">3–40位英文字母、数字、下划线或连字符；请勿填写真实手机号、地址或密码。</text><FarmButton class="action" style="margin-top:16px" :disabled="state.busy || !accountValid || !state.configured" @tap="connect">连接联调账户</FarmButton></template>
       <text v-if="!state.configured" class="helper" style="margin-top:18px">农场账户服务尚未配置，目前无法登录。</text>
     </view>
     <template v-if="state.snapshot && state.authenticated && !state.pendingCanRetryWithoutAuth">

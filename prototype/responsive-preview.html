@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>合耕小舍 · 手机尺寸预览</title>
-  <link rel="stylesheet" href="styles.css?v=20261027-polish2">
+  <link rel="stylesheet" href="styles.css?v=20261027-work1">
   <style>
     :root { --preview-width:390px; --preview-height:844px; font-family:'Segoe UI','Microsoft YaHei',sans-serif; color:var(--ink); background:var(--canvas); }
     * { box-sizing:border-box; }
@@ -40,7 +40,7 @@
     if([320,640,844].includes(height))resizeHeight(height,document.querySelector('[data-height="'+height+'"]'));
     if(params.get('capture')==='1')document.body.classList.add('capture');
     const view=params.get('view');
-    if(['home','farm','shop','activities','community','friends','live','warehouse','mine'].includes(view))document.querySelector('iframe').src='index.html#'+view;
+    if(['home','farm','shop','activities','community','friends','live','warehouse','mine','orders','workbench'].includes(view))document.querySelector('iframe').src='index.html#'+view;
   </script>
 </body>
 </html>

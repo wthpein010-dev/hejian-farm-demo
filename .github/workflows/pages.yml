@@ -39,6 +39,8 @@ jobs:
           node --check prototype/systems.js
           node --check prototype/rewards.js
           node --check prototype/discovery.js
+          node --check prototype/workflow.js
+          node --check prototype/workbench.js
           node --check prototype/expansion.js
           node --check prototype/boot.js
           node --check services/api/src/providers.mjs

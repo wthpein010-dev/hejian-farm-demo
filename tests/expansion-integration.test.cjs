@@ -19,7 +19,7 @@ test('adoption entry points override a previous supplies tab while ordinary shop
     } else {
       await app.click('我的');
       await app.click(/^我的认养订单/);
-      await app.click('去认养优选');
+      await app.click('选择认养品种');
     }
     assert.equal(app.state.storefront, 'adopt', `${intent} must lead to adoption`);
     assert.ok(app.controls().some(control => control.name.includes('选择樱桃萝卜')), `${intent} renders the actual seed choices`);
