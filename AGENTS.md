@@ -53,6 +53,10 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 
 用户已授权继续反复优化 UI 并增加商城、活动和更多系统；在本轮范围内直接实现可修改的 Demo 样本，不重复要求审批样本。设计参数和新运营规则保持提案身份，用户验证后再记录结论。原领域与新增系统规则分别有意义测试，保持原设备、隐私及福利回归。验收记录实际命令、浏览器、窄屏／键盘／对比度和新部署结果；上一轮通过不等于本轮自动通过。生产系统重新核定真实业务与平台协议。本轮发布前不更新 Obsidian，待主任务明确授权后维护项目记忆。
 
+## 写实摄影资产（2026-10-27）
+
+用户要求全部可见场景、农产品、牲畜、积分物资及横幅改为写实照片风格；保留操作/状态SVG。当前25张均内置image_gen独立生成的AI摄影示意，不能当用户农场实拍或直播。`prototype/assets/photos/`和manifest.json为单一资产归属，ui.js的photoArt为H5统一图像入口，photography.css仅消费既有token；不得回退到旧SVG场景。mobile用`npm run assets`同步实际12图、`node tools/sync-photo-assets.mjs --check`验证摘要。原始PNG及含本机路径的过程json不发布，完整prompt/网络尺寸/hash在公开manifest。旧3个mobile插画副本已移除。视频与封面也应使用本轮照片版截图，保持截图讲解/非实拍/非直播说明。
+
 ## 农场档案实现
 
 术语见[CONTEXT.md](CONTEXT.md)，接入契约见[农场档案](docs/release/FARM-RECORDS.md)。shared/farm-records.mjs拥有字段/页面/历史与转换校验；farm-registry.mjs拥有三表DDL、事务和历史，备份共用DDL。只读账户接口不改变金融Snapshot、revision、奖励或能力开关；观测不是设备回执。CLI仅显式私有文件/既有DB，真实资料和运行库不入Git。本轮全部验证使用合成数据。

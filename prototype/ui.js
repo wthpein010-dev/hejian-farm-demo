@@ -1,4 +1,4 @@
-/* Shared original SVG primitives for the H5 demo. */
+/* Shared operation icons and photographic AI demonstration assets. */
 (()=>{
   const paths = {
     search:'M21 21l-6-6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z',
@@ -32,29 +32,19 @@
     signal:'M4 19v-3m5 3v-7m6 7V8m5 11V3',
   };
   function icon(name, cls='') { return `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.leaf}"/></svg>`; }
-  function cropArt(type) {
-    const arts = {
-      tomato:'<ellipse cx="31" cy="47" rx="20" ry="5" fill="#6a683b12"/><path d="M31 17c-20-8-29 18-15 28 9 7 29 4 32-8 3-12-7-23-17-20Z" fill="#df654b"/><path d="M31 19c-10 4-12 22-5 27-14-3-19-16-10-25 5-4 9-5 15-2Z" fill="#ef8265"/><path d="m31 20-11 1 7-6-2-7 8 6 9-4-4 8 7 5-11-1-4 9Z" fill="#4e7943"/><path d="m32 18 1-12" stroke="#496f3a" stroke-width="3" stroke-linecap="round"/><path d="M18 29c-2 3-2 6-1 8" stroke="#f4a187" stroke-width="3" stroke-linecap="round"/>',
-      carrot:'<path d="m25 21 14 8-23 25c-2 2-5 1-4-2l10-30Z" fill="#e78c36"/><path d="m24 24 6 4-17 24Z" fill="#f4ac53"/><path d="m27 23-4-14q8-2 9 11L38 5q8 6-3 19l14-9q3 10-12 12Z" fill="#6f964f"/><path d="m23 33 5 3m-9 3 4 2m-9 3 4 2" stroke="#c97127" stroke-width="2" stroke-linecap="round"/>',
-      lettuce:'<path d="M32 52C7 53 5 34 13 29c-7-13 3-22 13-16 6-12 21-8 20 3 13-1 16 13 7 19 5 13-8 20-21 17Z" fill="#92b564"/><path d="M32 49C16 45 12 31 21 26c-5-10 4-16 11-8 7-12 18-1 12 8 12 6 6 18-12 23Z" fill="#b0cd7c"/><path d="m31 51 3-29m-2 22-11-9m12 2 10-7m-10 2-6-5" fill="none" stroke="#6c964d" stroke-width="2" stroke-linecap="round"/>',
-      radish:'<path d="M22 25c7-8 20-6 22 5 3 13-9 21-14 27-1-8-17-17-8-32Z" fill="#d97781"/><path d="M30 42c-5 4-3 9 0 15 6-7 10-9 12-16Z" fill="#f5e7d8"/><path d="m30 26-7-17c6-4 11 4 11 13l6-18c9 3 1 16-4 22l14-11c7 9-8 13-14 15Z" fill="#779f58"/><path d="m24 31 5-2" stroke="#e99ba0" stroke-width="3" stroke-linecap="round"/>',
-      onion:'<path d="m23 48 4-32m3 32L39 7m-5 44 17-28M20 47 17 8m9 39L33 6" stroke="#6e9b4e" stroke-width="5" stroke-linecap="round"/><path d="m20 43 1 11m6-11-2 12m8-11-3 12" stroke="#e6dfbc" stroke-width="5" stroke-linecap="round"/><path d="m21 54-3 6m7-5 1 5m4-6 4 4" stroke="#ae9a69" stroke-width="1.4" stroke-linecap="round"/>',
-      chicken:'<path d="M20 21c-2-9 9-14 14-7 6-4 13 1 11 8 12 17 3 31-13 31-17 0-23-11-18-22l-5-9 11 4Z" fill="#fff6d8"/><path d="M29 15c-6-9 3-15 6-8 7-6 12 3 5 9" fill="#cd6d52"/><path d="m44 23 9 4-10 4" fill="#d9a64f"/><circle cx="39" cy="22" r="2" fill="#434a33"/><path d="M18 33c-3 9 9 15 17 7" fill="#e9d4a4"/><path d="m26 52-2 7m12-7 2 7m-16 0h7m6 0h7" stroke="#b28d4a" stroke-width="2" stroke-linecap="round"/>',
-      egg:'<path d="M17 37C17 24 26 8 32 8s15 16 15 29c0 18-30 18-30 0Z" fill="#e7cfa2"/><path d="M24 26c-5 7-6 15 0 19" fill="none" stroke="#f8ebce" stroke-width="5" stroke-linecap="round"/>',
-      empty:'<path d="m10 37 22-12 22 12-22 13Z" fill="#c6b18b"/><path d="m10 37 22 13v6L10 43Zm22 13 22-13v6L32 56Z" fill="#a28c64"/><path d="M32 37V20m0 9c-10 0-12-10-12-10s12-2 12 10Zm0-8c0-10 12-11 12-11s1 11-12 11Z" fill="#719650" stroke="#719650" stroke-width="1.6"/>',
-    };
-    return `<svg viewBox="0 0 64 64" aria-hidden="true">${arts[type] || arts.lettuce}</svg>`;
+  const photoKeys=new Set(['tomato','carrot','lettuce','radish','onion','bokchoy','chicken','egg','empty','pig','goat','feed','fertilizer','tools','seed','sign','frame','bundle','gift']);
+  function photoArt(type){
+    const key=photoKeys.has(type)?type:'lettuce';
+    return `<img class="asset-photo" src="assets/photos/${key}.webp" alt="" width="640" height="640" loading="lazy" decoding="async" draggable="false">`;
   }
+  const cropArt=photoArt;
 
   paths.gift='M3 8h18v4H3V8Zm2 4v9h14v-9M12 8v13M12 8c-10 0-7-9-3-6l3 6Zm0 0c10 0 7-9 3-6l-3 6Z';
   paths.pig='M5 10C0 4 6 3 9 7c9-4 13 2 13 8 0 4-3 6-7 6H8l-1-4-4-2v-4l2-1ZM17 10h.01M10 21v-3m8 3v-3M4 10H1';
   paths.video='M3 5h13v14H3V5Zm13 5 6-4v12l-6-4v-4Z';
   paths.share='M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 14a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-5 7-4m-7 8 7 4';
   paths.minus='M5 12h14';
-  function animalArt(type) {
-    if(type==='chicken')return cropArt('chicken');
-    return `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="33" cy="56" rx="23" ry="4" fill="#243c2912"/><path d="M13 29c-7-14 5-18 12-7 21-8 34 4 31 20-1 8-7 12-17 12H23c-9-1-16-9-15-17l5-8Z" fill="${type==='goat'?'#d6cfb9':'#bd9587'}"/><path d="m13 30-8 4v12l12 2 5-11Z" fill="${type==='goat'?'#a29578':'#d3ab9a'}"/><circle cx="24" cy="29" r="2" fill="#303b2b"/><path d="m24 50-1 9m23-9 1 9" stroke="#6a6952" stroke-width="4" stroke-linecap="round"/><path d="M54 28q10-8 6-13" stroke="#a18371" stroke-width="3" fill="none"/>${type==='goat'?'<path d="m17 22-3-16m8 15L27 6" stroke="#7c785d" stroke-width="4" stroke-linecap="round"/>':''}</svg>`;
-  }
-  window.FarmUI={icon,cropArt,animalArt};
+  const animalArt=photoArt;
+  window.FarmUI={icon,cropArt,animalArt,photoArt};
 
 })();

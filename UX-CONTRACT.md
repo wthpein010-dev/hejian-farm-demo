@@ -45,7 +45,7 @@
 |---|---|---|---|---|
 | Navigation | H5：app 主状态与 expansion；跨端：FarmNavigation／pages.json | docs/PRODUCT.md；DESIGN.md | 五入口，首页农田／牧场，商城三分类 | 返回、选中、标题和焦点 |
 | Button | H5：原生 button／a 与共享 CSS；跨端：FarmButton | DESIGN.md；本文交互约定 | 主／次、领取、停止、busy | 48px、键盘、禁用无效 |
-| Iconography | H5：prototype/ui.js；跨端：共享导航及场景资产 | DESIGN.md | 功能图标、农作物与牲畜插画 | 同族语言与中文操作名称 |
+| Iconography | H5：prototype/ui.js；跨端：共享导航及场景资产 | DESIGN.md | 操作状态SVG图标、统一摄影资产 | 同族语言与中文操作名称 |
 | Form | H5：原生 label 输入与 app 校验；跨端：profile 的联调账户输入 | docs/PRODUCT.md；docs/release/API-CONTRACT.md | 示例邮寄、对象／时长选择、开发身份 | 中文校验、焦点、不收真实地址 |
 | Dialog | H5：唯一原生 dialog／frame；跨端：cart 文档流内确认区 | 本文确认与焦点约定 | H5 模态；跨端内联确认 | Escape、关闭、焦点恢复、短屏 |
 | Toast | H5：app 共享 status；跨端：FarmScreen 状态／错误区域 | 本文反馈约定；docs/release/API-CONTRACT.md | 普通、成功、警告、未知结果 | 去重、不抢焦点、关键状态常驻 |

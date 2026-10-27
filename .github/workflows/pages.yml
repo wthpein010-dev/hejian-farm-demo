@@ -71,6 +71,7 @@ jobs:
         run: |
           npm run typecheck
           node tools/sync-mobile-tokens.mjs --check
+          node tools/sync-photo-assets.mjs --check
       - name: Compile four platform targets
         run: |
           npm run build:h5

@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 premium-audit.json
+prototype/assets/photos/*.png
+prototype/assets/photos/*-prompts.json
 .env*
 !.env*.example
 node_modules/

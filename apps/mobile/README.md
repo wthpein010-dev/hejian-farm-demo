@@ -31,4 +31,4 @@
 
 ## 视觉归属
 
-`prototype/styles.css`为已有canonical token源。运行根 `npm run tokens` 生成 `src/styles/tokens.css`；后续只改上游token并重新生成。当前场景WebP沿用项目原创概念素材，不冒充实时视频或实拍。
+`prototype/styles.css`为已有canonical token源。运行根 `npm run tokens` 生成 `src/styles/tokens.css`；后续只改上游token并重新生成。场景/商品/商城横幅使用prototype/assets/photos中的12张摄影风格AI示意WebP；运行根npm run assets或各build自动同步，node tools/sync-photo-assets.mjs --check校验同源摘要。原始PNG和本机生成路径不入Git，未使用的旧插画副本已移除，不冒充实时视频或实拍。

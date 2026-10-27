@@ -1,0 +1,334 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-27",
+  "generator": "OpenAI built-in image_gen",
+  "disclosure": "AI生成摄影风格示意，非实拍、非直播、非用户农场证据。无外部图库。",
+  "processing": "仅等比缩小并编码WebP供网页使用；未拼接或绘制替代图片。",
+  "assets": [
+    {
+      "key": "tomato",
+      "file": "tomato.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 73560,
+      "sha256": "2bc2b1339a521118c77d877ab97996fb96cc7937991ea1e1c1a846b28ff69543",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: close-up of a real cluster of small red ripe cherry tomatoes still naturally attached to the living green tomato vine, realistic five-point green calyxes, a few green leaves and a little dew. Background is softly blurred real vegetable field. Keep the fruit cluster clear and centered."
+    },
+    {
+      "key": "carrot",
+      "file": "carrot.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 143722,
+      "sha256": "78ede0a57f5fed03f93e57ac6600e21ba7abfbe8dce89d308922d66a3f0ae3d9",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: fresh orange carrots just harvested, with natural clumps of dark soil on the tapered roots and intact feathery green carrot leaves, laid on a weathered rough wooden farm table at the edge of a real vegetable field. Several carrots form one centered generous bunch. Botanically accurate proportions."
+    },
+    {
+      "key": "lettuce",
+      "file": "lettuce.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 83846,
+      "sha256": "a77d65630cab7c18d0d96a10f5e88173448acf56d023b68fe034acfafdc1be38",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: one freshly harvested compact butterhead lettuce with tender broad softly curled pale and medium green leaves forming a loose round head, fine dew on leaf texture, no iceberg or cabbage. Sitting on a weathered rough wooden farm table with softly blurred real vegetable field behind it."
+    },
+    {
+      "key": "radish",
+      "file": "radish.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 118904,
+      "sha256": "6ed6b0ca0101c7665c26c0d9fe3da88f46a06034175825e50c908554b842bacc",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: one freshly harvested generous bunch of ROUND red cherry radishes with their intact green leaves, small spherical bright crimson roots, thin white root tips and flecks of fresh soil, lying on a weathered rough wooden farm table at a real vegetable field. Botanically accurate cherry radishes; absolutely no long white daikon and no carrots."
+    },
+    {
+      "key": "onion",
+      "file": "onion.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 124476,
+      "sha256": "aad328da799ba2014f4e60128c498606707dd5b42f88224bbca6a6303f22d2e5",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: one freshly harvested generous bunch of Chinese spring onions / scallions (葱), long slender tubular green leaves and slender white stems with natural fibrous roots and a little soil, on a weathered rough wooden farm table at the edge of a real vegetable field. These are green spring onions, no large round onion bulbs. A clear centered bunch, realistic botanical proportions."
+    },
+    {
+      "key": "bokchoy",
+      "file": "bokchoy.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 87812,
+      "sha256": "4f46f8db72547cbb1348074d4e5907be157477d3a852751e8666b96c8418ac13",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: freshly harvested Shanghai green bok choy (上海青), three compact individual heads with smooth dark green oval leaves and thick pale green spoon-shaped stalks connected naturally at the base. A centered group on a weathered rough wooden farm table at a real vegetable field, slight dew, botanically correct small Shanghai bok choy, not cabbage or lettuce."
+    },
+    {
+      "key": "egg",
+      "file": "egg.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 83420,
+      "sha256": "2e94208fd7e5f85d46e47ced1f14468d8e1fd9a7ae8db06753c1c791a8144abb",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: a centered generous cluster of five freshly collected real chicken eggs in a shallow woven natural wicker basket, natural pale brown and cream shells with subtle tiny speckles, realistic oval egg forms and matte shell pores. Resting on a weathered rough wooden farm table at the edge of a real green farm, a few clean straw pieces in the basket. No hens, no animals, no packaging, no cracked eggs."
+    },
+    {
+      "key": "empty",
+      "file": "empty.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 147046,
+      "sha256": "ad419d36d1167829e3896fc965f80db339cedb160e1f593860cf820a9a548ead",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: photorealistic-natural. Asset type: one independent square 1024x1024 mobile farm app photographic asset. Style/medium: authentic documentary and premium fresh farm produce photography, optically realistic camera photograph, subtle natural color, gentle early-morning daylight, fine physical texture, honest irregular organic shapes. Composition: a single subject family centered, filling about 85% of the frame with safe edge margins, natural shallow depth of field, one image not a collage or grid. Background: real farm surroundings or a weathered rough wooden farm table, consistent calm earthy rural atmosphere. No people, no text, no letters, no logos, no watermark, no illustration, no drawing, no painting, no CGI, no 3D render, no cartoon.\nPrimary request: a real empty vegetable garden bed freshly tilled and watered, dark moist crumbly fertile soil with small natural clods and faint shallow planting furrows. A close slightly elevated view; the prepared empty soil bed occupies 85% of the center of the square frame, bounded by simple weathered wood boards, with soft out-of-focus green farm plots behind it. No plants growing in this bed, no tools, no produce, no people, no wooden table."
+    },
+    {
+      "key": "feed",
+      "file": "feed.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 70578,
+      "sha256": "26432859159f6d50421f972ef48c3cebde11ff909512fdda9ed9b0169d4107a1",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: a single small unbranded kraft paper sack of animal feed, folded open at the top with clearly visible golden-brown grain feed pellets and grains inside, a small modest scattering of the same grains at its base. The paper bag and feed are the only merchandise."
+    },
+    {
+      "key": "fertilizer",
+      "file": "fertilizer.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 103010,
+      "sha256": "7663f291aa3be376836586d53a01d82cb98c238342bf7edba4578984942eefb4",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: a small blank burlap or kraft paper sack containing natural dark granular garden nutrition fertilizer, folded opening, with a modest mound of rich dark soil beside it to convey gardening material. Clearly a soil and fertilizer supply product, no fresh vegetables."
+    },
+    {
+      "key": "tools",
+      "file": "tools.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 82526,
+      "sha256": "8e1017815d062342389711ecd98773612b1b8b67b70817bedb399a20678cfc91",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: a well-made clean metal hand garden trowel and a small three-prong hand rake, both with real smooth wooden handles, arranged together as a compact garden hand-tool set. Authentic steel surfaces, sharpened realistic profiles, plausible scale, no extra implements."
+    },
+    {
+      "key": "seed",
+      "file": "seed.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 63868,
+      "sha256": "ec161d9af4ba18520a0e866516036542bd7fc0a629976f4590e536125d8606cf",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: a single plain kraft seed paper packet with no writing whatsoever, slightly open with several realistic vegetable seeds visible, a few seeds beside it and one healthy tiny two-leaf seedling in a small soil plug. A small gardening seed product; no vegetables, no lettering."
+    },
+    {
+      "key": "sign",
+      "file": "sign.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 93980,
+      "sha256": "2a96d0e4102af47643608b0a2e8c555c25f49a3f2997c38b540f3f8ef51beecd",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: a tactile high-quality real wooden garden sign, completely blank smooth rectangular weathered wood plaque on a short sturdy wooden stake, standing upright in garden soil immediately beside a rough wooden garden table edge. It is a close-up product portrait with the entire blank plaque visible and wood grain realistic; blurred vegetable rows behind. No carved marks or letters."
+    },
+    {
+      "key": "frame",
+      "file": "frame.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 76440,
+      "sha256": "803cddbff7f0c98fd2674638324eb0031ad3943c6725372688500765389829c2",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: one authentic freestanding rectangular wooden photo frame with warm natural wood grain, resting centered on the rough wood table. Inside is a real-looking photographic print of peaceful green farm fields and a pale sky, clearly recognizable as a flat photograph behind glass. No mat captions, words or lettering anywhere. The frame itself is the merchandise, full outer edge visible."
+    },
+    {
+      "key": "bundle",
+      "file": "bundle.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 86708,
+      "sha256": "5a5e55dbc502c83dac107708cdd48fcd35c11703cac96afad60b6ee4e915fd83",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: one compact practical farm-supply bundle consisting exactly of a small unbranded open kraft paper sack of golden feed pellets and grains, a smaller completely blank burlap fertilizer sack containing dark soil-like granules, and a single clean steel garden hand trowel with a smooth real wooden handle resting in front. Each item clearly identifiable, neatly grouped as one kit. No vegetables or food produce, no ribbon, no other tools."
+    },
+    {
+      "key": "gift",
+      "file": "gift.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 95364,
+      "sha256": "43d9f4548fedb7d486c50612482b124db9b5544b5602150c7a61efbd09d49171",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: product-mockup.\nAsset type: one independent square 1024x1024 photographic product thumbnail for a Chinese farm app demo.\nStyle/medium: exceptionally realistic commercial product photography, mature understated premium rural styling, absolutely photographic rather than illustration, CGI, 3D rendering or cartoon.\nScene/backdrop: rough weathered wood worktable, softly blurred green farmland and vegetable rows in the distance, natural outdoor daylight.\nComposition: one single centered product arrangement, close enough for the physical materials to read in a small mobile thumbnail, natural perspective at product height, coherent soft shadows. Square image, no collage, no panels.\nLighting: soft warm neutral daylight, realistic fine detail, gentle shallow depth of field, earthy browns and natural greens, no oversaturation.\nConstraints: no people, no body parts, no animals, no words, no lettering of any language, no numbers, no logos, no watermark, no brand labels. Packaging surfaces must be completely blank. No ornamental text-like marks.\nSubject: one attractive realistic rural farm-supplies gift kit in an open natural woven wicker basket lined with crumpled kraft paper. The contents are two small completely blank kraft paper feed packets with visible grain pellets, and one small blank burlap nutrition fertilizer sack, all tied simply with natural jute twine. The basket contains only these farm supply items. No vegetables, no fruit, no fresh produce, no food gift claims, no tags or writing, no decorative sign."
+    },
+    {
+      "key": "farm-estate",
+      "file": "farm-estate.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 216282,
+      "sha256": "ec2f631ed3d5e10349ee24be1b3a2ddf3c8034bcf2f3392851c4705ffb77a5ff",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "Create ONE photorealistic natural documentary photograph for an adult Chinese mobile farm app. Landscape 3:2, 1536x1024 if possible. A real-looking small working vegetable farm in eastern China in autumn, medium-height drone looking diagonally down, six modest vegetable allotments and narrow soil footpaths, natural leafy plants, a white translucent greenhouse, a simple utilitarian barn, low wooded hills. Genuine full-scale rural place, imperfect moist soil, convincing crop foliage and practical drip irrigation. Soft morning daylight, natural photographic color, restrained contrast. Main farm beds and buildings fit central 65% for mobile crop. Absolutely no drawing, illustration, isometric miniature, 3D render, cartoon, text, logo, people, watermark or UI. This is a fictional farm photographic concept image, not documentary evidence of an actual business."
+    },
+    {
+      "key": "livestock",
+      "file": "livestock.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 122214,
+      "sha256": "6aede53d11bb2d8e125772397e6ec2a1520044a9858c8da544c6f4129d86bff2",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "ONE photorealistic natural documentary photograph, landscape 3:2 1536x1024, for an adult Chinese farm app. Real-scale authentic rural materials, natural daylight, restrained color, lifelike anatomy, no illustration, cartoon, 3D render, miniature, text, logos, watermarks, people, timestamps or UI. Fictional AI photographic demonstration, not proof of an actual business. Eye-level view into a clean practical open-sided family pig barn. Two healthy black pigs in natural relaxed positions, believable coarse dark bristles and textured skin, wood beams, steel pen rails, rough pale plaster, a stainless feed trough, straw on a solid floor. One pig in central foreground. Soft morning light, realistic husbandry environment."
+    },
+    {
+      "key": "pig-pov",
+      "file": "pig-pov.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 128378,
+      "sha256": "d0c8fd0a90b4a49c14fade9d32b64aaa932e9eac17779792821c448381236ad7",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "ONE photorealistic natural documentary photograph, landscape 3:2 1536x1024, for an adult Chinese farm app. Real-scale authentic rural materials, natural daylight, restrained color, lifelike anatomy, no illustration, cartoon, 3D render, miniature, text, logos, watermarks, people, timestamps or UI. Fictional AI photographic demonstration, not proof of an actual business. Low wide-angle first-person viewpoint from a lightweight camera near the head of a black pig, looking FORWARD through its pen. At the bottom edge only a small soft hint of the near pig's ears, natural perspective. Ahead are a stainless feed trough, fence rails and a second black pig further away. Slight wide lens distortion, realistic floor-level camera photography. No floating giant snout or backward-facing animal face. No humans."
+    },
+    {
+      "key": "shop-banner",
+      "file": "shop-banner.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 118350,
+      "sha256": "4cc26ce0e3a497131446d5314538b762e652cfe7c3a6ca2858455a433091639d",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "ONE photorealistic natural documentary photograph, landscape 3:2 1536x1024, for an adult Chinese farm app. Real-scale authentic rural materials, natural daylight, restrained color, lifelike anatomy, no illustration, cartoon, 3D render, miniature, text, logos, watermarks, people, timestamps or UI. Fictional AI photographic demonstration, not proof of an actual business. A beautifully natural close photographic view of a wicker harvest basket with fresh lettuce, carrots with green tops and small tomatoes, resting on a weathered wooden table at an actual vegetable farm. Basket occupies right 60 percent. The left 40 percent is softly blurred dark green farm foliage with clean low detail for readable white HTML overlay. No product package typography, no graphic backdrop, no drawn leaves."
+    },
+    {
+      "key": "activity-banner",
+      "file": "activity-banner.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 117174,
+      "sha256": "5e1b41a878539fa7f8d0e8f35128a38ad0763fc5c96d0469b181cec774b04c71",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "ONE photorealistic natural photograph for an adult Chinese farm app. 1536x1024 landscape 3:2, accurate real-world scale and material texture, natural daylight and muted true-to-life colors. No illustration, 3D render, toy, painting, people, writing, logo, watermark or UI. Fictional photographic AI example, not evidence of a real farm. Close-up of freshly harvested small red cherry radishes with leafy green tops and several natural brown eggs in a shallow wicker basket on a worn farmhouse wooden table. Foreground basket and produce at right two-thirds. Left one-third calm softly defocused dark green garden background for readable white HTML text. Warm late morning agricultural documentary photography, not a decorative gift render."
+    },
+    {
+      "key": "season-banner",
+      "file": "season-banner.webp",
+      "width": 960,
+      "height": 640,
+      "bytes": 137816,
+      "sha256": "33177cb2ea807747a768f971ba3d65d76b516dbc196d6cec78a90d49b5e8c040",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "prompt": "ONE photorealistic natural photograph for an adult Chinese farm app. 1536x1024 landscape 3:2, accurate real-world scale and material texture, natural daylight and muted true-to-life colors. No illustration, 3D render, toy, painting, people, writing, logo, watermark or UI. Fictional photographic AI example, not evidence of a real farm. Beautiful real countryside vegetable garden in early autumn morning with low green vegetable rows and a sunlit walking path leading toward a modest greenhouse, green hills beyond. Calm natural scene from standing human viewpoint, depth and real texture. Left third darker softly blurred foliage suitable for white HTML text. No huge buildings or fantasy terraces."
+    },
+    {
+      "key": "pig",
+      "file": "pig.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 96302,
+      "sha256": "6ee14d3d2cd3bfd3ced4f488bcc6e6f8bb6c365c0cd39ce1139d8dcb4ca1ab18",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "ONE photorealistic natural photograph for an adult Chinese farm app. 1536x1024 landscape 3:2, accurate real-world scale and material texture, natural daylight and muted true-to-life colors. No illustration, 3D render, toy, painting, people, writing, logo, watermark or UI. Fictional photographic AI example, not evidence of a real farm. Square 1024x1024 documentary animal portrait photo of ONE healthy black farm pig standing naturally in its practical open-air farm enclosure, clear whole body and face within central 85% of image, coarse black bristles, lifelike snout, correct four legs, naturally relaxed pose, softly blurred wooden fence and greenery behind. Respectful real husbandry photography, no clothes or human behavior."
+    },
+    {
+      "key": "goat",
+      "file": "goat.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 94252,
+      "sha256": "eaf9c404e72f3d074436ba274fb53c8bd506c99ef3251a571444935c709d2ef1",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "ONE square 1024x1024 photorealistic documentary photograph for an adult Chinese mobile farm app. Accurate full-scale anatomy and natural real-life textures, authentic small Chinese farm in gentle morning daylight. True photographic color and soft realistic background, main animal central 85 percent, no writing, people, logos, watermark, illustration, cartoon, painting or 3D render. Fictional AI photo example, not actual farm evidence. One healthy black mountain goat with natural short horns and a small beard, correct four legs and hooves, standing on an earthy path beside a practical timber fence, green hilly farm background softly defocused. Clear natural face and whole body, calm documentary photography."
+    },
+    {
+      "key": "chicken",
+      "file": "chicken.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 110896,
+      "sha256": "9c0029f2eb649523b40f4c793efc2be2a8cbeef32e43d2943b5d196981d85a16",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "ONE square 1024x1024 photorealistic documentary photograph for an adult Chinese mobile farm app. Accurate full-scale anatomy and natural real-life textures, authentic small Chinese farm in gentle morning daylight. True photographic color and soft realistic background, main animal central 85 percent, no writing, people, logos, watermark, illustration, cartoon, painting or 3D render. Fictional AI photo example, not actual farm evidence. One naturally proportioned mature brown free-range hen standing on the soil in a small farm orchard, glossy brown feathers, red comb, correct two legs and wings, softly blurred orchard foliage and simple chicken fencing. Whole animal central and easy to recognize, realistic agricultural photograph, no cage close-up."
+    }
+  ]
+}

@@ -45,7 +45,7 @@ python prototype/serve.py
 
 ## 开发入口
 
-vanilla HTML／CSS／JavaScript；`domain.js` 管理原规则，`systems.js` 的 `FarmSystems` 管理商城和活动，`ui.js` 提供共享 SVG，`app.js` 拥有主状态与共享模态，`expansion.js` 接入扩展。`styles.css` 拥有运行时 token，`expansion.css` 消费这些 token，Python 仅提供本地静态服务。
+vanilla HTML／CSS／JavaScript；`domain.js` 管理原规则，`systems.js` 的 `FarmSystems` 管理商城和活动，`ui.js` 提供共享操作SVG及摄影图，`app.js` 拥有主状态与共享模态，`expansion.js` 接入扩展。`styles.css` 拥有运行时 token，`expansion.css` 消费这些 token，Python 仅提供本地静态服务。
 
 仓库内自动检查：
 
