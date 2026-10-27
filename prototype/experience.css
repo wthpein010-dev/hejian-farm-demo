@@ -1,0 +1,67 @@
+/* Discovery and activity composition. All colors come from styles.css. */
+.shop-discovery{margin:12px 0 14px;padding:17px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)}
+.shop-discovery label{display:block;font-size:18px;font-weight:600;margin-bottom:12px}
+.shop-search-row{display:flex;gap:8px;align-items:stretch}
+.shop-search-field{display:flex;align-items:center;min-width:0;flex:1;border:1px solid var(--secondary);border-radius:11px;background:var(--canvas)}
+.shop-search-field:focus-within{outline:2px solid var(--focus);outline-offset:2px}
+.shop-search-field>.icon{flex:none;width:19px;height:19px;margin-left:11px;color:var(--secondary)}
+.shop-search-field input{min-width:0;width:100%;height:50px;padding:10px 7px;background:transparent;border:0;border-radius:11px;color:var(--ink);font:16px/1.5 var(--font-body);outline:none}
+.shop-search-field input::placeholder{color:var(--secondary);opacity:1}
+.shop-search-field input::-webkit-search-cancel-button{display:none}
+.shop-search-field button{flex:none;width:48px;min-height:48px;display:grid;place-items:center;color:var(--secondary);border-radius:9px}
+.shop-search-field button[hidden]{display:none}
+.shop-search-row>.primary-button{padding:10px 13px;min-width:58px;min-height:52px;font-size:16px}
+.discovery-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+.discovery-chip{min-width:0;min-height:48px;padding:10px 8px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--secondary);border-radius:10px;background:var(--paper);color:var(--secondary);font-size:15px;line-height:1.5}
+.discovery-chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--ink);box-shadow:inset 0 0 0 1px var(--brand);font-weight:600}
+.discovery-chip>span{font-family:var(--font-data);font-size:14px}
+.discovery-help{font-size:13px;color:var(--secondary);line-height:1.7;margin:12px 0 0;min-height:22px}
+.discovery-result{font-size:14px;line-height:1.7;color:var(--secondary);margin:10px 0 14px;overflow-wrap:anywhere}
+.discovery-empty,.task-filter-empty{padding:25px 15px;text-align:center;border:1px dashed var(--scroll-hover);border-radius:var(--radius);background:var(--paper);margin:12px 0 18px}
+.discovery-empty-mark{display:grid;place-items:center;width:60px;height:60px;margin:0 auto 14px;background:var(--brand-soft);border-radius:50%;color:var(--brand)}
+.discovery-empty-mark>.icon{width:27px;height:27px}
+.discovery-empty h3,.task-filter-empty h3{font-size:19px;line-height:1.5;margin-bottom:9px}
+.discovery-empty p,.task-filter-empty p{font-size:16px;line-height:1.75;color:var(--secondary);margin-bottom:16px}
+.goods-tag>.icon{width:14px;height:14px;flex:none}
+.goods-card{transition:transform .18s ease,border-color .18s ease}
+.goods-card:focus-within{border-color:var(--brand)}
+.goods-card>p{font-size:14px;line-height:1.75}
+.goods-wish-actions{padding:15px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;gap:10px;margin:18px 0}
+.goods-wish-actions button{font-size:16px;gap:7px;min-height:48px}
+.goods-wish-actions [aria-pressed="true"]{background:var(--brand-soft)}
+.goods-wish-actions p{color:var(--ink);font-size:17px;line-height:1.7;text-align:center}
+.goods-wish-actions small{font-size:13px;line-height:1.7;color:var(--secondary)}
+.saving-goal{position:relative;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);padding:14px 16px 17px;margin:15px 0;background:var(--paper);animation:field-enter .22s ease-out both}
+.saving-goal-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.saving-goal-top .section-kicker{font-size:13px;color:var(--secondary)}
+.saving-goal-top button{font-size:14px;min-height:48px;white-space:nowrap}
+.saving-goal-main{display:flex;align-items:center;gap:14px;margin:3px 0 17px}
+.saving-goal-main>div:last-child{min-width:0}
+.saving-goal-art{display:grid;place-items:center;width:70px;height:76px;flex:none;border-radius:13px;background:var(--brand-soft)}
+.saving-goal-art svg{width:61px;height:61px}
+.saving-goal-main h2{font-size:20px;line-height:1.5;margin:0 0 6px;overflow-wrap:anywhere}
+.saving-goal-main p{font-size:16px;color:var(--brand);line-height:1.6}
+.saving-goal-progress{height:9px;border-radius:8px;background:var(--brand-soft);overflow:hidden}
+.saving-goal-progress span{display:block;height:100%;border-radius:inherit;background:var(--brand);transition:width .25s ease}
+.saving-goal-amount{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--secondary);margin:9px 0 15px;font-variant-numeric:tabular-nums}
+.saving-goal>button{font-size:16px;min-height:48px;justify-content:space-between}
+.saving-goal>.helper{font-size:13px;line-height:1.75;margin-top:12px}
+.task-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 15px}
+.task-filter-empty>.icon{width:33px;height:33px;color:var(--brand);margin-bottom:12px}
+.checkin-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.checkin-cell{min-width:0}
+.checkin-cell:last-child{grid-column:span 2}
+.checkin-cell>.checkin-day{width:100%;min-height:98px;padding:12px 3px;gap:7px;border-color:var(--scroll-hover)}
+.checkin-day>span,.checkin-day>small{font-size:13px}
+.checkin-day.active{box-shadow:inset 0 0 0 1px var(--brand)}
+.checkin-day.active>span{font-weight:600}
+.checkin-day:active{transform:scale(.97)}
+.signin-preview{display:grid;justify-items:center;gap:14px;padding:20px 0;text-align:center}
+.signin-preview-icon{display:grid;place-items:center;width:84px;height:84px;background:var(--brand-soft);border-radius:50%;color:var(--brand);border:1px solid var(--line)}
+.signin-preview-icon>.icon{width:36px;height:36px}
+.signin-preview h3{font-size:27px;line-height:1.5}
+.signin-preview>p{font-size:18px;line-height:1.75;color:var(--secondary)}
+.signin-preview .section-kicker{font-size:16px}
+@media(hover:hover){.goods-card:hover{border-color:var(--scroll-hover);transform:translateY(-2px)}.checkin-day:hover{background:var(--brand-soft)}}
+@media(max-width:360px){.shop-discovery{padding:15px 10px}.shop-search-field>.icon{display:none}.shop-search-field input{padding-left:10px}.shop-search-row{gap:6px}.saving-goal{padding-left:12px;padding-right:12px}}
+@media(prefers-reduced-motion:reduce){.saving-goal{animation:none}.goods-card,.saving-goal-progress span{transition:none}.checkin-day:active,.goods-card:hover{transform:none}}

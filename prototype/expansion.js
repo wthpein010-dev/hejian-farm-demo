@@ -4,6 +4,43 @@
  window.FarmExpansion={create(ctx){
   const {state,S,D,icon,cropArt,animalArt,esc,btn}=ctx;
   const R=window.FarmRewards;
+  const F=window.FarmDiscovery;
+  let searchComposing=false,pendingSearchRender=false,compositionEndedAt=-Infinity;
+  const shopFilters=[['all','全部商品'],['affordable','积分够兑'],['available','可加入'],['wishlist','我的心愿']];
+  const taskFilters=[['all','全部'],['ready','待领取'],['todo','待完成'],['claimed','已领取']];
+  const wishIds=()=>state.shopWishlist||[];
+  function focusSearch(){document.querySelector('#shop-query')?.focus();}
+  function handleComposition(event,active){
+   if(event.target.id!=='shop-query')return;
+   searchComposing=active;
+   if(!active){compositionEndedAt=now();state.shopDraft=event.target.value.slice(0,64);if(pendingSearchRender){pendingSearchRender=false;ctx.render();}}
+  }
+  function handleKeyDown(event){
+   if(event.target.id==='shop-query'&&event.key==='Enter'&&(searchComposing||event.isComposing||event.keyCode===229||now()-compositionEndedAt<50))event.preventDefault();
+  }
+  function deferRender(){
+   if(searchComposing&&state.view==='shop'&&document.activeElement?.id==='shop-query'&&!ctx.getModal()){pendingSearchRender=true;return true;}
+   return false;
+  }
+  function handleInput(event){
+   if(event.target.id!=='shop-query')return;
+   state.shopDraft=event.target.value.slice(0,64);
+   const clear=document.querySelector('#shop-clear');if(clear)clear.hidden=!state.shopDraft.length;
+  }
+  function handleSubmit(event){
+   if(event.target.id!=='shop-search')return false;
+   event.preventDefault();if(searchComposing||event.isComposing)return true;
+   state.shopQuery=event.target.querySelector('input').value.slice(0,64).trim();
+   state.shopDraft=state.shopQuery;ctx.render();focusSearch();return true;
+  }
+  function discoveryControls(){
+   const filter=state.shopFilter||'all',query=state.shopDraft??state.shopQuery??'';
+   return `<section class="shop-discovery" aria-label="查找积分商品"><form id="shop-search" novalidate role="search"><label for="shop-query">想为田园添点什么？</label><div class="shop-search-row"><div class="shop-search-field">${icon('search')}<input id="shop-query" data-focus-key="shop-query" name="query" type="search" maxlength="64" enterkeyhint="search" autocomplete="off" placeholder="搜商品、饲料或肥料" value="${esc(query)}"><button type="button" id="shop-clear" data-action="x-search-clear" aria-label="清除商品搜索" ${query?'':'hidden'}>${icon('close')}</button></div><button type="submit" class="primary-button">查找</button></div></form><div class="discovery-filters" role="group" aria-label="商品筛选">${shopFilters.map(([key,label])=>btn('x-shop-filter',label+(key==='wishlist'?` <span>${wishIds().length}</span>`:''),'discovery-chip',`data-filter="${key}" aria-label="${label}" aria-pressed="${filter===key}"`)).join('')}</div><p class="discovery-help">${filter==='affordable'?'按单件原价与当前积分筛选；库存、购物车与优惠券在结算时核对。':filter==='wishlist'?'心愿只保留本次体验，刷新后清空。':'可按所需物资查找，组合包也能找到。'}</p></section>`;
+  }
+  function goalCard(){
+   const g=F.goal(catalog,state.wallet,state.savingGoalSku);if(!g)return '';
+   return `<section class="saving-goal" aria-labelledby="saving-goal-title"><div class="saving-goal-top"><span class="section-kicker">攒一份田园心意</span>${btn('x-goal-clear','结束目标','link-button')}</div><div class="saving-goal-main"><div class="saving-goal-art">${art(g.item.art)}</div><div><h2 id="saving-goal-title">${esc(g.item.title)}</h2><p>${g.shortfall?`还差 ${g.shortfall} 积分`:'积分已够兑一件'}</p></div></div><div class="saving-goal-progress" role="progressbar" aria-label="心愿商品积分进度" aria-valuemin="0" aria-valuemax="${g.item.cost}" aria-valuenow="${Math.min(g.points,g.item.cost)}"><span style="width:${g.percent}%"></span></div><div class="saving-goal-amount"><span>当前 ${g.points} 积分</span><span>单件 ${g.item.cost} 积分</span></div>${btn('x-goal-detail','回看心愿商品'+icon('chevron'),'outline-button full')}<p class="helper">按单件原价展示，不自动兑换。库存、优惠券和车中商品请在结算时核对。</p></section>`;
+  }
   const now=()=>Date.now();
   const catalog=S.getCatalog();
   const ownViews=new Set(['activities','warehouse','cart','coupons','exchanges','rewards','achievements','tasks','album','messages']);
@@ -14,6 +51,7 @@
   const back=(to='farm',label='返回农场')=>btn(to,`${icon('back')}${label}`,'extension-back back-button');
   const returnLabel=to=>({cart:'返回购物车',shop:'返回商城',warehouse:'返回仓库',mine:'返回我的',rewards:'返回奖励明细'}[to]||'返回我的');
   function beforeNavigate(view){
+   searchComposing=false;pendingSearchRender=false;
    if(view==='coupons'&&state.view!=='coupons')state.couponOrigin=['cart','shop','mine','rewards'].includes(state.view)?state.view:'mine';
    if(view==='exchanges'&&state.view!=='exchanges')state.exchangeOrigin=['warehouse','shop','mine'].includes(state.view)?state.view:'shop';
    if(view==='rewards'&&state.view!=='rewards'&&!(state.view==='coupons'&&state.couponOrigin==='rewards'))state.rewardOrigin=['activities','tasks','achievements','mine','warehouse'].includes(state.view)?state.view:'activities';
@@ -72,25 +110,31 @@
    return `<aside class="commerce-dock" aria-label="已选积分商品"><div class="commerce-dock-copy"><strong>已选 ${q.count} 件 · 小计 ${q.subtotal} 积分</strong><span>可用 ${state.wallet.points} 积分 · 优惠在购物车核对</span></div>${btn('cart','查看购物车','primary-button')}</aside>`;
   }
   function goodsAvailability(p){
-   const remaining=Math.max(0,p.limit-(state.system.daily.bought[p.id]||0)),inCart=state.system.cart[p.id]||0;
-   const canAdd=Math.max(0,Math.min(5,remaining)-inCart);
-   return {remaining,inCart,canAdd,unavailable:remaining===0?'今日兑完':canAdd===0?'购物车达限':''};
+   return F.availability(p,state.system);
   }
   const goodsSortOptions=[['recommended','推荐顺序'],['cost-asc','积分从低到高'],['cost-desc','积分从高到低']];
   function sortedGoods(category){
-   const items=catalog.filter(p=>p.category===category);
-   if(state.goodsSort==='cost-asc')items.sort((a,b)=>a.cost-b.cost);
-   if(state.goodsSort==='cost-desc')items.sort((a,b)=>b.cost-a.cost);
-   return items;
+   return F.select(catalog,state.system,state.wallet,{category,query:state.shopQuery,filter:state.shopFilter,sort:state.goodsSort,wishlist:wishIds()});
   }
   function goodsSortControls(){return `<div class="goods-sorting" role="group" aria-label="积分商品排序">${goodsSortOptions.map(([key,label])=>btn('x-goods-sort',key==='cost-asc'?'积分低→高':key==='cost-desc'?'积分高→低':label,'goods-sort-button',`data-sort="${key}" aria-label="${label}" aria-pressed="${(state.goodsSort||'recommended')===key}"`)).join('')}</div>`;}
-  function goodsCards(category){return `${goodsSortControls()}<div class="goods-grid">${sortedGoods(category).map(p=>{const a=goodsAvailability(p);return `<article class="goods-card">${btn('x-goods-detail',`${art(p.art)}<span class="goods-tag">${p.category==='gifts'?'田园好礼':'日常所需'}</span>`,'goods-art',`data-sku="${p.id}" aria-label="查看${esc(p.title)}详情"`)}<h3>${p.title}</h3><p>${p.description}</p><div class="goods-stock"><span>今日剩余 ${a.remaining} 件</span><span>车中 ${a.inCart} 件 · 还可加 ${a.canAdd} 件</span></div><div class="product-footer"><span class="goods-cost">${p.cost}<small> 积分 / 件</small></span>${btn('x-add-cart',a.unavailable||(a.inCart?'再加入':'加入'),'goods-add primary-button',`data-sku="${p.id}" ${a.canAdd===0?'disabled':''} aria-label="${a.unavailable?`${esc(p.title)}，${a.unavailable}`:`加入${esc(p.title)}到购物车`}"`)}</div></article>`;}).join('')}</div>`;}
+  function goodsCards(category){
+   const items=sortedGoods(category),emptyWish=state.shopFilter==='wishlist'&&!wishIds().length;
+   const empty=`<div class="discovery-empty"><div class="discovery-empty-mark">${icon(emptyWish?'heart':'search')}</div><h3>${emptyWish?'还没有心愿商品':'没有找到合适的商品'}</h3><p>${emptyWish?'打开商品详情，存下一份喜欢的田园心意。':'试试其他名称，或清除搜索与筛选再看看。'}</p>${btn('x-discovery-reset',emptyWish?'去挑选商品':'查看全部商品','outline-button')}</div>`;
+   return `${discoveryControls()}${goodsSortControls()}<p id="goods-results" class="discovery-result" role="status" aria-live="polite">${state.shopQuery?'搜索「'+esc(state.shopQuery)+'」 · ':''}本专区 ${items.length} 件商品${state.shopFilter==='wishlist'?' · 我的心愿':''}</p>${items.length?`<div class="goods-grid">${items.map(p=>{const a=goodsAvailability(p);return `<article class="goods-card">${btn('x-goods-detail',`${art(p.art)}<span class="goods-tag">${wishIds().includes(p.id)?icon('heart')+'我的心愿':p.category==='gifts'?'田园好礼':'日常所需'}</span>`,'goods-art',`data-sku="${p.id}" aria-label="查看${esc(p.title)}详情"`)}<h3>${p.title}</h3><p>${p.description}</p><div class="goods-stock"><span>今日剩余 ${a.remaining} 件</span><span>车中 ${a.inCart} 件 · 还可加 ${a.canAdd} 件</span></div><div class="product-footer"><span class="goods-cost">${p.cost}<small> 积分 / 件</small></span>${btn('x-add-cart',a.unavailable||(a.inCart?'再加入':'加入'),'goods-add primary-button',`data-sku="${p.id}" ${a.canAdd===0?'disabled':''} aria-label="${a.unavailable?`${esc(p.title)}，${a.unavailable}`:`加入${esc(p.title)}到购物车`}"`)}</div></article>`;}).join('')}</div>`:empty}`;
+  }
   function shop(adoptionHtml){
    let body=adoptionHtml;body=body.replace(/<div class="info">[\s\S]*?<\/div>/,`<div class="recommend-note"><span>当季推荐优先 · 比较周期与收获价值</span>${btn('recommend-info','推荐依据','link-button')}</div>`);const start=body.indexOf('<div class="segmented"');if(start>=0)body=body.slice(start);
    return `<div class="store-hero"><span class="section-kicker">HEJIAN FARM STORE</span><h1>把田园所需，<br>好好备齐。</h1><p>选当季，备物资，收一份田园好礼。</p></div>${storeWallet()}${storeTabs()}${state.storefront==='adopt'?body:`<div class="adoption-toolbar"><h2>${state.storefront==='supplies'?'日常照料，刚刚好':'让田园，多一点心意'}</h2>${btn('warehouse','查看仓库'+icon('chevron'),'link-button')}</div>${goodsCards(state.storefront)}<div class="info">${icon('shield')}<span>使用田园积分兑换，全部为演示物资。增加饲料或肥料不会解除照料间隔与次数限制。</span></div>`}`;
   }
-  function taskCards(compact=false){return S.getTasks(state.system,now()).map(t=>`<article class="task-card"><div class="task-icon">${icon(t.id==='browse'?'leaf':t.id==='care'?'drop':'basket')}</div><div class="task-copy"><h3>${t.title}</h3><p>${t.description}</p><span class="task-reward">+ ${rewardText(t.reward)}</span><div class="task-progress-label"><span>任务进度</span><span>${t.progress} / ${t.target}</span></div><div class="task-progress" role="progressbar" aria-label="${t.title}进度" aria-valuemin="0" aria-valuemax="${t.target}" aria-valuenow="${Math.min(t.progress,t.target)}"><span style="width:${Math.min(100,t.progress/t.target*100)}%"></span></div></div><div class="task-action">${btn(t.ready?'x-claim-task':'x-task-go',t.claimed?'已领取':t.ready?'领取':'去完成',t.ready?'primary-button':'outline-button',`data-task="${t.id}" ${t.claimed?'disabled':''}`)}</div></article>`).join('');}
-  function signInCard(){const sign=S.getSignIn(state.system,now()),claimedCount=sign.todayClaimed?((sign.streak-1)%7)+1:sign.streak%7;return `<article class="checkin-card"><div class="card-head"><div><span class="section-kicker">每天来看看</span><h2>七日田园签到</h2></div><span class="tag">连签 ${sign.streak} 天</span></div><p class="helper">每天一份心意，第 7 天领积分优惠券。</p><div class="checkin-grid" role="list" aria-label="七日签到奖励">${sign.rewards.map((r,i)=>`<div role="listitem" aria-label="第${r.day}日，${r.label}，${i<claimedCount?'已领取':i===sign.nextIndex&&!sign.todayClaimed?'今日可签到':'待签到'}" class="checkin-day ${i<claimedCount?'claimed':''} ${i===sign.nextIndex&&!sign.todayClaimed?'active':''}"><span>${r.day}日</span>${icon(i<claimedCount?'check':r.reward.points?'sprout':r.reward.coupon?'gift':'bag')}<small>${r.reward.points?r.reward.points:r.reward.coupon?'券':'物资'}</small></div>`).join('')}</div>${btn('x-signin',sign.todayClaimed?'今日已签到，明天再来':`签到领取 ${sign.rewards[sign.nextIndex]?.label||'田园心意'}`,'primary-button full',sign.todayClaimed?'disabled':'')}<p class="helper">按北京时间每日签到；断签后重新积累连续天数。奖励均为 Demo 资源。</p></article>`;}
+  function taskCards(compact=false){const tasks=S.getTasks(state.system,now()),filter=compact?(state.activityTaskFilter||'all'):'all',items=tasks.filter(t=>filter==='all'||filter==='ready'&&t.ready&&!t.claimed||filter==='todo'&&!t.ready&&!t.claimed||filter==='claimed'&&t.claimed);if(!items.length)return `<div class="task-filter-empty" role="status">${icon('checkCircle')}<h3>${filter==='ready'?'没有待领取的任务奖励':filter==='claimed'?'还没有已领取的任务':'今日任务都已完成'}</h3><p>${filter==='ready'?'完成农事后再来看看，已领取的奖励可在明细中核对。':filter==='claimed'?'先完成任务，再领取对应奖励。':'可以看看成长成就与丰收集章。'}</p>${btn('x-task-filter','查看全部任务','outline-button','data-filter="all"')}</div>`;return items.map(t=>`<article class="task-card"><div class="task-icon">${icon(t.id==='browse'?'leaf':t.id==='care'?'drop':'basket')}</div><div class="task-copy"><h3>${t.title}</h3><p>${t.description}</p><span class="task-reward">+ ${rewardText(t.reward)}</span><div class="task-progress-label"><span>任务进度</span><span>${t.progress} / ${t.target}</span></div><div class="task-progress" role="progressbar" aria-label="${t.title}进度" aria-valuemin="0" aria-valuemax="${t.target}" aria-valuenow="${Math.min(t.progress,t.target)}"><span style="width:${Math.min(100,t.progress/t.target*100)}%"></span></div></div><div class="task-action">${btn(t.ready?'x-claim-task':'x-task-go',t.claimed?'已领取':t.ready?'领取':'去完成',t.ready?'primary-button':'outline-button',`data-task="${t.id}" ${t.claimed?'disabled':''}`)}</div></article>`).join('');}
+  function signInCard(){
+   const sign=S.getSignIn(state.system,now()),claimedCount=sign.todayClaimed?((sign.streak-1)%7)+1:sign.streak%7;
+   return `<article class="checkin-card"><div class="card-head"><div><span class="section-kicker">每天来看看</span><h2>七日田园签到</h2></div><span class="tag">连签 ${sign.streak} 天</span></div><p class="helper">点选日期查看奖励，第 7 天领积分优惠券。</p><div class="checkin-grid" role="list" aria-label="七日签到奖励">${sign.rewards.map((r,i)=>`<div role="listitem" class="checkin-cell">${btn('x-signin-preview',`<span>第 ${r.day} 天</span>${icon(i<claimedCount?'check':r.reward.points?'sprout':r.reward.coupon?'gift':'bag')}<small>${r.reward.points?r.reward.points+' 积分':r.reward.coupon?'积分券':'农场物资'}</small>`,`checkin-day ${i<claimedCount?'claimed':''} ${i===sign.nextIndex&&!sign.todayClaimed?'active':''}`,`data-day="${r.day}" aria-label="第${r.day}日，${r.label}，${i<claimedCount?'已领取':i===sign.nextIndex&&!sign.todayClaimed?'今日可签到':'待签到'}，查看奖励"`)}</div>`).join('')}</div>${btn('x-signin',sign.todayClaimed?'今日已签到，明天再来':`签到领取 ${sign.rewards[sign.nextIndex]?.label||'田园心意'}`,'primary-button full',sign.todayClaimed?'disabled':'')}<p class="helper">按北京时间每日签到；断签后重新积累连续天数。奖励均为 Demo 资源。</p></article>`;
+  }
+  function taskFilterControls(){
+   const tasks=S.getTasks(state.system,now()),counts={all:tasks.length,ready:tasks.filter(t=>t.ready&&!t.claimed).length,todo:tasks.filter(t=>!t.ready&&!t.claimed).length,claimed:tasks.filter(t=>t.claimed).length};
+   return `<div class="task-filters" role="group" aria-label="每日任务筛选">${taskFilters.map(([key,label])=>btn('x-task-filter',`${label}<span>${counts[key]}</span>`,'discovery-chip',`data-filter="${key}" aria-pressed="${(state.activityTaskFilter||'all')===key}"`)).join('')}</div>`;
+  }
   function seasonCard(){const s=S.getSeasonStatus(state.system,now()),tasks=S.getTasks(state.system,now());return `<article class="season-card"><div><span class="section-kicker">当季特别活动</span><h2>丰收季 · 集齐田园三章</h2><p>领取今日三项任务奖励，再收一份丰收礼。</p></div><div class="stamp-grid">${tasks.map(t=>`<div class="stamp ${t.claimed?'completed':''}">${icon(t.claimed?'checkCircle':t.id==='browse'?'leaf':t.id==='care'?'drop':'basket')}<span>${t.id==='browse'?'逛田园':t.id==='care'?'做照料':'有收获'}</span></div>`).join('')}</div>${btn('x-claim-season',s.claimed?'今日丰收礼已领取':s.ready?'领取 30 积分 + 饲料 + 券':`已集齐 ${s.count} / ${s.total} 枚印章`,'primary-button full claim-button',!s.ready||s.claimed?'disabled':'')}<p class="helper">奖励不改变实际种养的次数、间隔或成熟时间。</p></article>`;}
   function achievements(embedded=false){const heading=embedded?'h2':'h1';const l=S.getLevel(state.system);return `<div class="growth-hero"><span class="section-kicker">每一份照料，都算数</span><${heading}>Lv.${l.level} · ${l.label}</${heading}><div class="growth-row"><span>成长值 ${l.xp}</span><span>${l.next?'距下一级 '+(l.next-l.xp):'已达当前最高等级'}</span></div><div class="progress"><span style="width:${l.progress}%"></span></div><p>成长只记录田园历程，不增加农事额度。</p></div>${S.getAchievements(state.system).map((a,i)=>`<article class="achievement-card"><div class="achievement-medal ${a.ready?'earned':''}">${icon(['drop','seed','basket','clock'][i])}</div><div class="task-copy"><h2>${a.title}</h2><p>${a.description}</p><span class="task-reward">+ ${rewardText(a.reward)}</span><div class="achievement-progress-label">累计 ${a.progress} / ${a.target}</div><div class="achievement-progress" role="progressbar" aria-label="${a.title}进度" aria-valuemin="0" aria-valuemax="${a.target}" aria-valuenow="${Math.min(a.progress,a.target)}"><span style="width:${Math.min(100,a.progress/a.target*100)}%"></span></div></div>${btn('x-claim-achievement',a.claimed?'已领取':a.ready?'领取':'未达成',a.ready?'primary-button':'outline-button',`data-achievement="${a.id}" ${a.claimed||!a.ready?'disabled':''}`)}</article>`).join('')}`;}
   function nextActivity(){
@@ -117,7 +161,7 @@
    const next=nextActivity();
    return `<section class="activity-overview" aria-labelledby="activity-overview-title"><div class="activity-overview-head"><h2 id="activity-overview-title">今天的田园心意</h2><span>${ready?ready+' 项可领':'完成农事，再领积分'}</span></div><div class="activity-next"><span class="activity-next-kicker">${icon('leaf')}接下来，做这件小事</span><h3>${esc(next.title)}</h3><p>${esc(next.description)}</p>${btn(next.action,next.label+icon('chevron'),'primary-button',`data-guide="next" ${next.attrs||''}`)}</div><p class="activity-overview-stamps">丰收季 · ${season.count} / ${season.total} 枚印章${season.claimed?' · 丰收礼已领取':season.ready?' · 丰收礼待领取':''}</p><div class="activity-overview-actions">${btn('x-signin-calendar',sign.todayClaimed?'今日签到已领取':'七日签到奖励','outline-button',sign.todayClaimed?'disabled':'')}${btn('tasks',ready?`每日任务 · ${ready} 项可领`:'每日任务 · 去完成','outline-button')}${btn('welfare','新人和好友福利'+icon('chevron'),'outline-button')}</div><div class="activity-reward-links">${btn('rewards',`${icon('list')}奖励明细`,'link-button')}${btn('warehouse',`${icon('box')}去仓库看看`,'link-button')}</div></section>`;
   }
-  function activities(){return `<div class="activity-hero"><span class="section-kicker">HEJIAN · 田园活动</span>${btn('x-activity-rules',icon('help')+'活动说明','link-button activity-rules-link')}<h1>日常有心意</h1><p>来田园，攒心意。</p></div>${activityOverview()}${latestReward()}<div class="activity-tabs" role="group" aria-label="活动内容">${btn('x-activity-tab','今日活动',state.activityTab==='today'?'active':'','data-tab="today" aria-pressed="'+(state.activityTab==='today')+'"')}${btn('x-activity-tab','成长成就',state.activityTab==='growth'?'active':'','data-tab="growth" aria-pressed="'+(state.activityTab==='growth')+'"')}</div>${state.activityTab==='growth'?achievements(true):`${signInCard()}${section('今日农事','tasks','全部任务')}${taskCards(true)}${seasonCard()}${section('和朋友一起，来田园坐坐')}<div class="card"><div class="card-head"><h3>新人有礼，好友有伴</h3>${icon('gift')}</div><p class="helper">新人礼、完整观看广告和有效邀请，收一份田园心意。</p><div class="modal-actions">${btn('ad','看广告领奖','outline-button',state.wallet.adToday>=3?'disabled':'')}${btn('invite','邀请朋友','primary-button')}</div>${btn('welcome',state.wallet.welcomeClaimed?'新人礼已领取':'领取新人见面礼','link-button full',state.wallet.welcomeClaimed?'disabled':'')}</div>`}`;}
+  function activities(){return `<div class="activity-hero"><span class="section-kicker">HEJIAN · 田园活动</span>${btn('x-activity-rules',icon('help')+'活动说明','link-button activity-rules-link')}<h1>日常有心意</h1><p>来田园，攒心意。</p></div>${goalCard()}${activityOverview()}${latestReward()}<div class="activity-tabs" role="group" aria-label="活动内容">${btn('x-activity-tab','今日活动',state.activityTab==='today'?'active':'','data-tab="today" aria-pressed="'+(state.activityTab==='today')+'"')}${btn('x-activity-tab','成长成就',state.activityTab==='growth'?'active':'','data-tab="growth" aria-pressed="'+(state.activityTab==='growth')+'"')}</div>${state.activityTab==='growth'?achievements(true):`${signInCard()}${section('今日农事','tasks','全部任务')}${taskFilterControls()}${taskCards(true)}${seasonCard()}${section('和朋友一起，来田园坐坐')}<div class="card"><div class="card-head"><h3>新人有礼，好友有伴</h3>${icon('gift')}</div><p class="helper">新人礼、完整观看广告和有效邀请，收一份田园心意。</p><div class="modal-actions">${btn('ad','看广告领奖','outline-button',state.wallet.adToday>=3?'disabled':'')}${btn('invite','邀请朋友','primary-button')}</div>${btn('welcome',state.wallet.welcomeClaimed?'新人礼已领取':'领取新人见面礼','link-button full',state.wallet.welcomeClaimed?'disabled':'')}</div>`}`;}
   function rewardParts(r){
    const items=[['points','积分','积分余额','sprout'],['feed','份饲料','我的仓库','bag'],['fertilizer','份肥料','我的仓库','leaf'],['tools','件工具','我的仓库','shield'],['seedPacks','份种子盒','我的仓库','seed'],['decorations','件装扮','我的仓库','gift']];
    return `<ul class="reward-parts">${items.filter(([key])=>r[key]).map(([key,label,destination,ic])=>`<li>${icon(ic)}<strong>+ ${r[key]} ${label}</strong><span>已收入${destination}</span></li>`).join('')}${r.coupon?`<li>${icon('gift')}<strong>+ 1 张积分券</strong><span>${esc(r.coupon.title)} · 我的优惠券</span></li>`:''}</ul>`;
@@ -156,10 +200,15 @@
   }
   function goodsModal(m){
    const p=catalog.find(p=>p.id===m.sku);if(!p)return null;
-   const a=goodsAvailability(p);
-   return ctx.frame('田园物资详情',`<div class="goods-art" aria-hidden="true">${art(p.art)}</div><h3 style="font-size:23px;margin-top:15px">${p.title}</h3><p class="sheet-intro" style="margin-top:10px">${p.description}</p><div class="goods-detail-summary"><div class="summary-row"><span>兑换价格</span><strong>${p.cost} 积分 / 件</strong></div><div class="summary-row"><span>可用田园积分</span><strong>${state.wallet.points} 积分</strong></div><div class="summary-row"><span>今日剩余</span><strong>${a.remaining} 件</strong></div><div class="summary-row"><span>车中</span><strong>${a.inCart} 件</strong></div><div class="summary-row"><span>还可加</span><strong>${a.canAdd} 件</strong></div></div>${goodsGrants(p)}<div class="info">${icon('shield')}<span>每次加入 1 件，加入购物车不锁定库存。结算时核对积分和优惠券；物资不增加浇水或投喂次数，全部为演示资源。</span></div>${btn('x-add-cart',a.unavailable||'加入购物车','primary-button full',`data-sku="${p.id}" ${a.canAdd===0?'disabled':''}`)}${btn('x-modal-cart','查看购物车','link-button full')}`);
+   const a=goodsAvailability(p),g=F.goal(catalog,state.wallet,p.id),wished=wishIds().includes(p.id);
+   return ctx.frame('田园物资详情',`<div class="goods-art" aria-hidden="true">${art(p.art)}</div><h3 style="font-size:23px;margin-top:15px">${p.title}</h3><p class="sheet-intro" style="margin-top:10px">${p.description}</p><div class="goods-detail-summary"><div class="summary-row"><span>兑换价格</span><strong>${p.cost} 积分 / 件</strong></div><div class="summary-row"><span>可用田园积分</span><strong>${state.wallet.points} 积分</strong></div><div class="summary-row"><span>今日剩余</span><strong>${a.remaining} 件</strong></div><div class="summary-row"><span>车中</span><strong>${a.inCart} 件</strong></div><div class="summary-row"><span>还可加</span><strong>${a.canAdd} 件</strong></div></div><div class="goods-wish-actions">${btn('x-wishlist',icon('heart')+(wished?'取消心愿':'存入心愿'),'outline-button full',`data-sku="${p.id}" aria-pressed="${wished}"`)}${g.shortfall?`<p>还差 ${g.shortfall} 积分可兑一件</p>${btn('x-earn-goal','去活动攒积分','outline-button full',`data-sku="${p.id}"`)}`:''}<small>按单件原价展示；心愿刷新清空，券在结算核对。</small></div>${goodsGrants(p)}<div class="info">${icon('shield')}<span>每次加入 1 件，加入购物车不锁定库存。结算时核对积分和优惠券；物资不增加浇水或投喂次数，全部为演示资源。</span></div>${btn('x-add-cart',a.unavailable||'加入购物车','primary-button full',`data-sku="${p.id}" ${a.canAdd===0?'disabled':''}`)}${btn('x-modal-cart','查看购物车','link-button full')}`);
   }
   function renderModal(m){
+   if(m.type==='signin-preview'){
+    const sign=S.getSignIn(state.system,now()),index=Number(m.day)-1,r=sign.rewards[index];if(!r)return null;
+    const count=sign.todayClaimed?((sign.streak-1)%7)+1:sign.streak%7,available=index===sign.nextIndex&&!sign.todayClaimed;
+    return ctx.frame('七日签到 · 奖励预览',`<div class="signin-preview"><div class="signin-preview-icon">${icon(r.reward.coupon?'gift':r.reward.points?'sprout':'bag')}</div><span class="section-kicker">第 ${r.day} 天</span><h3>${esc(r.label)}</h3><p>${esc(rewardText(r.reward))}</p><span class="tag">${index<count?'本轮已领取':available?'今日可领取':'连续签到后领取'}</span></div><div class="info">${icon('clock')}<span>查看预览不会发放奖励。按北京时间签到，同一天只能领取一次；断签后重新积累。</span></div>${available?btn('x-signin','领取今日签到','primary-button full'):btn('close','知道了，回到活动','outline-button full')}`);
+   }
    if(m.type==='activity-rules')return ctx.frame('活动说明',`<p class="sheet-intro">所有奖励均为 Demo 资源；领取结果会显示在活动奖励明细。</p><ol class="activity-rules"><li><h3>每天来看看</h3><p>签到与每日任务按北京时间 00:00 更新。断签后重新积累连续天数，同一天不能重复领取。</p></li><li><h3>先完成，再领取</h3><p>逛商城、成功照料、完成演示收获后，各领取一次任务奖励。领取三项奖励后，才能收取当天丰收集章礼。</p></li><li><h3>照料刚刚好</h3><p>积分、饲料与优惠券不会解除农事次数与间隔，也不会提前让作物或牲畜成熟。</p></li><li><h3>到账随时可看</h3><p>积分收入同一余额，物资进入我的仓库，积分券进入我的优惠券。活动明细只保留本次页面体验，刷新后清空。</p></li></ol>${btn('close','知道了，回活动','primary-button full')}`);
    if(m.type==='goods-detail')return goodsModal(m);
    if(m.type==='checkout'){const q=S.quoteCart(state.system,{couponId:state.selectedCoupon});return ctx.frame('确认积分兑换',`<p class="sheet-intro">${q.count} 件物资会收入“我的仓库”，本次只消耗田园积分。</p><div class="checkout-summary">${q.items.map(p=>`<div class="summary-row"><span>${p.title} × ${p.quantity}</span><strong>${p.lineTotal} 积分</strong></div>`).join('')}<div class="summary-row"><span>优惠抵扣</span><strong>− ${q.discount} 积分</strong></div><div class="summary-row total"><span>本次实付</span><strong>${q.total} 积分</strong></div></div><div class="info">${icon('box')}<span>兑换成功后发放物资并核销优惠券。余额或库存不足时不扣积分、不发物资。</span></div><div class="modal-actions">${btn('close','再看看','outline-button')}${btn('x-confirm-checkout','确认兑换','primary-button',state.commerceBusy?'disabled':'')}</div>`);}
@@ -177,6 +226,15 @@
   function handleAction(a,target){
    if(!a.startsWith('x-'))return false;
    const sku=target.dataset.sku;
+   if(a==='x-search-clear'){state.shopQuery='';state.shopDraft='';ctx.render();focusSearch();return true;}
+   if(a==='x-discovery-reset'){state.shopQuery='';state.shopDraft='';state.shopFilter='all';ctx.render();focusSearch();return true;}
+   if(a==='x-shop-filter'){if(shopFilters.some(([key])=>key===target.dataset.filter)){state.shopFilter=target.dataset.filter;ctx.render();}return true;}
+   if(a==='x-wishlist'){state.shopWishlist=F.toggleWishlist(catalog,wishIds(),sku);if(!wishIds().includes(state.savingGoalSku))state.savingGoalSku='';ctx.render();ctx.renderModal();ctx.toast(wishIds().includes(sku)?'已存入心愿，本次体验可回看':'已取消这份心愿');return true;}
+   if(a==='x-earn-goal'){const p=catalog.find(p=>p.id===sku);if(!p)return true;if(!wishIds().includes(sku))state.shopWishlist=F.toggleWishlist(catalog,wishIds(),sku);state.savingGoalSku=sku;ctx.close();ctx.navigate('activities');return true;}
+   if(a==='x-goal-clear'){state.savingGoalSku='';ctx.render();ctx.toast('已结束攒分目标，心愿商品仍保留');return true;}
+   if(a==='x-goal-detail'){const p=catalog.find(p=>p.id===state.savingGoalSku);if(p){state.storefront=p.category;ctx.navigate('shop');ctx.open('goods-detail',{sku:p.id});}return true;}
+   if(a==='x-task-filter'){if(taskFilters.some(([key])=>key===target.dataset.filter)){state.activityTaskFilter=target.dataset.filter;ctx.render();}return true;}
+   if(a==='x-signin-preview'){const day=Number(target.dataset.day);if(Number.isInteger(day)&&day>=1&&day<=7)ctx.open('signin-preview',{day});return true;}
    if(a==='x-store-tab'){state.storefront=target.dataset.tab;state.selectedCoupon='';if(state.storefront!=='adopt')track('browse','browse-'+D.chinaDayKey(now()));ctx.render();return true;}
    if(a==='x-goods-sort'){if(goodsSortOptions.some(([key])=>key===target.dataset.sort)){state.goodsSort=target.dataset.sort;ctx.render();}return true;}
    if(a==='x-store-supplies'){state.storefront='supplies';ctx.navigate('shop');return true;}
@@ -189,7 +247,7 @@
    if(a==='x-coupon'){state.selectedCoupon=target.dataset.coupon||'';ctx.render();return true;}
    if(a==='x-checkout'){const q=S.quoteCart(state.system,{couponId:state.selectedCoupon});if(q.count&&state.wallet.points>=q.total)ctx.open('checkout');return true;}
    if(a==='x-confirm-checkout'){if(ctx.getModal()?.type!=='checkout'||state.commerceBusy)return true;state.commerceBusy=true;const r=S.checkout(state.system,state.wallet,{now:now(),couponId:state.selectedCoupon,receiptId:receipt('checkout')});state.commerceBusy=false;if(!r.ok){ctx.toast(r.reason);return true;}state.system=r.system;state.wallet=r.wallet;state.selectedCoupon='';ctx.addLog(`积分兑换 ${r.purchase.count} 件农场物资`,`消耗 ${r.purchase.total} 积分 · 演示库存已更新`);ctx.render();ctx.open('exchange-success',{count:r.purchase.count,total:r.purchase.total});return true;}
-   if(a==='x-signin'){if(claimReward('signIn',{},'signin','七日田园签到'))ctx.addLog('完成今日田园签到','签到奖励已收入积分与仓库 · 演示');return true;}
+   if(a==='x-signin'){if(claimReward('signIn',{},'signin','七日田园签到')){ctx.addLog('完成今日田园签到','签到奖励已收入积分与仓库 · 演示');if(ctx.getModal()?.type==='signin-preview')ctx.close();}return true;}
    if(a==='x-claim-task'){const task=S.getTasks(state.system,now()).find(t=>t.id===target.dataset.task);claimReward('claimTask',{taskId:target.dataset.task},'task',task?.title||'每日任务');return true;}
    if(a==='x-claim-season'){claimReward('claimSeason',{},'season','丰收季 · 田园三章');return true;}
    if(a==='x-claim-achievement'){const achievement=S.getAchievements(state.system).find(a=>a.id===target.dataset.achievement);claimReward('claimAchievement',{achievementId:target.dataset.achievement},'achievement',achievement?.title||'成长成就');return true;}
@@ -204,6 +262,6 @@
   }
   const rewardNavOwner=()=>['mine','warehouse'].includes(state.rewardOrigin)?'mine':'activities';
   const navOwner=view=>view==='rewards'?rewardNavOwner():view==='coupons'?state.couponOrigin==='rewards'?rewardNavOwner():(state.couponOrigin||'mine')==='mine'?'mine':'shop':['activities','tasks','achievements','welfare'].includes(view)?'activities':['shop','cart','exchanges'].includes(view)?'shop':['mine','warehouse','album','messages','orders','deliveries'].includes(view)?'mine':view;
-  return {home,shop,mine,renderPage,renderDock,renderModal,handleAction,track,onAdoption,onHarvest,decorateCare,consumeCare,decorateBuy,beforeNavigate,navigationContext,restoreNavigationContext,navOwner,titles};
+  return {home,shop,mine,renderPage,renderDock,renderModal,handleAction,handleSubmit,handleInput,handleComposition,handleKeyDown,deferRender,track,onAdoption,onHarvest,decorateCare,consumeCare,decorateBuy,beforeNavigate,navigationContext,restoreNavigationContext,navOwner,titles};
  }};
 })();

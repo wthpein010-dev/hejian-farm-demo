@@ -25,6 +25,22 @@ function createApp(hash = '', options = {}) {
     removeAttribute(name) { delete this[name]; },
   });
   const app = node();
+  let appHTML='';
+  Object.defineProperty(app,'innerHTML',{
+    get(){return appHTML;},
+    set(value){
+      appHTML=value;
+      const former=nodes.get('#shop-query');if(former){former.isConnected=false;if(document?.activeElement===former)document.activeElement=node();}
+      const match=value.match(/<input\b([^>]*id="shop-query"[^>]*)>/);
+      if(match){
+        const attrs=attributes(match[1]);
+        const field=Object.assign(node(),attrs,{tagName:'INPUT',value:attrs.value||'',selectionStart:0,selectionEnd:0,selectionDirection:'none'});
+        field.dataset={focusKey:attrs['data-focus-key']};
+        field.setSelectionRange=(start,end,direction)=>Object.assign(field,{selectionStart:start,selectionEnd:end,selectionDirection:direction});
+        nodes.set('#shop-query',field);
+      }
+    },
+  });
   app.innerHTML = html.match(/<main\b[^>]*id="app"[^>]*>([\s\S]*?)<\/main>/)?.[1] || '';
   dialog = node();
   let dialogHTML = '';
@@ -62,7 +78,7 @@ function createApp(hash = '', options = {}) {
       if (!nodes.has(selector)) nodes.set(selector, node());
       return nodes.get(selector);
     },
-    querySelectorAll() { return []; },
+    querySelectorAll(selector) { return selector.includes('input')?[...nodes.values()].filter(field=>field.tagName==='INPUT'&&field.isConnected):[]; },
     addEventListener(type, fn) { listen(documentEvents, type, fn); },
   };
   const location = { reload() { reloads++; } };
@@ -149,6 +165,27 @@ function createApp(hash = '', options = {}) {
       await fire(documentEvents, 'click', { target: el, preventDefault() {} });
     },
     fill(name, value) { const field = formFields.get(name); assert.ok(field, `visible form field ${name}`); field.value = value; return field; },
+    async search(query, { composing = false } = {}) {
+      const field = document.querySelector('#shop-query');
+      field.id = 'shop-query'; field.value = query;
+      if (composing) await fire(documentEvents, 'compositionstart', { target: field });
+      await fire(documentEvents, 'input', { target: field });
+      const searchForm = Object.assign(node(), { id: 'shop-search', querySelector: () => field });
+      await fire(documentEvents, 'submit', { target: searchForm, preventDefault() {}, isComposing: composing });
+      if (composing) await fire(documentEvents, 'compositionend', { target: field });
+    },
+    async draftSearch(query,start=0,end=start){
+      const field=document.querySelector('#shop-query');field.value=query;field.focus();field.setSelectionRange(start,end,'forward');
+      await fire(documentEvents,'input',{target:field});
+    },
+    get focusedInput(){const el=document.activeElement;return {id:el.id,value:el.value,start:el.selectionStart,end:el.selectionEnd};},
+    async composeSearch(query){const field=document.querySelector('#shop-query');field.focus();await fire(documentEvents,'compositionstart',{target:field});field.value=query;await fire(documentEvents,'input',{target:field,isComposing:true});},
+    async endSearchComposition(){await fire(documentEvents,'compositionend',{target:document.querySelector('#shop-query')});},
+    async enterSearch(){
+      const field=document.querySelector('#shop-query');let prevented=false;
+      await fire(documentEvents,'keydown',{target:field,key:'Enter',keyCode:13,isComposing:false,preventDefault(){prevented=true;}});
+      if(!prevented)await fire(documentEvents,'submit',{target:{id:'shop-search',querySelector:()=>field},preventDefault(){}});
+    },
     async submit() { assert.ok(dialogHTML.includes('id="shipping-form"')); await fire(documentEvents, 'submit', { target: form, preventDefault() {} }); },
     async popstate(route, state = null) {
       setURL('#' + route);

@@ -1,6 +1,8 @@
 /* Shared original SVG primitives for the H5 demo. */
 (()=>{
   const paths = {
+    search:'M21 21l-6-6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z',
+    heart:'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',
     sprout:'M12 21v-9M12 16C4 16 3 9 3 9s8-2 9 7Zm0-5C12 4 21 3 21 3s1 8-9 8Z',
     farm:'m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7M2 21h20',
     seed:'M20 4C6 2 2 12 7 17c5 5 15 1 13-13ZM5 20 16 9M10 15v-5m0 5h5',

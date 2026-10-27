@@ -58,10 +58,10 @@ test('after eight real sign-ins the ninth-day activity grid shows one claimed ce
   }
   app.nextDay();
   await app.click('活动');
-  const cells = [...app.html.matchAll(/<div\b[^>]*\bclass="([^"]*\bcheckin-day\b[^"]*)"[^>]*>\s*<span>(\d+日)<\/span>/g)].map(match => ({ classes: match[1].split(/\s+/), label: match[2] }));
+  const cells = app.controls().filter(control => control.dataset.action === 'x-signin-preview');
   assert.equal(cells.length, 7, 'the rendered activity page contains seven reward cells');
-  assert.deepEqual(cells.filter(cell => cell.classes.includes('claimed')).map(cell => cell.label), ['1日']);
-  assert.deepEqual(cells.filter(cell => cell.classes.includes('active')).map(cell => cell.label), ['2日']);
+  assert.deepEqual(cells.filter(cell => cell.name.includes('已领取')).map(cell => cell.dataset.day), ['1']);
+  assert.deepEqual(cells.filter(cell => cell.name.includes('今日可签到')).map(cell => cell.dataset.day), ['2']);
 });
 
 test('the shop cart summary stays reachable outside the scrolling catalogue and follows current quantities', async () => {
