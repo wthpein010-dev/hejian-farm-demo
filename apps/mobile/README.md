@@ -31,4 +31,6 @@
 
 ## 视觉归属
 
+商城和“我的”可进入完整积分兑换记录、原值收据与当前仓库。记录最近优先每页20笔，详情返回保留已加载页；成功checkout和未知结果核对后按原操作查收据，URL只有白名单id或operation=last。认证/原key仅内存，读取失败不重兑。饲料余额来自wallet.feed，其他库存来自system.inventory，本笔发放不代表剩余库存；不构成现金支付或实体履约。
+
 `prototype/styles.css`为已有canonical token源。运行根 `npm run tokens` 生成 `src/styles/tokens.css`；后续只改上游token并重新生成。场景/商品/商城横幅使用prototype/assets/photos中的12张摄影风格AI示意WebP；运行根npm run assets或各build自动同步，node tools/sync-photo-assets.mjs --check校验同源摘要。原始PNG和本机生成路径不入Git，未使用的旧插画副本已移除，不冒充实时视频或实拍。

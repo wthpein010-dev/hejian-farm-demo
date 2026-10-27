@@ -37,3 +37,17 @@ export interface FarmRegistryDetail {
   recordFormat: 1; ownerId: string; environment: 'development' | 'production'; record: FarmRecord;
   events: FarmRecordEvent[]; nextBeforeVersion: number | null; serverTime: number;
 }
+export type ResourceKey = 'feed' | 'fertilizer' | 'tools' | 'seedPacks' | 'decorations';
+export interface Exchange {
+  id: string; day: string;
+  items: Array<{ sku: string; title: string; art: string; quantity: number; unitPoints: number; linePoints: number; grant: Partial<Record<ResourceKey, number>> }>;
+  count: number; subtotal: number; discount: number; total: number; couponId: string | null;
+  received: Partial<Record<ResourceKey, number>>;
+}
+export interface ExchangePage {
+  exchangeFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number;
+  items: Exchange[]; nextCursor: string | null;
+}
+export interface ExchangeDetail {
+  exchangeFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number; exchange: Exchange;
+}

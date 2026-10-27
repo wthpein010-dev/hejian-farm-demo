@@ -7,6 +7,7 @@ import { PlatformIdentityError } from './providers.mjs';
 import { createOperations, createJsonLineLogger } from './operations.mjs';
 import { ClientAddressError } from './client-address.mjs';
 import { FarmRegistryError } from './farm-registry.mjs';
+import { ExchangeCursorError, isExchangeId } from '../../../shared/exchanges.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -193,6 +194,26 @@ export function createApp(options = {}) {
         if (store.authenticate(token, instant) !== userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
         return instant;
       };
+      const exchangePage = /^\/account\/exchanges\/([^/]+)$/.exec(route);
+      const exchangeDetail = /^\/account\/exchange\/([^/]+)$/.exec(route);
+      if (exchangePage || exchangeDetail || route === '/account/checkout-receipt') {
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        let data;
+        if (exchangePage) {
+          const cursor = exchangePage[1];
+          if (cursor !== 'start' && !isExchangeId(cursor)) throw new ExchangeCursorError();
+          data = store.exchangePage(userId, cursor, refreshSession());
+        } else if (exchangeDetail) {
+          if (!isExchangeId(exchangeDetail[1])) throw invalid();
+          data = store.exchangeDetail(userId, exchangeDetail[1], refreshSession());
+        } else {
+          const key = request.headers['idempotency-key'];
+          if (typeof key !== 'string' || !SAFE_ID.test(key)) throw invalid();
+          data = store.checkoutReceipt(userId, key, refreshSession());
+        }
+        if (!data) throw new RequestError(404, 'EXCHANGE_NOT_FOUND', '未找到这笔积分兑换记录');
+        send(200, { data }); return;
+      }
       const farmPage = /^\/farm\/records\/(plots|animals)\/([^/]+)$/.exec(route);
       const farmDetail = /^\/farm\/record\/([^/]+)\/([^/]+)$/.exec(route);
       if (farmPage || farmDetail) {
@@ -255,6 +276,7 @@ export function createApp(options = {}) {
       send(result.status, result.error ? { error: result.error, data: result.data } : { data: result.data, message: result.message, replayed: result.replayed });
     } catch (error) {
       if (error instanceof ClientAddressError) send(400, { error: { code: 'INVALID_PROXY_HEADER', message: '代理转发信息无效，请联系服务维护人员' } });
+      else if (error instanceof ExchangeCursorError) send(400, { error: { code: error.code, message: error.message } });
       else if (error instanceof FarmRegistryError && error.code === 'NOT_FOUND') send(404, { error: { code: error.code, message: error.message } });
       else if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });

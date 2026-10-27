@@ -41,6 +41,24 @@
       "style": {
         "navigationBarTitleText": "种养档案"
       }
+    },
+    {
+      "path": "pages/exchanges/index",
+      "style": {
+        "navigationBarTitleText": "积分兑换记录"
+      }
+    },
+    {
+      "path": "pages/exchange/index",
+      "style": {
+        "navigationBarTitleText": "积分兑换收据"
+      }
+    },
+    {
+      "path": "pages/inventory/index",
+      "style": {
+        "navigationBarTitleText": "我的仓库"
+      }
     }
   ],
   "globalStyle": {

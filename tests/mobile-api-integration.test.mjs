@@ -86,6 +86,27 @@ test('a lost checkout response is recovered using the same real server receipt',
   assert.equal(client.hasPending(), false);
 });
 
+test('a recovered mobile checkout opens its original receipt despite a newer checkout in another session', async t => {
+  const h = await fixture(t), original = h.client(), otherSession = h.client();
+  await original.loginDevelopment('exchange-original'); await original.load();
+  const initialFertilizer = original.snapshot.system.inventory.fertilizer;
+  await original.mutate('/cart/items', { sku: 'feed-pack', delta: 1 });
+  h.loseNextCheckout(); await assert.rejects(original.mutate('/checkout'), { code: 'RESULT_UNKNOWN' });
+  await otherSession.loginDevelopment('exchange-original'); await otherSession.load();
+  await otherSession.mutate('/cart/items', { sku: 'fertilizer', delta: 1 }); await otherSession.mutate('/checkout');
+  await original.load(); const revision = original.snapshot.revision;
+  await original.retryPending(); const receipt = await original.loadConfirmedCheckout();
+  assert.equal(original.snapshot.revision, revision); assert.equal(receipt.exchange.items[0].sku, 'feed-pack');
+  assert.equal(receipt.exchange.received.feed, 3); assert.equal(receipt.exchange.total, 30);
+  const history = await original.loadExchangePage(); assert.equal(history.items.length, 2);
+  assert.equal(history.items[0].items[0].sku, 'fertilizer'); assert.equal(history.items[1].id, receipt.exchange.id);
+  assert.equal(original.snapshot.wallet.points, 30); assert.equal(original.snapshot.wallet.feed, 9); assert.equal(original.snapshot.system.inventory.fertilizer, initialFertilizer + 1);
+  assert.equal(h.checkoutRequests[0].key, h.checkoutRequests.at(-1).key);
+  await original.logout(); await original.loginDevelopment('exchange-empty'); await original.load();
+  assert.equal((await original.loadExchangePage()).items.length, 0);
+  await assert.rejects(original.loadExchangeDetail(receipt.exchange.id), { status: 404 });
+});
+
 test('expired uncertain checkout rejects another identity and recovers the original account without a second debit', async t => {
   let now = Date.now();
   const h = await fixture(t, { clock: () => now, sessionTtlMs: 60000 }), client = h.client();

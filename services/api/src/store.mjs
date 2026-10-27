@@ -5,6 +5,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { encodeReceipt, decodeReceipt } from './receipt-codec.mjs';
 import { normalizeFarmBatch } from '../../../shared/farm-records.mjs';
+import { createExchangePage, createExchangeDetail } from '../../../shared/exchanges.mjs';
 import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm-registry.mjs';
 
 const require = createRequire(import.meta.url);
@@ -233,6 +234,32 @@ export class FarmStore {
 
   bootstrap(userId, now) {
     return this.#transaction(() => { const row = this.#user(userId); return this.#snapshot(row, this.#sync(row, now), now); });
+  }
+
+  #exchangeHistory(userId, now) {
+    const row = this.#user(userId), purchases = JSON.parse(row.state_json)?.system?.purchases;
+    if (!Array.isArray(purchases)) throw new TypeError('积分兑换记录数据无效');
+    return { purchases, scope: { ownerId: row.id, environment: row.environment, serverTime: now } };
+  }
+
+  exchangePage(userId, cursor = 'start', now) {
+    const { purchases, scope } = this.#exchangeHistory(userId, now);
+    return createExchangePage(purchases, { ...scope, cursor });
+  }
+
+  exchangeDetail(userId, id, now) {
+    const { purchases, scope } = this.#exchangeHistory(userId, now);
+    const matches = purchases.filter(purchase => purchase?.id === id);
+    if (matches.length > 1) throw new TypeError('积分兑换记录数据无效');
+    return matches.length ? createExchangeDetail(matches[0], scope) : null;
+  }
+
+  checkoutReceipt(userId, key, now) {
+    const { purchases, scope } = this.#exchangeHistory(userId, now);
+    const receiptId = 'api-' + hash(userId + '\n' + key);
+    const matches = purchases.filter(purchase => purchase?.receiptId === receiptId);
+    if (matches.length > 1) throw new TypeError('积分兑换记录数据无效');
+    return matches.length ? createExchangeDetail(matches[0], scope) : null;
   }
 
   farmPage(userId, kind, cursor = 'start', now) {

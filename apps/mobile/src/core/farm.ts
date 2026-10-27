@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
-import { createFarmClient, mergeFarmPages, mergeFarmDetails } from './client.mjs';
-import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus } from './types';
+import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
+import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail } from './types';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : '');
 const client = createFarmClient({ baseURL, transport: (request: { url: string; method: string; headers: object; body: unknown; timeout: number }) => new Promise((resolve, reject) => {
@@ -14,6 +14,8 @@ export const farmState = reactive({
   privacy: null as PrivacyReport | null, deletionPrepared: false, pendingCanRetryWithoutAuth: false,
   farmRegistryPage: null as FarmRegistryPage | null, farmRegistryDetail: null as FarmRegistryDetail | null,
   farmRegistryBusy: false, farmRegistryError: '', farmRecordBusy: false, farmRecordError: '', farmRecordMessage: '',
+  exchangeHistory: null as ExchangePage | null, exchangeRecord: null as ExchangeDetail | null,
+  exchangeHistoryBusy: false, exchangeHistoryError: '', exchangeRecordBusy: false, exchangeRecordError: '', confirmedCheckout: false,
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -26,21 +28,28 @@ provider = 'weixin';
 provider = 'toutiao';
 // #endif
 export const platformProvider = provider as 'weixin' | 'toutiao' | null;
-let registryRead = 0, detailRead = 0, synchronizedProfile: unknown = null;
+let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRead = 0, exchangeSelection = '', synchronizedProfile: unknown = null;
 function syncClientState() {
   if (synchronizedProfile !== client.profile || !client.authenticated) {
     synchronizedProfile = client.profile; registryRead++; detailRead++;
     farmState.farmRegistryPage = null; farmState.farmRegistryDetail = null;
     farmState.farmRegistryError = ''; farmState.farmRecordError = ''; farmState.farmRecordMessage = '';
     farmState.farmRegistryBusy = false; farmState.farmRecordBusy = false;
+    exchangeHistoryRead++; exchangeRecordRead++; exchangeSelection = '';
+    farmState.exchangeHistory = null; farmState.exchangeRecord = null;
+    farmState.exchangeHistoryBusy = false; farmState.exchangeRecordBusy = false;
+    farmState.exchangeHistoryError = ''; farmState.exchangeRecordError = '';
   }
   farmState.snapshot = client.snapshot as Snapshot | null;
   farmState.privacy = client.privacy as PrivacyReport | null;
   farmState.deletionPrepared = client.deletionPrepared;
   farmState.pendingCanRetryWithoutAuth = client.pendingCanRetryWithoutAuth;
   farmState.authenticated = client.authenticated; farmState.pending = client.hasPending();
+  farmState.confirmedCheckout = client.hasConfirmedCheckout;
   if (!client.farmPage) farmState.farmRegistryPage = null;
   if (!client.farmDetail) farmState.farmRegistryDetail = null;
+  if (!client.exchangePage) farmState.exchangeHistory = null;
+  if (!client.exchangeDetail) farmState.exchangeRecord = null;
 }
 
 async function run(operation: () => Promise<unknown>, message = '') {
@@ -69,6 +78,62 @@ export const loginPlatform = () => run(async () => {
   await client.loginPlatform(platformProvider, code); await client.load();
 });
 export const logoutFarm = () => run(() => client.logout());
+export async function loadExchangeHistory(cursor = 'start') {
+  syncClientState();
+  const read = ++exchangeHistoryRead, account = client.profile;
+  farmState.exchangeHistoryBusy = true; farmState.exchangeHistoryError = '';
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== exchangeHistoryRead || account !== client.profile) return false;
+    const page = await client.loadExchangePage(cursor) as ExchangePage;
+    if (read !== exchangeHistoryRead || account !== client.profile || page !== client.exchangePage) return false;
+    farmState.exchangeHistory = mergeExchangePages(farmState.exchangeHistory, page, cursor) as ExchangePage;
+    return true;
+  } catch (failure) {
+    if (read === exchangeHistoryRead && account === client.profile) farmState.exchangeHistoryError = failure instanceof Error ? failure.message : '兑换记录暂时无法读取，请重试。';
+    return false;
+  } finally {
+    syncClientState(); if (read === exchangeHistoryRead) farmState.exchangeHistoryBusy = false;
+  }
+}
+export async function loadExchangeRecord(id: string) {
+  syncClientState();
+  const read = ++exchangeRecordRead, account = client.profile;
+  farmState.exchangeRecordBusy = true; farmState.exchangeRecordError = '';
+  if (exchangeSelection !== id || id === 'last') farmState.exchangeRecord = null;
+  exchangeSelection = id;
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== exchangeRecordRead || account !== client.profile) return false;
+    const detail = await (id === 'last' ? client.loadConfirmedCheckout() : client.loadExchangeDetail(id)) as ExchangeDetail;
+    if (read !== exchangeRecordRead || account !== client.profile || detail !== client.exchangeDetail) return false;
+    farmState.exchangeRecord = detail;
+    return true;
+  } catch (failure) {
+    if (read === exchangeRecordRead && account === client.profile) farmState.exchangeRecordError = failure instanceof Error ? failure.message : '兑换收据暂时无法读取，请重试。';
+    return false;
+  } finally {
+    syncClientState(); if (read === exchangeRecordRead) farmState.exchangeRecordBusy = false;
+  }
+}
+function openAccountPage(route: 'pages/exchanges/index' | 'pages/inventory/index') {
+  const pages = getCurrentPages(), position = pages.map(page => page.route).lastIndexOf(route);
+  if (position === pages.length - 1) return;
+  const fallback = () => uni.navigateTo({ url: `/${route}` });
+  if (position >= 0) uni.navigateBack({ delta: pages.length - 1 - position, fail: fallback });
+  else fallback();
+}
+export function openExchangeHistory() { openAccountPage('pages/exchanges/index'); }
+export function openExchangeRecord(id: string) {
+  if (isExchangeId(id)) uni.navigateTo({ url: `/pages/exchange/index?id=${id}` });
+}
+export function openConfirmedCheckout() { uni.navigateTo({ url: '/pages/exchange/index?operation=last' }); }
+export function openInventory() { openAccountPage('pages/inventory/index'); }
+export function returnFromExchange() {
+  const fallback = () => uni.switchTab({ url: '/pages/profile/index' });
+  if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback });
+  else fallback();
+}
 export async function loadFarmRegistry(kind: FarmRegistryKind, cursor = 'start') {
   syncClientState();
   const read = ++registryRead, account = client.profile;

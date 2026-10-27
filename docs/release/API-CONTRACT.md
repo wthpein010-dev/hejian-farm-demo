@@ -63,3 +63,13 @@ JSON请求最大16KiB，拒绝未知字段、错误类型及无穷数，受限CO
 ## 农场归属档案与观测
 
 新增独立Bearer只读接口：GET /farm/records/{plots|animals}/{start|cursor}、GET /farm/record/{id}/{0|beforeVersion}。每页20项，账户来自会话，暂无公开写入。字段/时间/游标与私有导入以[FARM-RECORDS](FARM-RECORDS.md)为准；账户privacy类别新增farm-records，注销一并删除归属档案与观测。financial Snapshot兼容farm空字段和原revision/幂等保持，不将档案同步计为设备执行、任务奖励或实体履约。
+
+## 账户积分兑换记录
+
+三个Bearer只读GET接口：`/account/exchanges/{start|beforeExchangeId}`、`/account/exchange/{id}`、`/account/checkout-receipt`。最后一个仅通过`Idempotency-Key`头查询已确认checkout的原操作，key不进入URL、响应或日志。账户由会话解析，缺失及其他账户记录统一404 `EXCHANGE_NOT_FOUND`；无效或非本账户游标400 `EXCHANGE_CURSOR_INVALID`。响应禁止缓存，日志只记录路由模板。
+
+响应作用域为`{exchangeFormat:1,ownerId,environment,serverTime}`，列表追加`items,nextCursor`，详情追加`exchange`。单笔为`{id,day,items:[{sku,title,art,quantity,unitPoints,linePoints,grant}],count,subtotal,discount,total,couponId,received}`。`received`为原历史grant乘数量的本笔发放汇总；名称、单价、优惠及发放不从当前目录重算，day只代表上海日历日期。ID为`shop-api-`加64位小写hex。
+
+每页20笔，最近优先，nextCursor为本页末笔ID或null；追加新兑换不影响更早游标。读取不syncDay、不改变revision、资产、schema或capabilities；坏历史固定500且不回显内容。原始purchases JSON仍整体读取和验证，分页仅限制响应与展示，不解决历史存储增长。当前仓库使用最新Snapshot的wallet.feed及system.inventory，不从收据反推余额。
+
+客户端仅在checkout确认成功后保留原key、账户与环境的内存引用。未知操作沿用原key/body核对；确认后按该key打开收据，即使已同步较新Snapshot也不以最新purchase替代。401、退出、换登录及注销清理私有记录与确认引用，迟到响应不得污染新账户。新checkout确认后使旧列表失效；读取失败可重试，不发起第二笔兑换。

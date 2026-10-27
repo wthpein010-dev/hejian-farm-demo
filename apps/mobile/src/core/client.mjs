@@ -1,6 +1,8 @@
 /** Account-scoped API client. Authentication and uncertain requests stay in memory. */
 import { isFarmSnapshot } from './snapshot.mjs';
 import { isFarmPage, isFarmDetail } from '../../../../shared/farm-records.mjs';
+import { isExchangeId, isExchangePage, isExchangeDetail } from '../../../../shared/exchanges.mjs';
+export { isExchangeId };
 export class FarmApiError extends Error {
   constructor(code, message, status = 0) { super(message); this.name = 'FarmApiError'; this.code = code; this.status = status; }
 }
@@ -21,6 +23,16 @@ export function mergeFarmDetails(previous, detail, beforeVersion = 0) {
   return { ...detail, events: [...previous.events, ...detail.events] };
 }
 
+export function mergeExchangePages(previous, page, cursor = 'start') {
+  if (cursor === 'start') return { ...page, items: [...page.items] };
+  const seen = new Set(previous?.items.map(item => item.id));
+  if (!previous || previous.ownerId !== page.ownerId || previous.environment !== page.environment ||
+    previous.nextCursor !== cursor || page.items.some(item => seen.has(item.id))) {
+    throw new FarmApiError('READ_SUPERSEDED', '兑换记录已更新，请刷新后继续查看。');
+  }
+  return { ...page, items: [...previous.items, ...page.items] };
+}
+
 export function createFarmClient({ baseURL = '', transport, generateKey = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}` }) {
   const base = baseURL.replace(/\/$/, '');
   if (base && !/^(https:\/\/[a-zA-Z0-9.-]+(?::\d+)?|http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?)(?:\/[a-zA-Z0-9_~.-]+)*$/.test(base)) {
@@ -29,7 +41,13 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   let token = '', profile = null, snapshot = null, pending = null, generation = 0, loginAttempt = 0, activeLogins = 0, activeMutation = false;
   let privacy = null, deletionProposal = null, deletionAttempt = 0;
   let farmPage = null, farmDetail = null, farmPageRead = 0, farmDetailRead = 0;
-  function clearFarmRecords() { farmPage = null; farmDetail = null; farmPageRead++; farmDetailRead++; }
+  let exchangePage = null, exchangeDetail = null, exchangePageRead = 0, exchangeDetailRead = 0;
+  let confirmedCheckout = null, exchangeDetailOperationKey = '';
+  function clearFarmRecords() {
+    farmPage = null; farmDetail = null; farmPageRead++; farmDetailRead++;
+    exchangePage = null; exchangeDetail = null; exchangePageRead++; exchangeDetailRead++;
+    confirmedCheckout = null; exchangeDetailOperationKey = '';
+  }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
   function acceptSnapshot(value) {
@@ -101,7 +119,12 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     activeMutation = true;
     try {
       const result = await send(operation.path, 'POST', operation.body, true, operation.key);
-      acceptSnapshot(result); pending = null; return snapshot;
+      acceptSnapshot(result);
+      if (operation.path === '/checkout') {
+        confirmedCheckout = { key: operation.key, accountId: operation.accountId, environment: result.environment };
+        exchangePage = null; exchangePageRead++;
+      }
+      pending = null; return snapshot;
     } catch (failure) {
       if (!confirmedMutationRefusals.has(failure) && (failure.status >= 500 ||
         ['NETWORK_UNAVAILABLE', 'SERVER_UNAVAILABLE', 'SESSION_CHANGED'].includes(failure.code) || (retry && failure.status !== 401))) {
@@ -145,6 +168,9 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get privacy() { return privacy; },
     get farmPage() { return farmPage; },
     get farmDetail() { return farmDetail; },
+    get exchangePage() { return exchangePage; },
+    get exchangeDetail() { return exchangeDetail; },
+    get hasConfirmedCheckout() { return !!confirmedCheckout && !!token && confirmedCheckout.accountId === profile?.id; },
     get deletionPrepared() { return !!deletionProposal; },
     get pendingCanRetryWithoutAuth() { return pending?.kind === 'deletion'; },
     hasPending() { return !!pending; },
@@ -176,6 +202,44 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (read !== farmDetailRead) throw error('READ_SUPERSEDED', '已选择其他档案，请查看当前对象。');
       if (!isFarmDetail(value, ownerId, id, environment) || (beforeVersion > 0 && value.events.some(event => event.version >= beforeVersion))) throw error('SERVER_UNAVAILABLE', '观测记录未能确认，请重新加载。');
       farmDetail = value; return farmDetail;
+    },
+    async loadExchangePage(cursor = 'start') {
+      requireSession();
+      if (cursor !== 'start' && !isExchangeId(cursor)) throw error('INVALID_REQUEST', '兑换记录翻页位置无效，请刷新记录。');
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步田园数据，再查看兑换记录。');
+      const read = ++exchangePageRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      const value = await send(`/account/exchanges/${cursor}`, 'GET');
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
+      if (read !== exchangePageRead) throw error('READ_SUPERSEDED', '兑换记录已更新，请以当前列表为准。');
+      if (!isExchangePage(value, ownerId, environment) || (cursor !== 'start' && value.items.some(item => item.id === cursor))) throw error('SERVER_UNAVAILABLE', '兑换记录未能确认，请重新加载。');
+      exchangePage = value; return exchangePage;
+    },
+    async loadExchangeDetail(id) {
+      requireSession();
+      if (!isExchangeId(id)) throw error('INVALID_REQUEST', '兑换记录编号无效，请返回重新选择。');
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步田园数据，再查看兑换收据。');
+      const read = ++exchangeDetailRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      if (exchangeDetail?.exchange.id !== id) exchangeDetail = null;
+      const value = await send(`/account/exchange/${id}`, 'GET');
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
+      if (read !== exchangeDetailRead) throw error('READ_SUPERSEDED', '兑换收据已更新，请以当前选择为准。');
+      if (!isExchangeDetail(value, ownerId, environment) || value.exchange.id !== id) throw error('SERVER_UNAVAILABLE', '兑换收据未能确认，请重新加载。');
+      exchangeDetail = value; exchangeDetailOperationKey = ''; return exchangeDetail;
+    },
+    async loadConfirmedCheckout() {
+      requireSession();
+      const checkout = confirmedCheckout;
+      if (!checkout || checkout.accountId !== profile.id) throw error('CHECKOUT_RECEIPT_UNAVAILABLE', '本次运行没有可核对的已确认兑换，请查看全部记录。');
+      if (!snapshot || checkout.environment !== snapshot.environment) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再查看兑换收据。');
+      const read = ++exchangeDetailRead, requestGeneration = generation, ownerId = profile.id, environment = snapshot.environment;
+      if (exchangeDetailOperationKey !== checkout.key) exchangeDetail = null;
+      // Keep the original operation key in memory and the private request header.
+      // A newer synchronized purchase must never become this operation's receipt.
+      const value = await send('/account/checkout-receipt', 'GET', undefined, true, checkout.key);
+      if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
+      if (read !== exchangeDetailRead || confirmedCheckout !== checkout) throw error('READ_SUPERSEDED', '已确认的兑换已更新，请重新查看收据。');
+      if (!isExchangeDetail(value, ownerId, environment)) throw error('SERVER_UNAVAILABLE', '兑换收据未能确认，请重新加载。');
+      exchangeDetail = value; exchangeDetailOperationKey = checkout.key; return exchangeDetail;
     },
     async loadPrivacy() {
       const value = await send('/account/privacy', 'GET');
@@ -217,6 +281,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (body.expectedRevision !== undefined && body.expectedRevision !== snapshot.revision) throw error('VERSION_CONFLICT', '田园资产已更新，请重新核对本次明细。');
       cancelAccountDeletion();
       const operation = { path, body: JSON.parse(JSON.stringify({ ...body, expectedRevision: snapshot.revision })), key: generateKey(), accountId: profile.id };
+      if (path === '/checkout') { confirmedCheckout = null; exchangeDetail = null; exchangeDetailOperationKey = ''; exchangeDetailRead++; }
       return submit(operation);
     },
     async retryPending() {

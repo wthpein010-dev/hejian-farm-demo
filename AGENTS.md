@@ -60,3 +60,7 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 ## 农场档案实现
 
 术语见[CONTEXT.md](CONTEXT.md)，接入契约见[农场档案](docs/release/FARM-RECORDS.md)。shared/farm-records.mjs拥有字段/页面/历史与转换校验；farm-registry.mjs拥有三表DDL、事务和历史，备份共用DDL。只读账户接口不改变金融Snapshot、revision、奖励或能力开关；观测不是设备回执。CLI仅显式私有文件/既有DB，真实资料和运行库不入Git。本轮全部验证使用合成数据。
+
+## 兑换记录实现
+
+shared/exchanges.mjs拥有严格只读历史投影、资源标签与wire校验；三账户GET接口读取原purchase，不改schema/revision/经济规则。client.mjs保留已确认checkout原key定位收据，pending协议不变；farm.ts统一账户清理、读取代际、分页聚合及导航栈复用。FarmGoodsPhoto为商城/收据/仓库照片白名单入口，微信需virtualHost/shared保持列宽。分页仅限制响应，不解决整体JSON历史容量。公开Pages仍为prototype，无生产API。

@@ -4,7 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
-import { farmState as state, onFarmPageShow, mutateFarm, openShop } from '../../core/farm';
+import { farmState as state, onFarmPageShow, mutateFarm, openShop, openConfirmedCheckout } from '../../core/farm';
 const selectedCoupon = ref('');
 const confirmation = ref<{ revision: number; total: number; couponId: string } | null>(null);
 const items = computed(() => state.snapshot?.catalog.filter(p => (state.snapshot?.system.cart[p.id] || 0) > 0).map(p => ({ ...p, quantity: state.snapshot!.system.cart[p.id] })) || []);
@@ -37,7 +37,7 @@ async function edit() { confirmation.value = null; await focusSection('checkout-
 async function checkout() {
   const intent = confirmation.value; if (!intent) return;
   const ok = await mutateFarm('/checkout', { ...(intent.couponId ? { couponId: intent.couponId } : {}), expectedRevision: intent.revision }, '兑换成功，物资已收入仓库。');
-  if (ok) { selectedCoupon.value = ''; await focusSection('cart-empty-action'); }
+  if (ok) { selectedCoupon.value = ''; openConfirmedCheckout(); }
 }
 function maximum(id: string, limit: number) { return Math.min(5, limit - (state.snapshot?.system.daily.bought[id] || 0)); }
 onShow(onFarmPageShow);

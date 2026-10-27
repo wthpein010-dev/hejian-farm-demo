@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 const ROUTES = new Set([
   '/livez', '/readyz', '/healthz', '/api/v1/auth/development', '/api/v1/auth/platform',
   '/api/v1/auth/logout', '/api/v1/bootstrap', '/api/v1/account/privacy',
+  '/api/v1/account/checkout-receipt',
   '/api/v1/account/deletion/prepare', '/api/v1/account/deletion/confirm', '/api/v1/cart/items',
   '/api/v1/checkout', '/api/v1/events/shop-visit', '/api/v1/activities/sign-in', '/api/v1/activities/season/claim',
 ]);
@@ -11,6 +12,8 @@ const LATENCY_BUCKETS = Object.freeze([5, 25, 100, 500, 2000, 10000]);
 
 function routeTemplate(pathname) {
   if (ROUTES.has(pathname)) return pathname;
+  if (/^\/api\/v1\/account\/exchanges\/(start|shop-api-[a-f0-9]{64})$/.test(pathname)) return '/api/v1/account/exchanges/:cursor';
+  if (/^\/api\/v1\/account\/exchange\/shop-api-[a-f0-9]{64}$/.test(pathname)) return '/api/v1/account/exchange/:exchangeId';
   if (/^\/api\/v1\/farm\/records\/(plots|animals)\/(start|[a-z0-9][a-z0-9-]{7,63})$/.test(pathname)) return '/api/v1/farm/records/:kind/:cursor';
   if (/^\/api\/v1\/farm\/record\/[a-z0-9][a-z0-9-]{7,63}\/(0|[1-9][0-9]{0,15})$/.test(pathname)) return '/api/v1/farm/record/:recordId/:beforeVersion';
   if (/^\/api\/v1\/activities\/tasks\/[A-Za-z0-9_-]{1,64}\/claim$/.test(pathname)) return '/api/v1/activities/tasks/:taskId/claim';
