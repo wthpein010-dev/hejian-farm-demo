@@ -3,6 +3,8 @@ import { isFarmSnapshot } from './snapshot.mjs';
 import { isFarmPage, isFarmDetail } from '../../../../shared/farm-records.mjs';
 import { isExchangeId, isExchangePage, isExchangeDetail } from '../../../../shared/exchanges.mjs';
 import { isFriendsView, isFriendCommandReceipt, isFriendCommand } from '../../../../shared/friends.mjs';
+import { isForumStatus, isForumPage, isForumDetail, isForumReports, isForumCommand, isForumCommandReceipt, isForumId } from '../../../../shared/forum.mjs';
+export { isForumId };
 export { isExchangeId };
 export class FarmApiError extends Error {
   constructor(code, message, status = 0) { super(message); this.name = 'FarmApiError'; this.code = code; this.status = status; }
@@ -45,11 +47,19 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
   let exchangePage = null, exchangeDetail = null, exchangePageRead = 0, exchangeDetailRead = 0;
   let confirmedCheckout = null, exchangeDetailOperationKey = '';
   let friendsView = null, friendsRead = 0, friendsVersion = -1;
+  let forumStatus = null, forumPage = null, forumDetail = null, forumReports = null;
+  let forumStatusRead = 0, forumPageRead = 0, forumDetailRead = 0, forumReportsRead = 0;
+  function clearFriendsView() { friendsView = null; friendsRead++; }
+  function clearForum() {
+    forumStatus = null; forumPage = null; forumDetail = null; forumReports = null;
+    forumStatusRead++; forumPageRead++; forumDetailRead++; forumReportsRead++;
+  }
   function clearFarmRecords() {
     farmPage = null; farmDetail = null; farmPageRead++; farmDetailRead++;
     exchangePage = null; exchangeDetail = null; exchangePageRead++; exchangeDetailRead++;
     confirmedCheckout = null; exchangeDetailOperationKey = '';
     friendsView = null; friendsRead++; friendsVersion = -1;
+    clearForum();
   }
   const confirmedMutationRefusals = new WeakSet();
   const error = (code, message, status) => new FarmApiError(code, message, status);
@@ -143,7 +153,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     if (pending || activeMutation || activeLogins) throw error('PENDING_OPERATION', '请先完成登录或核对上次操作的结果，再继续。');
   }
   async function submitFriends(operation) {
-    activeMutation = true; friendsRead++;
+    activeMutation = true; clearFriendsView(); clearForum();
     try {
       const receipt = await send('/friends/commands', 'POST', operation.body, true, operation.key, false);
       if (!isFriendCommandReceipt(receipt, operation.accountId, operation.environment, operation.key, operation.body.action)) {
@@ -151,13 +161,35 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       }
       // A historical receipt only settles its original command. Current social
       // data is read independently; it must never enter financial state.
-      pending = null; friendsView = null; friendsRead++;
+      pending = null; clearFriendsView(); clearForum();
       return receipt;
     } catch (failure) {
       pending = operation;
       if (failure.status === 401) throw failure;
       throw error('RESULT_UNKNOWN', '农友操作的结果尚未确认。请核对上次操作，避免重复申请。');
     } finally { activeMutation = false; }
+  }
+  async function submitForum(operation) {
+    activeMutation = true; clearForum();
+    if (operation.body.action === 'block-author') clearFriendsView();
+    try {
+      const receipt = await send('/forum/commands', 'POST', operation.body, true, operation.key, false);
+      if (!isForumCommandReceipt(receipt, operation.accountId, operation.environment, operation.key, operation.body.action)) throw error('SERVER_UNAVAILABLE', '社区操作回执未能确认。');
+      pending = null; clearForum();
+      if (operation.body.action === 'block-author') clearFriendsView();
+      return receipt;
+    } catch (failure) {
+      pending = operation;
+      if (failure.status === 401) throw failure;
+      throw error('RESULT_UNKNOWN', '社区操作结果尚未确认。请核对上次操作，避免重复提交。');
+    } finally { activeMutation = false; }
+  }
+  function forumReadContext(cursor = 'start') {
+    requireSession();
+    if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再查看社区。');
+    if (activeMutation) throw error('PENDING_OPERATION', '正在核对操作，请稍后刷新社区。');
+    if (cursor !== 'start' && !isForumId(cursor)) throw error('INVALID_REQUEST', '社区分页位置无效，请刷新。');
+    return { ownerId: profile.id, environment: snapshot.environment, generation };
   }
   async function submitDeletion(operation) {
     activeMutation = true;
@@ -191,6 +223,10 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     get exchangePage() { return exchangePage; },
     get exchangeDetail() { return exchangeDetail; },
     get friendsView() { return friendsView; },
+    get forumStatus() { return forumStatus; },
+    get forumPage() { return forumPage; },
+    get forumDetail() { return forumDetail; },
+    get forumReports() { return forumReports; },
     get pendingKind() { return pending?.kind || (pending ? 'assets' : null); },
     get hasConfirmedCheckout() { return !!confirmedCheckout && !!token && confirmedCheckout.accountId === profile?.id; },
     get deletionPrepared() { return !!deletionProposal; },
@@ -222,6 +258,47 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       const operation = { kind: 'friends', accountId: profile.id, environment: friendsView.environment, key: generateKey(),
         body: JSON.parse(JSON.stringify({ ...command, expectedVersion: friendsView.version })) };
       return submitFriends(operation);
+    },
+    async loadForumStatus() {
+      const context = forumReadContext(), read = ++forumStatusRead;
+      const value = await send('/forum/status', 'GET', undefined, true, '', false);
+      if (read !== forumStatusRead || context.generation !== generation) throw error('READ_SUPERSEDED', '社区状态已更新，请刷新。');
+      if (!isForumStatus(value, context.ownerId, context.environment)) throw error('SERVER_UNAVAILABLE', '社区状态未能确认，请重新读取。');
+      forumStatus = value;
+      if (!value.available) { forumPage = null; forumDetail = null; forumReports = null; forumPageRead++; forumDetailRead++; forumReportsRead++; }
+      return value;
+    },
+    async loadForumPage(scope = 'public', circle = 'all', cursor = 'start') {
+      const context = forumReadContext(cursor), read = ++forumPageRead;
+      if (!['public', 'mine'].includes(scope) || !['all', 'harvest', 'questions', 'chat'].includes(circle) || (scope === 'mine' && circle !== 'all')) throw error('INVALID_REQUEST', '社区分类无效。');
+      if (forumPage?.scope !== scope || forumPage?.circle !== circle) forumPage = null;
+      const value = await send(scope === 'mine' ? `/forum/mine/${cursor}` : `/forum/posts/${circle}/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== forumPageRead || context.generation !== generation) throw error('READ_SUPERSEDED', '社区列表已更新，请查看当前选择。');
+      if (!isForumPage(value, context.ownerId, context.environment, scope, circle) || value.items.some(item => item.id === cursor)) throw error('SERVER_UNAVAILABLE', '社区列表未能确认，请刷新。');
+      forumPage = value; return value;
+    },
+    async loadForumDetail(id, cursor = 'start') {
+      const context = forumReadContext(cursor), read = ++forumDetailRead;
+      if (!isForumId(id)) throw error('INVALID_REQUEST', '帖子编号无效。');
+      if (forumDetail?.post.id !== id) forumDetail = null;
+      const value = await send(`/forum/post/${id}/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== forumDetailRead || context.generation !== generation) throw error('READ_SUPERSEDED', '已选择其他帖子，请查看当前页面。');
+      if (!isForumDetail(value, context.ownerId, context.environment, id) || value.comments.some(item => item.id === cursor)) throw error('SERVER_UNAVAILABLE', '帖子内容未能确认，请刷新。');
+      forumDetail = value; return value;
+    },
+    async loadForumReports(cursor = 'start') {
+      const context = forumReadContext(cursor), read = ++forumReportsRead;
+      const value = await send(`/forum/reports/${cursor}`, 'GET', undefined, true, '', false);
+      if (read !== forumReportsRead || context.generation !== generation) throw error('READ_SUPERSEDED', '举报记录已更新，请刷新。');
+      if (!isForumReports(value, context.ownerId, context.environment) || value.items.some(item => item.id === cursor)) throw error('SERVER_UNAVAILABLE', '举报记录未能确认，请刷新。');
+      forumReports = value; return value;
+    },
+    async commandForum(command) {
+      requireSession(); requireIdle();
+      if (!snapshot) throw error('SNAPSHOT_REQUIRED', '请先同步当前田园，再操作社区。');
+      if (!isForumCommand(command)) throw error('INVALID_REQUEST', '请检查内容长度和格式，再提交审核。');
+      cancelAccountDeletion();
+      return submitForum({ kind: 'forum', accountId: profile.id, environment: snapshot.environment, key: generateKey(), body: JSON.parse(JSON.stringify(command)) });
     },
     async loadFarmPage(kind, cursor = 'start') {
       requireSession();
@@ -333,6 +410,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
       if (!pending) throw error('NO_PENDING_OPERATION', '没有需要核对的操作。');
       if (pending.accountId !== profile.id) throw error('ACCOUNT_MISMATCH', '请登录原来的账户，再核对上次操作。');
       if (pending.kind === 'friends') return submitFriends(pending);
+      if (pending.kind === 'forum') return submitForum(pending);
       return submit(pending, true);
     },
     async logout() {

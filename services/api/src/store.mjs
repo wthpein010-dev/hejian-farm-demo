@@ -8,6 +8,7 @@ import { normalizeFarmBatch } from '../../../shared/farm-records.mjs';
 import { createExchangePage, createExchangeDetail } from '../../../shared/exchanges.mjs';
 import { FARM_REGISTRY_SQL, createFarmRegistry, FarmRegistryError } from './farm-registry.mjs';
 import { FRIENDS_SQL, createFriends } from './friends.mjs';
+import { FORUM_SQL, createForum } from './forum.mjs';
 
 const require = createRequire(import.meta.url);
 const Systems = require('../../../prototype/systems.js');
@@ -20,6 +21,7 @@ const PRIVACY_CATEGORIES = [
   { id: 'history', title: '操作记录', description: '兑换和奖励回执、用于防止重复记账的操作记录' },
   { id: 'farm-records', title: '农场归属与观测记录', description: '归属档案、种养轮次及农场来源的观测历史' },
   { id: 'friends', title: '农友名片与关系', description: '主动开通的系统名片、双方申请及关系（合计最多200条）、主动屏蔽（最多200条）、上海日界每日20次新申请额度与防重复操作记录；关闭交友保留历史额度及最小操作确认，注销删除本人记录和双方引用' },
+  { id: 'forum', title: '社区内容与举报', description: '本人提交审核的帖子和评论、固定理由举报、每日额度与最小操作确认；关闭农友名片不撤回已发内容，本人可单独撤回，注销删除本人内容、子评论和相关举报' },
   { id: 'sessions', title: '登录会话', description: '会话摘要、有效期限与退出状态' },
 ];
 
@@ -40,6 +42,7 @@ export class FarmStore {
   #statements = new Map();
   #farmRegistry;
   #friends;
+  #forum;
 
   constructor(config) {
     this.#config = config;
@@ -47,7 +50,7 @@ export class FarmStore {
     this.#database = new DatabaseSync(config.databasePath);
     try {
       const schema = this.#prepare('PRAGMA user_version').get().user_version;
-      if (schema > 6) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
+      if (schema > 7) throw new Error('数据库schema版本高于服务支持版本，请勿降级启动');
       this.#database.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -106,10 +109,13 @@ export class FarmStore {
       );
       ${FARM_REGISTRY_SQL}
       ${FRIENDS_SQL}
-      PRAGMA user_version = 6;
+      ${FORUM_SQL}
+      PRAGMA user_version = 7;
     `);
       this.#farmRegistry = createFarmRegistry({ prepare: sql => this.#prepare(sql), environment: config.mode });
       this.#friends = createFriends({ prepare: sql => this.#prepare(sql), environment: config.mode });
+      this.#forum = createForum({ prepare: sql => this.#prepare(sql), environment: config.mode,
+        blockFromForum: (ownerId, peerOwnerId, now) => this.#friends.blockFromForum(ownerId, peerOwnerId, now) });
     } catch (error) { this.#database.close(); this.#statements.clear(); throw error; }
   }
 
@@ -296,6 +302,15 @@ export class FarmStore {
     return this.#transaction(() => this.#friends.command(this.#user(userId), key, input, now));
   }
 
+  forumStatus(userId, now) { return this.#transaction(() => this.#forum.status(this.#user(userId), now)); }
+  forumPage(userId, circle = 'all', cursor = 'start', now) { return this.#transaction(() => this.#forum.page(this.#user(userId), circle, cursor, now)); }
+  forumMine(userId, cursor = 'start', now) { return this.#transaction(() => this.#forum.page(this.#user(userId), 'all', cursor, now, 'mine')); }
+  forumDetail(userId, id, cursor = 'start', now) { return this.#transaction(() => this.#forum.detail(this.#user(userId), id, cursor, now)); }
+  forumReports(userId, cursor = 'start', now) { return this.#transaction(() => this.#forum.reports(this.#user(userId), cursor, now)); }
+  forumCommand(userId, key, input, now) { return this.#transaction(() => this.#forum.command(this.#user(userId), key, input, now)); }
+  forumModerationQueue(now, state = 'pending') { return this.#transaction(() => this.#forum.moderationQueue(now, state)); }
+  applyForumModeration(batch, now) { return this.#transaction(() => this.#forum.applyModeration(batch, now)); }
+
   prepareDeletion(userId, token, expectedRevision, now) {
     return this.#transaction(() => {
       const sessionHash = hash(token), session = this.#session(sessionHash, now);
@@ -334,6 +349,7 @@ export class FarmStore {
       this.#prepare('DELETE FROM idempotency WHERE user_id = ?').run(row.id);
       this.#prepare('DELETE FROM deletion_confirmations WHERE user_id = ?').run(row.id);
       this.#farmRegistry.deleteOwner(row.id);
+      this.#forum.deleteOwner(row.id);
       this.#friends.deleteOwner(row.id, now);
       this.#prepare('DELETE FROM users WHERE id = ?').run(row.id);
       this.#prepare('INSERT INTO deletion_receipts (token_hash, completed_at) VALUES (?, ?)').run(tokenHash, now);

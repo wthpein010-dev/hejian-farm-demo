@@ -5,6 +5,7 @@ import ts from 'typescript';
 import * as vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
+import * as navigation from '../apps/mobile/src/core/navigation.mjs';
 
 const sourceFile = path => new URL(`../apps/mobile/src/${path}`, import.meta.url);
 function evaluate(source, imports, globals = {}) {
@@ -18,7 +19,7 @@ async function component(path, imports = {}, globals = {}) {
   const source = (await readFile(sourceFile(path), 'utf8')).replace(/<!-- #ifndef H5 -->[\s\S]*?<!-- #endif -->/g, '');
   const descriptor = parse(source).descriptor;
   const script = compileScript(descriptor, { id: path, inlineTemplate: true, templateOptions: { compilerOptions: { isCustomElement: tag => ['view', 'text', 'image'].includes(tag) } } }).content;
-  return evaluate(script, { vue, ...imports }, { HTMLElement: class {}, document: { activeElement: null }, ...globals }).default;
+  return evaluate(script, { vue, '../core/navigation.mjs': navigation, ...imports }, { HTMLElement: class {}, document: { activeElement: null }, ...globals }).default;
 }
 function mount(component, props = {}) {
   const renderer = vue.createRenderer({
@@ -45,7 +46,7 @@ const button = await component('components/FarmButton.vue');
 async function home(overrides = {}) {
   const state = vue.reactive({ authenticated: true, snapshot: mobileSnapshot(), busy: false, pending: false, message: '', error: '', confirmedCheckout: false, ...overrides });
   const mutations = [], actions = [];
-  const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openFriends: () => actions.push('friends'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
+  const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openFriends: () => actions.push('friends'), openCommunity: () => actions.push('community'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
   const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': button, './FarmNavigation.vue': invisible });
   const empty = await component('components/EmptyPanel.vue');
   const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty });
@@ -79,7 +80,8 @@ test('Home renders a labeled photography cover and uses the existing account sig
     h.state.snapshot.signIn.todayClaimed = true; h.state.snapshot.signIn.streak = 1; await vue.nextTick();
     const claimed = h.findButton('今日已签到，明天再来'); assert.equal(claimed.props.disabled, true);
     activate(claimed); assert.equal(h.mutations.length, 1, 'confirmed sign-in is unavailable for a second tap');
-    assert.match(h.text(h.root), /论坛、发帖、消息及邀请奖励仍待接入/);
+    assert.match(h.text(h.root), /帖子与评论通过审核才公开/);
+    assert.ok(h.text(h.root).indexOf('进入田园圈子') < h.text(h.root).indexOf('今日活动'));
     activate(h.findButton('查看我的农友')); assert.deepEqual(h.actions, ['friends']); assert.equal(h.mutations.length, 1, 'opening friends does not award points or submit a relation');
     assert.deepEqual(h.warnings, []);
   } finally { h.close(); }
@@ -91,8 +93,8 @@ test('unopened production activities offer only friends status navigation withou
   try {
     assert.match(h.text(h.root), /活动暂未开放/);
     assert.match(h.text(h.root), /正式服务暂未开放/);
-    assert.match(h.text(h.root), /论坛、发帖、消息及邀请奖励仍待接入/);
-    assert.equal(h.buttons().length, 1, 'only navigation to the closed friends status page is available');
+    assert.match(h.text(h.root), /帖子与评论通过审核才公开/);
+    assert.equal(h.buttons().length, 2, 'only navigation to closed social status pages is available');
     activate(h.findButton('查看我的农友')); assert.deepEqual(h.actions, ['friends']);
     assert.deepEqual(h.mutations, []);
   } finally { h.close(); }

@@ -9,6 +9,8 @@ import { ClientAddressError } from './client-address.mjs';
 import { FarmRegistryError } from './farm-registry.mjs';
 import { ExchangeCursorError, isExchangeId } from '../../../shared/exchanges.mjs';
 import { isFriendCommand } from '../../../shared/friends.mjs';
+import { isForumCommand, isForumId } from '../../../shared/forum.mjs';
+import { ForumError } from './forum.mjs';
 
 const BODY_LIMIT = 16 * 1024;
 const PREFIX = '/api/v1';
@@ -195,6 +197,28 @@ export function createApp(options = {}) {
         if (store.authenticate(token, instant) !== userId) throw new RequestError(401, 'UNAUTHENTICATED', '登录已失效，请重新登录');
         return instant;
       };
+      if (route === '/forum/commands') {
+        if (request.method !== 'POST') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受POST请求');
+        const key = request.headers['idempotency-key'];
+        if (typeof key !== 'string' || !SAFE_ID.test(key)) throw invalid();
+        const body = await jsonBody(request); if (!isForumCommand(body)) throw invalid();
+        send(200, { data: store.forumCommand(userId, key, body, refreshSession()) }); return;
+      }
+      if (route.startsWith('/forum/')) {
+        if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
+        let result;
+        const posts = /^\/forum\/posts\/(all|harvest|questions|chat)\/([^/]+)$/.exec(route);
+        const mine = /^\/forum\/mine\/([^/]+)$/.exec(route), reports = /^\/forum\/reports\/([^/]+)$/.exec(route);
+        const detail = /^\/forum\/post\/([^/]+)\/([^/]+)$/.exec(route);
+        if (route === '/forum/status') result = store.forumStatus(userId, refreshSession());
+        else if (posts) result = store.forumPage(userId, posts[1], posts[2], refreshSession());
+        else if (mine) result = store.forumMine(userId, mine[1], refreshSession());
+        else if (reports) result = store.forumReports(userId, reports[1], refreshSession());
+        else if (detail && isForumId(detail[1])) result = store.forumDetail(userId, detail[1], detail[2], refreshSession());
+        else throw new RequestError(404, 'NOT_FOUND', '请求的服务不存在');
+        if (!result) throw new RequestError(404, 'NOT_FOUND', '未找到此社区内容');
+        send(200, { data: result }); return;
+      }
       if (route === '/friends') {
         if (request.method !== 'GET') throw new RequestError(405, 'METHOD_NOT_ALLOWED', '此服务只接受GET请求');
         send(200, { data: store.friendsView(userId, refreshSession()) }); return;
@@ -291,6 +315,7 @@ export function createApp(options = {}) {
       if (error instanceof ClientAddressError) send(400, { error: { code: 'INVALID_PROXY_HEADER', message: '代理转发信息无效，请联系服务维护人员' } });
       else if (error instanceof ExchangeCursorError) send(400, { error: { code: error.code, message: error.message } });
       else if (error instanceof FarmRegistryError && error.code === 'NOT_FOUND') send(404, { error: { code: error.code, message: error.message } });
+      else if (error instanceof ForumError && error.code === 'INVALID_CURSOR') send(400, { error: { code: 'INVALID_REQUEST', message: '社区请求无效，请刷新后重试' } });
       else if (error instanceof RequestError) send(error.status, { error: { code: error.code, message: error.message } });
       else send(500, { error: { code: 'INTERNAL_ERROR', message: '服务暂不可用，请稍后重试；可向运营方提供请求编号' } });
     }

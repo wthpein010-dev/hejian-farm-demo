@@ -63,3 +63,19 @@ export interface FriendCommandReceipt {
   friendsFormat: 1; ownerId: string; environment: 'development' | 'production'; operationKey: string; action: FriendAction;
   outcome: 'applied' | 'refused'; code: string; completedAt: number;
 }
+export type ForumCircle = 'harvest' | 'questions' | 'chat';
+export type ForumReason = 'spam' | 'abuse' | 'privacy' | 'misinformation' | 'other';
+export type ForumState = 'pending' | 'published' | 'rejected' | 'hidden' | 'withdrawn';
+export interface ForumContent {
+  id: string; kind: 'post' | 'comment'; parentId: string | null; circle: ForumCircle;
+  author: { peerId: string; alias: string; self: boolean }; title: string; body: string;
+  state: ForumState; version: number; createdAt: number; updatedAt: number; publishedAt: number | null; reasonCode: string | null;
+}
+export interface ForumScope { forumFormat: 1; ownerId: string; environment: 'development' | 'production'; serverTime: number; }
+export interface ForumStatus extends ForumScope { available: boolean; canPost: boolean; alias: string | null; limits: { posts: number; comments: number; reports: number; active: number }; usage: { posts: number; comments: number; reports: number }; }
+export interface ForumPage extends ForumScope { scope: 'public' | 'mine'; circle: 'all' | ForumCircle; items: ForumContent[]; nextCursor: string | null; }
+export interface ForumDetail extends ForumScope { post: ForumContent; comments: ForumContent[]; nextCursor: string | null; }
+export interface ForumReport { id: string; contentId: string; kind: 'post' | 'comment'; reason: ForumReason; status: 'open' | 'resolved'; resolution: null | 'dismissed' | 'hidden' | 'withdrawn'; version: number; createdAt: number; resolvedAt: number | null; }
+export interface ForumReports extends ForumScope { items: ForumReport[]; nextCursor: string | null; }
+export type ForumCommand = { action: 'submit-post'; circle: ForumCircle; title: string; body: string } | { action: 'submit-comment'; postId: string; expectedVersion: number; body: string } | { action: 'withdraw' | 'block-author'; contentId: string; expectedVersion: number } | { action: 'report'; contentId: string; expectedVersion: number; reason: ForumReason };
+export interface ForumReceipt { forumFormat: 1; ownerId: string; environment: 'development' | 'production'; operationKey: string; action: ForumCommand['action']; outcome: 'applied' | 'refused'; code: string; contentId: string | null; completedAt: number; }

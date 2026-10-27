@@ -6,6 +6,7 @@ import * as vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
 import * as exchanges from '../shared/exchanges.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
+import * as navigation from '../apps/mobile/src/core/navigation.mjs';
 
 const sourceFile = path => new URL(`../apps/mobile/src/${path}`, import.meta.url);
 const receiptId = n => `shop-api-${n.toString(16).padStart(64, '0')}`;
@@ -21,6 +22,7 @@ function state(overrides = {}) {
 function evaluate(source, imports, globals = {}) {
   const code = ts.transpile(source, { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS });
   return new Function('require', 'exports', ...Object.keys(globals), `${code}\nreturn exports;`)(name => {
+    if (name === '../core/navigation.mjs') return navigation;
     assert.ok(imports[name], `explicit import ${name}`); return name.endsWith('.vue') ? { default: imports[name] } : imports[name];
   }, {}, ...Object.values(globals));
 }

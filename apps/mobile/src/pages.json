@@ -59,6 +59,14 @@
       "style": { "navigationBarTitleText": "我的农友" }
     },
     {
+      "path": "pages/community/index",
+      "style": { "navigationBarTitleText": "田园圈子" }
+    },
+    {
+      "path": "pages/forum-post/index",
+      "style": { "navigationBarTitleText": "圈子帖子" }
+    },
+    {
       "path": "pages/inventory/index",
       "style": {
         "navigationBarTitleText": "我的仓库"

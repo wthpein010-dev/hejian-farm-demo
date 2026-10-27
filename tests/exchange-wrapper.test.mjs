@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 import * as vue from 'vue';
+import * as appNavigation from '../apps/mobile/src/core/navigation.mjs';
 import * as clientModule from '../apps/mobile/src/core/client.mjs';
 import { createExchangePage, createExchangeDetail } from '../shared/exchanges.mjs';
 import { mobileSnapshot } from './helpers/mobile-snapshot.mjs';
@@ -22,7 +23,7 @@ async function harness() {
   } });
   const source = await readFile(new URL('../apps/mobile/src/core/farm.ts', import.meta.url), 'utf8');
   const code = ts.transpile(source.replaceAll('import.meta.env', '__testEnv'), { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS });
-  const imports = { vue, './client.mjs': { ...clientModule, createFarmClient: () => client } };
+  const imports = { vue, './client.mjs': { ...clientModule, createFarmClient: () => client }, './navigation.mjs': appNavigation };
   const core = new Function('require', 'exports', '__testEnv', 'uni', 'getCurrentPages', `${code}\nreturn exports;`)(name => { assert.ok(imports[name], `explicit import ${name}`); return imports[name]; }, {}, { DEV: true }, {
     navigateTo: options => navigation.push(['to', options.url]), navigateBack: options => navigation.push(['back', options.delta]), switchTab: options => navigation.push(['tab', options.url])
   }, () => pages);

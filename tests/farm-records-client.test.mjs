@@ -7,6 +7,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 import * as vue from 'vue';
+import * as navigation from '../apps/mobile/src/core/navigation.mjs';
 
 const now = 1793044800000;
 const ok = data => ({ status: 200, data: { data } });
@@ -42,12 +43,12 @@ function evaluateTypeScript(source, imports, globals = {}, exposed = '') {
   const code = ts.transpile(source.replaceAll('import.meta.env', '__testEnv') + exposed, { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS });
   const exports = {};
   return new Function('require', 'exports', '__testEnv', ...Object.keys(globals), `${code}\nreturn exports;`)(
-    name => { assert.ok(imports[name], `explicit import ${name}`); return imports[name]; }, exports,
+    name => { if (name === '../core/navigation.mjs') return navigation; assert.ok(imports[name], `explicit import ${name}`); return imports[name]; }, exports,
     { VITE_API_BASE_URL: 'http://127.0.0.1:8787', DEV: true }, ...Object.values(globals));
 }
 async function coreHarness(h, globals = {}) {
   const source = await readFile(new URL('../apps/mobile/src/core/farm.ts', import.meta.url), 'utf8');
-  return evaluateTypeScript(source, { vue, './client.mjs': { ...farmClient, createFarmClient: () => h.client } }, globals);
+  return evaluateTypeScript(source, { vue, './client.mjs': { ...farmClient, createFarmClient: () => h.client }, './navigation.mjs': navigation }, globals);
 }
 function historyPage(version, eventVersions, nextBeforeVersion = null) {
   const current = record('record-0001', { version });

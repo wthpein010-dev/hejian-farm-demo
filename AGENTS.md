@@ -70,6 +70,16 @@ API运维归属 `services/api/src/operations.mjs`：日志只输出固定模板�
 
 客户端复用唯一会话/待核对槽，社交回复不进入财务Snapshot，通用4xx/429/5xx不能丢未知key。列表/申请有界但命令账仍增长，不能静默裁剪历史；正式开放前仍需容量/保留、最新撤销删除记录、生产隐私及平台/真机证据。本轮不迁移用户运行库。
 
+## 持久论坛实现
+
+来源：2026-10-27持续上线目标及论坛/社交需求。契约见[FORUM](docs/release/FORUM.md)，计划`.scratch/durable-forum/`。`shared/forum.mjs`拥有严格DTO/文字/动作/审核批次与队列校验；`services/api/src/forum.mjs`拥有schema7五表、预审状态、分页、额度、最小命令账及无UGC审核元数据，备份共用DDL/索引和数据校验。帖子/评论先pending，明确审核后published；本人撤回擦除原帖及子评论文本，旧key/旧审核不能复活。陌生作者屏蔽仅凭当前可见内容，调用friends私有blockFromForum，同一事务影响双方关系与可见性。
+
+命令先原回执/原批次再查版本；举报审核同时核对report和content版本。审核队列私有parents上下文最多40项；隐藏原帖下仍可拒绝/隐藏评论，批准/恢复须原帖公开。金融Snapshot/revision、财务原回执及奖励不变。production与非沙盒关闭，不以CLI测试冒充真实运营审核。
+
+`tools/moderate-forum.mjs`仅明确既有schema7 DB；数据库/所在目录/输入文件/输出目录须私有，复用只读inspectApplicationDatabase后才打开写Store。新输出不覆盖/追链接，stdout仅固定结果/计数，operatorId为标签非人员认证。UGC仅在当前内容表与显式私有审阅文件，不进账/日志/URL/storage；墓碑/命令/审核历史仍增长，生产容量/保留和最新撤销删除清单待验。
+
+跨端FarmTextField拥有H5原生label/input/textarea与非H5焦点；FarmForumActions/FarmDraftNotice及core/navigation+forum-draft统一拥有确认和草稿保护。全局快捷入口也须走同一导航保护，不允许经收据/主导航静默丢稿。全部验收用合成数据，不迁移运行库；原H5仍为内存论坛。
+
 ## 兑换记录实现
 
 shared/exchanges.mjs拥有严格只读历史投影、资源标签与wire校验；三账户GET接口读取原purchase，不改schema/revision/经济规则。client.mjs保留已确认checkout原key定位收据，pending协议不变；farm.ts统一账户清理、读取代际、分页聚合及导航栈复用。FarmGoodsPhoto为商城/收据/仓库照片白名单入口，微信需virtualHost/shared保持列宽。分页仅限制响应，不解决整体JSON历史容量。公开Pages仍为prototype，无生产API。

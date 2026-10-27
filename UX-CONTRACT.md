@@ -54,7 +54,7 @@ FarmCommunity复用app唯一dialog/frame/toast及输入/焦点恢复，FarmSocia
 | Navigation | H5：app 主状态与 expansion；跨端：FarmNavigation／pages.json | docs/PRODUCT.md；DESIGN.md | 五入口，首页农田／牧场，商城三分类 | 返回、选中、标题和焦点 |
 | Button | H5：原生 button／a 与共享 CSS；跨端：FarmButton | DESIGN.md；本文交互约定 | 主／次、领取、停止、busy | 48px、键盘、禁用无效 |
 | Iconography | H5：prototype/ui.js；跨端：共享导航及场景资产 | DESIGN.md | 操作状态SVG图标、统一摄影资产 | 同族语言与中文操作名称 |
-| Form | H5：原生 label 输入与 app 校验；跨端：profile 的联调账户输入 | docs/PRODUCT.md；docs/release/API-CONTRACT.md | 示例邮寄、对象／时长选择、开发身份 | 中文校验、焦点、不收真实地址 |
+| Form | H5原型：原生label与app校验；跨端论坛：FarmTextField；既有profile/农友输入延续各自适配 | docs/PRODUCT.md；docs/release/API-CONTRACT.md；docs/release/FORUM.md | 示例邮寄、开发身份、农友码、论坛单行/多行 | 中文校验/原生焦点/实例ID、草稿守卫、不收真实地址 |
 | Dialog | H5：唯一原生 dialog／frame；跨端：cart 文档流内确认区 | 本文确认与焦点约定 | H5 模态；跨端内联确认 | Escape、关闭、焦点恢复、短屏 |
 | Toast | H5：app 共享 status；跨端：FarmScreen 状态／错误区域 | 本文反馈约定；docs/release/API-CONTRACT.md | 普通、成功、警告、未知结果 | 去重、不抢焦点、关键状态常驻 |
 | Domain rules | prototype/domain.js 的纯规则 | docs/PRODUCT.md | 推荐、照料资格／间隔、福利、邮寄脱敏 | 重复、边界、资格与状态一致 |
@@ -208,6 +208,14 @@ toast 固定位置、统一时长、同类去重，以 status 温和播报，不
 依据：[账户API契约](docs/release/API-CONTRACT.md)“账户积分兑换记录”。FarmScreen/FarmButton、core/client.mjs和core/farm.ts统一拥有读取状态、账户清理、确认收据与导航，页面不复制钱包或恢复协议。商城和“我的”可进完整记录与当前仓库；详情底部归“我的”，返回使用既有栈保留已加载列表，直接进入时回“我的”。
 
 记录最近优先，每次20笔、显式“加载更早记录”和“刷新记录”；读取失败保留合法旧页并持续解释。收据显示原值和兑换日期，不虚构时分；本笔发放与当前仓库分开。成功checkout按原key查收据，URL只允许白名单id或operation=last；未知结果核对入口始终由FarmScreen拥有，不自动重兑。详情隐藏打开自身的确认入口；401、换账户及退出清理全部私有视图，迟到响应失效。库存饲料取wallet.feed，其他资源取system.inventory；物资照片与商城复用统一白名单并标明AI摄影示意。
+
+## 跨端论坛预审
+
+依据[FORUM](docs/release/FORUM.md)，主页社区入口、community列表/我的内容/举报和forum-post详情共用core-client/farm桥及唯一pending。帖子/评论显示待审/已公开/未通过/已隐藏/已撤回真实状态；纯文本插值，不执行HTML。投稿/评论不因回车或输入法候选自动发送，未开通给农友入口；关闭名片不冒充撤回论坛内容。
+
+Canonical Form为FarmTextField：H5原生label/input/textarea，非H5平台焦点，实例ID避免隐藏栈页面抢焦；错误保留草稿并定位，清除/输入不外发。FarmForumActions拥有举报/撤回/作者屏蔽的文档流确认，安全返回默认焦点，隐藏时清状态；FarmDraftNotice及core/navigation/forum-draft拥有离开草稿保护，包含底部导航和全局收据快捷入口。App原生导航不能拦截时在脏草稿阶段隐藏，需明确返回保护；真机另验。
+
+列表和评论按20项显式加载；共享pagination-focus只有键盘触发且末页按钮消失时移至结果计数，指针/读取失败/主动移焦不抢焦点。好友与论坛写操作同步作废相关域的私有缓存、读取代际与旧反馈，版本下限不降；忙碌期间切页若读取被跳过，显示刷新恢复入口，不留被屏蔽旧内容。命令确认后另读，不凭过去回执恢复当前正文或关系。
 
 ## 跨端持久农友
 

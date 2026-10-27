@@ -152,7 +152,18 @@ export function createFriends({ prepare, environment }) {
     prepare('DELETE FROM friends_commands WHERE environment = ? AND owner_id = ?').run(environment, id);
     prepare('DELETE FROM friends_profiles WHERE environment = ? AND owner_id = ?').run(environment, id);
   }
-  return { view, command, deleteOwner };
+  // Only the forum's verified, currently visible content path calls this seam.
+  // It accepts internal owners, never an arbitrary public author supplied by HTTP.
+  function blockFromForum(ownerId, peerOwnerId, now) {
+    const a = profile(ownerId), b = profile(peerOwnerId);
+    if (!a?.enabled || !b || ownerId === peerOwnerId) throw new Error('Forum block target unavailable');
+    if (prepare('SELECT 1 FROM friends_blocks WHERE environment = ? AND owner_id = ? AND peer_id = ?').get(environment, ownerId, peerOwnerId)) return 'OK';
+    if (prepare('SELECT COUNT(*) AS n FROM friends_blocks WHERE environment = ? AND owner_id = ?').get(environment, ownerId).n >= 200) return 'BLOCK_LIMIT';
+    deleteRelation(ownerId, peerOwnerId);
+    prepare('INSERT INTO friends_blocks (environment, owner_id, peer_id, created_at) VALUES (?, ?, ?, ?)').run(environment, ownerId, peerOwnerId, now);
+    bump([ownerId, peerOwnerId], now); return 'OK';
+  }
+  return { view, command, deleteOwner, blockFromForum };
 }
 
 export function validateFriendsDatabase(db, now) {

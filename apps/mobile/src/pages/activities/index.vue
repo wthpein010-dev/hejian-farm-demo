@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import FarmScreen from '../../components/FarmScreen.vue';
 import EmptyPanel from '../../components/EmptyPanel.vue';
-import { farmState as state, onFarmPageShow, mutateFarm, rewardLabel, openShop, openFriends } from '../../core/farm';
+import { farmState as state, onFarmPageShow, mutateFarm, rewardLabel, openShop, openFriends, openCommunity } from '../../core/farm';
 const tab = ref<'today' | 'growth'>('today');
 const sign = computed(() => state.snapshot?.signIn);
 const claimed = computed(() => !sign.value ? 0 : sign.value.todayClaimed ? ((sign.value.streak - 1) % 7) + 1 : sign.value.streak % 7);
@@ -19,7 +19,7 @@ onShow(onFarmPageShow);
       <view class="home-cover-copy"><text class="home-cover-kicker">禾间 · 田园日常</text><view class="home-cover-title">把日常，过成丰收。</view><text class="home-cover-description">签到、照料、收获，慢慢积累。</text></view>
       <text class="home-cover-source">AI摄影示意 · 非实拍、非直播</text>
     </view>
-    <view class="panel home-community-note"><text class="home-section-kicker">田园会客厅</text><view class="section-heading">我的农友</view><text class="body-copy">交换农友码，双方确认后建立关系。目前仅在开发沙盒联调，正式服务暂未开放。</text><FarmButton class="action" @tap="openFriends">查看我的农友</FarmButton><text class="helper">论坛、发帖、消息及邀请奖励仍待接入。</text></view>
+    <view class="panel home-community-note"><text class="home-section-kicker">田园会客厅</text><view class="section-heading">田园圈子与农友</view><text class="body-copy">分享种养见闻，交流丰收喜悦。社区和农友目前仅在开发沙盒联调，正式服务暂未开放。</text><FarmButton class="action" @tap="openCommunity">进入田园圈子</FarmButton><FarmButton class="action secondary" @tap="openFriends">查看我的农友</FarmButton><text class="helper">帖子与评论通过审核才公开；消息、邀请奖励仍待接入。</text></view>
     <EmptyPanel v-if="!state.snapshot?.capabilities.activities" title="活动暂未开放" description="活动安排核定后，会在这里公布参与条件和奖励。" />
     <template v-else>
       <view class="tabs" role="group" aria-label="活动内容"><FarmButton :class="{ active: tab === 'today' }" :aria-pressed="tab === 'today'" @tap="tab = 'today'">今日活动</FarmButton><FarmButton :class="{ active: tab === 'growth' }" :aria-pressed="tab === 'growth'" @tap="tab = 'growth'">成长成就</FarmButton></view>

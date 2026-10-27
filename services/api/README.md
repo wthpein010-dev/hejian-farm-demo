@@ -2,7 +2,7 @@
 
 Node.js 24，使用内置 HTTP、SQLite 和 crypto，无第三方运行依赖。对应 [API v1 契约](../../docs/release/API-CONTRACT.md)。此服务建立持久账户、资产和事务的联调闭环，并实现微信／抖音官方身份 HTTP 适配代码；当前尚未使用真实凭据完成官方联调，也未接入真实农场、支付、广告或物流。
 
-当前数据库schema5增加[账户归属档案与观测](../../docs/release/FARM-RECORDS.md)，金融回执继续使用schema4引入的[无损格式](RECEIPTS.md)，兼容旧原始JSON；备份支持schema2/3/4/5。原key的历史结果保持不变，旧服务不得打开新格式库或手工降级版本。
+当前数据库schema7包含[归属档案](../../docs/release/FARM-RECORDS.md)、[持久农友](../../docs/release/FRIENDS.md)及[论坛预审](../../docs/release/FORUM.md)；金融回执沿用schema4的[无损格式](RECEIPTS.md)，兼容旧原始JSON，备份支持schema2–7。论坛/农友仅开发沙盒开放，原金融key结果不变，旧服务不得打开新格式库或手工降级版本。
 
 ## 本地启动
 
@@ -88,6 +88,8 @@ development 沙盒初始 80 积分、6 份饲料与样本库存，仅用于联�
 production 平台账户的积分商城和活动同样关闭，须在真实经营规则与生产履约确认后另行实现能力启用。不能仅通过切换 `FARM_MODE` 将沙盒库存或演示奖励当作真实运营。
 
 ## 嵌入与测试接口
+
+论坛帖子与评论先待审、通过后公开，支持作者撤回、举报状态和凭可见内容屏蔽陌生作者，详见[FORUM](../../docs/release/FORUM.md)。`tools/moderate-forum.mjs`仅对明确既有schema7/私有目录操作，队列写私有新文件、审核批次原子提交，stdout不含正文。操作标签不等同真实人员认证，没有管理HTTP或production开启开关。
 
 schema6新增独立农友名片/关系/屏蔽及最小命令账，`GET /friends`与`POST /friends/commands`以服务器账户、环境和独立expectedVersion为准；原回执查找优先，旧命令不能复活已清关系。仅开发身份的development沙盒开放，真实平台身份及production均关闭。它不改变金融资产/revision或授权好友访问私人农场。名片开通、限额、注销与备份及未完成的生产门槛见[FRIENDS](../../docs/release/FRIENDS.md)。
 

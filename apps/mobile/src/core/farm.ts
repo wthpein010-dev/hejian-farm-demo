@@ -1,5 +1,8 @@
 import { reactive } from 'vue';
 import { createFarmClient, mergeFarmPages, mergeFarmDetails, mergeExchangePages, isExchangeId } from './client.mjs';
+import { isForumId } from './client.mjs';
+import { requestNavigation } from './navigation.mjs';
+import type { ForumStatus, ForumPage, ForumDetail, ForumReports, ForumCommand, ForumReceipt, ForumState, ForumCircle, ForumReason } from './types';
 import type { Snapshot, PrivacyReport, FarmRegistryPage, FarmRegistryDetail, FarmRegistryKind, FarmRecord, FarmRecordStatus, ExchangePage, ExchangeDetail, FriendsView, FriendCommand, FriendCommandReceipt } from './types';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : '');
@@ -17,6 +20,9 @@ export const farmState = reactive({
   exchangeHistory: null as ExchangePage | null, exchangeRecord: null as ExchangeDetail | null,
   exchangeHistoryBusy: false, exchangeHistoryError: '', exchangeRecordBusy: false, exchangeRecordError: '', confirmedCheckout: false,
   friends: null as FriendsView | null, friendsBusy: false, friendsError: '', friendsMessage: '',
+  forumStatus: null as ForumStatus | null, forumPage: null as ForumPage | null, forumDetail: null as ForumDetail | null, forumReports: null as ForumReports | null,
+  forumBusy: false, forumError: '', forumMessage: '', forumDetailBusy: false, forumDetailError: '',
+  forumSubmission: null as { action: 'submit-post' | 'submit-comment' } | null,
   error: '', message: '', pending: false, configured: client.configured
 });
 // Production bundles never include an enabled development sign-in path.
@@ -30,6 +36,19 @@ provider = 'toutiao';
 // #endif
 export const platformProvider = provider as 'weixin' | 'toutiao' | null;
 let registryRead = 0, detailRead = 0, exchangeHistoryRead = 0, exchangeRecordRead = 0, friendsRead = 0, exchangeSelection = '', synchronizedProfile: unknown = null;
+let forumRead = 0, forumDetailRead = 0, forumSelection = { scope: 'public' as 'public' | 'mine' | 'reports', circle: 'all' as 'all' | ForumCircle }, forumPostId = '';
+function invalidateForumViews(message = '') {
+  forumRead++; forumDetailRead++;
+  farmState.forumStatus = null; farmState.forumPage = null; farmState.forumDetail = null; farmState.forumReports = null;
+  farmState.forumBusy = false; farmState.forumDetailBusy = false;
+  farmState.forumError = message; farmState.forumDetailError = message; farmState.forumMessage = '';
+}
+function invalidateFriendsView(message = '') {
+  friendsRead++; farmState.friends = null; farmState.friendsBusy = false;
+  farmState.friendsError = message; farmState.friendsMessage = '';
+}
+const forumRelationRefresh = '农友关系可能已变化，请刷新社区核对当前可见内容。';
+const friendRelationRefresh = '农友关系可能已变化，请刷新农友列表核对当前关系。';
 function syncClientState() {
   if (synchronizedProfile !== client.profile || !client.authenticated) {
     synchronizedProfile = client.profile; registryRead++; detailRead++;
@@ -41,6 +60,9 @@ function syncClientState() {
     farmState.exchangeHistoryBusy = false; farmState.exchangeRecordBusy = false;
     farmState.exchangeHistoryError = ''; farmState.exchangeRecordError = '';
     friendsRead++; farmState.friends = null; farmState.friendsBusy = false; farmState.friendsError = ''; farmState.friendsMessage = '';
+    forumRead++; forumDetailRead++; farmState.forumStatus = null; farmState.forumPage = null; farmState.forumDetail = null; farmState.forumReports = null;
+    farmState.forumBusy = false; farmState.forumDetailBusy = false; farmState.forumError = ''; farmState.forumDetailError = ''; farmState.forumMessage = ''; forumPostId = '';
+    farmState.forumSubmission = null;
   }
   farmState.snapshot = client.snapshot as Snapshot | null;
   farmState.privacy = client.privacy as PrivacyReport | null;
@@ -53,6 +75,10 @@ function syncClientState() {
   if (!client.exchangePage) farmState.exchangeHistory = null;
   if (!client.exchangeDetail) farmState.exchangeRecord = null;
   if (!client.friendsView) farmState.friends = null;
+  if (!client.forumStatus) farmState.forumStatus = null;
+  if (!client.forumPage) farmState.forumPage = null;
+  if (!client.forumDetail) farmState.forumDetail = null;
+  if (!client.forumReports) farmState.forumReports = null;
 }
 
 async function run(operation: () => Promise<unknown>, message = '') {
@@ -71,7 +97,8 @@ export const retryFarmOperation = () => {
   return run(async () => {
     const result = await client.retryPending();
     if (kind === 'friends') await completeFriendsCommand(result as FriendCommandReceipt);
-  }, kind === 'friends' ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
+    if (kind === 'forum') await completeForumCommand(result as ForumReceipt);
+  }, ['friends', 'forum'].includes(kind || '') ? '' : farmState.pendingCanRetryWithoutAuth ? '账户已注销，全部登录已失效。' : '上次操作已核对，请查看最新资产。');
 };
 export const loadFarmPrivacy = () => run(() => client.loadPrivacy());
 export const prepareFarmDeletion = () => run(() => client.prepareAccountDeletion());
@@ -111,6 +138,7 @@ export async function loadFarmFriends() {
 }
 async function completeFriendsCommand(receipt: FriendCommandReceipt) {
   syncClientState();
+  invalidateForumViews(forumRelationRefresh);
   if (receipt.outcome === 'applied') farmState.friendsMessage = friendSuccess[receipt.action];
   else farmState.friendsMessage = friendRefusal[receipt.code] || '这次操作未能完成，请刷新后核对。';
   // Receipt confirmation is final even when the separate current-view read fails.
@@ -118,12 +146,85 @@ async function completeFriendsCommand(receipt: FriendCommandReceipt) {
 }
 export async function commandFarmFriends(command: FriendCommand) {
   if (farmState.busy || farmState.pending) return false;
-  friendsRead++; farmState.friendsBusy = false; farmState.friendsMessage = ''; farmState.friendsError = '';
+  invalidateFriendsView(); invalidateForumViews(forumRelationRefresh);
   let applied = false;
   const confirmed = await run(async () => {
     const receipt = await client.commandFriends(command) as FriendCommandReceipt;
     applied = receipt.outcome === 'applied'; await completeFriendsCommand(receipt);
   });
+  return confirmed && applied;
+}
+export const forumCircles: Array<{ id: 'all' | ForumCircle; title: string }> = [{ id: 'all', title: '全部圈子' }, { id: 'harvest', title: '丰收分享' }, { id: 'questions', title: '种养问答' }, { id: 'chat', title: '田园闲聊' }];
+export const forumReasons: Array<{ id: ForumReason; title: string }> = [{ id: 'spam', title: '广告刷屏' }, { id: 'abuse', title: '辱骂攻击' }, { id: 'privacy', title: '泄露隐私' }, { id: 'misinformation', title: '不实信息' }, { id: 'other', title: '其他违规' }];
+export function forumStateLabel(value: ForumState) { return { pending: '待审核，仅自己可见', published: '已公开', rejected: '审核未通过', hidden: '已隐藏', withdrawn: '已撤回，正文已清除' }[value]; }
+export function forumCircleLabel(value: ForumCircle) { return forumCircles.find(circle => circle.id === value)?.title || '田园圈子'; }
+const forumRefusals: Record<string, string> = { FORUM_UNAVAILABLE: '社区暂未开放。', FRIENDS_DISABLED: '请先开通农友名片，再参与社区。', CONTENT_UNAVAILABLE: '内容已不可用，请刷新查看。', CONTENT_CHANGED: '内容刚刚发生变化，请刷新后重新决定。', OWN_CONTENT_REQUIRED: '只能撤回自己的内容。', SELF_REPORT: '不能举报自己的内容。', ALREADY_REPORTED: '你已举报过这条内容，请在我的举报查看进展。', DAILY_POST_LIMIT: '今天的发帖次数已用完，请明天再来。', DAILY_COMMENT_LIMIT: '今天的评论次数已用完，请明天再来。', DAILY_REPORT_LIMIT: '今天的举报次数已用完，请明天再来。', ACTIVE_LIMIT: '当前内容已达上限，可先撤回不再保留的内容。', BLOCK_LIMIT: '屏蔽数量已达上限，请先到我的农友整理。', IDEMPOTENCY_CONFLICT: '操作记录有冲突，请刷新后重新核对。' };
+function appendForum<T extends { id: string }>(previous: { items: T[]; nextCursor: string | null } | null, page: { items: T[]; nextCursor: string | null }, cursor: string) {
+  if (cursor === 'start') return page.items;
+  if (!previous || previous.nextCursor !== cursor || page.items.some(item => previous.items.some(old => old.id === item.id))) throw new Error('列表刚刚更新，请刷新后继续查看。');
+  return [...previous.items, ...page.items];
+}
+export async function loadFarmForum(scope: 'public' | 'mine' | 'reports' = forumSelection.scope, circle: 'all' | ForumCircle = forumSelection.circle, cursor = 'start') {
+  syncClientState(); const read = ++forumRead, account = client.profile;
+  if (forumSelection.scope !== scope || forumSelection.circle !== circle) { farmState.forumPage = null; farmState.forumReports = null; }
+  forumSelection = { scope, circle }; farmState.forumBusy = true; farmState.forumError = '';
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== forumRead || account !== client.profile) return false;
+    const status = await client.loadForumStatus() as ForumStatus;
+    if (read !== forumRead || account !== client.profile || status !== client.forumStatus) return false;
+    farmState.forumStatus = status;
+    if (!status.available) return true;
+    if (scope === 'reports') {
+      const page = await client.loadForumReports(cursor) as ForumReports;
+      if (read !== forumRead || account !== client.profile || page !== client.forumReports) return false;
+      farmState.forumReports = { ...page, items: appendForum(farmState.forumReports, page, cursor) };
+    } else {
+      const page = await client.loadForumPage(scope, scope === 'mine' ? 'all' : circle, cursor) as ForumPage;
+      if (read !== forumRead || account !== client.profile || page !== client.forumPage) return false;
+      farmState.forumPage = { ...page, items: appendForum(farmState.forumPage, page, cursor) };
+    }
+    return true;
+  } catch (failure) { if (read === forumRead && account === client.profile) farmState.forumError = failure instanceof Error ? failure.message : '社区暂时无法读取，请重试。'; return false; }
+  finally { syncClientState(); if (read === forumRead) farmState.forumBusy = false; }
+}
+export async function loadFarmForumPost(id: string, cursor = 'start') {
+  syncClientState(); const read = ++forumDetailRead, account = client.profile;
+  if (forumPostId !== id) farmState.forumDetail = null;
+  forumPostId = id; farmState.forumDetailBusy = true; farmState.forumDetailError = '';
+  try {
+    if (!client.snapshot) await client.load();
+    if (read !== forumDetailRead || account !== client.profile) return false;
+    const status = await client.loadForumStatus() as ForumStatus;
+    if (read !== forumDetailRead || account !== client.profile) return false;
+    farmState.forumStatus = status;
+    if (!status.available) { farmState.forumDetail = null; return true; }
+    let detail = await client.loadForumDetail(id, cursor) as ForumDetail;
+    if (read !== forumDetailRead || account !== client.profile || detail !== client.forumDetail) return false;
+    const previous = farmState.forumDetail;
+    if (cursor !== 'start' && previous?.post.version !== detail.post.version) {
+      detail = await client.loadForumDetail(id, 'start') as ForumDetail;
+      if (read !== forumDetailRead || account !== client.profile || detail !== client.forumDetail) return false;
+      farmState.forumDetail = detail;
+    } else farmState.forumDetail = { ...detail, comments: appendForum(previous ? { items: previous.comments, nextCursor: previous.nextCursor } : null, { items: detail.comments, nextCursor: detail.nextCursor }, cursor) };
+    return true;
+  } catch (failure) { if (read === forumDetailRead && account === client.profile) { farmState.forumDetailError = failure instanceof Error ? failure.message : '帖子暂时无法读取，请重试。'; if ((failure as { status?: number }).status === 404) farmState.forumDetail = null; } return false; }
+  finally { syncClientState(); if (read === forumDetailRead) farmState.forumDetailBusy = false; }
+}
+async function completeForumCommand(receipt: ForumReceipt) {
+  syncClientState();
+  if (receipt.action === 'block-author') invalidateFriendsView(friendRelationRefresh);
+  if (receipt.outcome === 'applied' && ['submit-post', 'submit-comment'].includes(receipt.action)) farmState.forumSubmission = { action: receipt.action as 'submit-post' | 'submit-comment' };
+  farmState.forumMessage = receipt.outcome === 'applied' ? ({ 'submit-post': '帖子已提交审核，通过后才会公开。', 'submit-comment': '评论已提交审核，通过后才会公开。', withdraw: '内容已撤回，正文已清除。', report: '举报已记录，可在我的举报查看进展。', 'block-author': '已屏蔽该作者，双方的申请和关系已移除。' }[receipt.action]) : forumRefusals[receipt.code] || '操作未完成，请刷新后核对。';
+  await loadFarmForum();
+  if (forumPostId) await loadFarmForumPost(forumPostId);
+}
+export async function commandFarmForum(command: ForumCommand) {
+  if (farmState.busy || farmState.pending) return false;
+  invalidateForumViews();
+  if (command.action === 'block-author') invalidateFriendsView(friendRelationRefresh);
+  let applied = false;
+  const confirmed = await run(async () => { const receipt = await client.commandForum(command) as ForumReceipt; applied = receipt.outcome === 'applied'; await completeForumCommand(receipt); });
   return confirmed && applied;
 }
 export async function loadExchangeHistory(cursor = 'start') {
@@ -164,7 +265,7 @@ export async function loadExchangeRecord(id: string) {
     syncClientState(); if (read === exchangeRecordRead) farmState.exchangeRecordBusy = false;
   }
 }
-function openAccountPage(route: 'pages/exchanges/index' | 'pages/inventory/index' | 'pages/friends/index') {
+function openAccountPage(route: 'pages/exchanges/index' | 'pages/inventory/index' | 'pages/friends/index' | 'pages/community/index') {
   const pages = getCurrentPages(), position = pages.map(page => page.route).lastIndexOf(route);
   if (position === pages.length - 1) return;
   const fallback = () => uni.navigateTo({ url: `/${route}` });
@@ -175,9 +276,12 @@ export function openExchangeHistory() { openAccountPage('pages/exchanges/index')
 export function openExchangeRecord(id: string) {
   if (isExchangeId(id)) uni.navigateTo({ url: `/pages/exchange/index?id=${id}` });
 }
-export function openConfirmedCheckout() { uni.navigateTo({ url: '/pages/exchange/index?operation=last' }); }
+export function openConfirmedCheckout() { requestNavigation(() => uni.navigateTo({ url: '/pages/exchange/index?operation=last' })); }
 export function openInventory() { openAccountPage('pages/inventory/index'); }
 export function openFriends() { openAccountPage('pages/friends/index'); }
+export function openCommunity() { openAccountPage('pages/community/index'); }
+export function openForumPost(id: string) { if (isForumId(id)) uni.navigateTo({ url: `/pages/forum-post/index?id=${id}` }); }
+export function returnFromForumPost() { const fallback = () => openCommunity(); if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback }); else fallback(); }
 export function returnFromFriends() {
   const fallback = () => uni.switchTab({ url: '/pages/activities/index' });
   if (getCurrentPages().length > 1) uni.navigateBack({ delta: 1, fail: fallback });

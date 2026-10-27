@@ -4,7 +4,9 @@
 
 跨端本地开发（Node≥24.15）：先按[服务端说明](services/api/README.md)启动明确的本机沙盒，再运行 `npm ci --ignore-scripts` 及根 `npm run dev:mobile`。客户端公开配置与构建说明见[移动工程](apps/mobile/README.md)。真实平台AppID／后端HTTPS域名、签名和设备联调仍待配置。
 
-跨端“我的”页已补[账户数据查阅与确认注销](docs/release/ACCOUNT-PRIVACY.md)，服务端另提供[SQLite在线备份与隔离恢复](services/api/BACKUP.md)。新增[持久农友](docs/release/FRIENDS.md)及[验收证据](docs/release/FRIENDS-VERIFICATION.md)：本机602项测试中600通过、2项既有Windows平台跳过、0失败，四端资源编译通过；这些账户功能位于跨端工程与API，生产仍关闭，公开Pages继续提供内存H5演示。
+跨端“我的”页已补[账户数据查阅与确认注销](docs/release/ACCOUNT-PRIVACY.md)，服务端另提供[SQLite在线备份与隔离恢复](services/api/BACKUP.md)。[持久农友](docs/release/FRIENDS.md)的切片证据见[农友验收](docs/release/FRIENDS-VERIFICATION.md)；这些账户功能位于跨端工程与API，生产仍关闭，公开Pages继续提供内存H5演示。
+
+跨端新增[论坛帖子/评论预审](docs/release/FORUM.md)，包括举报、屏蔽、作者撤回和本机私有审核闭环；schema7与旧备份兼容，草稿、跨域缓存和原key恢复经回归。本轮本机684项：682通过、0失败、2既有Windows平台跳过，四端资源构建通过；详见[论坛验收](docs/release/FORUM-VERIFICATION.md)。完整工程进展见[上线证据](docs/release/PROGRESS.md)，生产社区与平台上架尚未完成。
 
 面向 30–50 岁及中老年用户的农场体验演示：认养农作物与牲畜、远程照料、看农田与牧场、参加福利，再体验收获到家。
 

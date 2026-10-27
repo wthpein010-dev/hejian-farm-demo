@@ -60,6 +60,10 @@ schema4的无损回执编码及schema2/3/4备份兼容属于[内部存储契约]
 
 JSON请求最大16KiB，拒绝未知字段、错误类型及无穷数，受限CORS，禁止缓存私有响应，添加nosniff和requestId；development登录限速。数据库文件不进Git；支持同进程并发串行事务、重启保留资产。生产备份恢复、监控、TLS及多实例/数据库运维须独立验证，不因HTTP单测通过宣称上线完成。
 
+## 论坛与预审
+
+独立`/forum/status`、公开/本人内容分页、帖子评论详情、本人举报及`/forum/commands`遵守[FORUM](FORUM.md)。帖子/评论先待审，仅本人或私有审核工具可见；公开前审核、撤回擦除和双向屏蔽由服务端执行。合法命令返回HTTP200最小applied/refused原结果，不进入金融Snapshot或原财务回执。最小命令账和审核元数据不保存UGC副本。production关闭；私有CLI不等于已接真实审核人员或平台内容安全。
+
 ## 农友关系
 
 独立 `GET /friends` 与 `POST /friends/commands` 采用[农友协议](FRIENDS.md)，不使用金融Snapshot/revision或资产幂等表。合法命令的HTTP200响应携带最小`applied/refused`原结果，之后另读当前关系；不是资产成功模型。原key重放不能恢复后来已取消或移除的关系。仅显式开发沙盒可用，production关闭；不赋予好友任何私人田园/设备权限。
