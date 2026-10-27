@@ -35,7 +35,7 @@ Snapshot:
 
 登录成功的 `data` 仅含上述四项，profile仅含id/displayName；token是32字节随机数的43字符base64url编码，expiresAt是正安全整数时间戳，environment为development/production。客户端通过共享会话契约完整校验后才接受新的账户状态；畸形成功回复不替换原会话、资产或待核对操作。期限由服务端鉴权，登录回复没有serverTime，客户端不以设备时钟自行判定过期。会话、原回复及凭据均不持久化，不进入日志或URL。
 
-当前weixin/toutiao提供方都是**小程序**code2Session，不能接收原生App OAuth code。App正式登录及跨平台账户绑定尚未实现；目前按environment/provider/AppID身份隔离，不自动把微信小程序、抖音与未来App资产合并。未核定正式提供方和绑定协议前不能用开发入口替代。
+当前weixin/toutiao提供方都是**小程序**code2Session，不能接收原生App OAuth code。用户已选择App微信登录，独立[App授权基础适配](APP-WEIXIN-AUTH.md)已实现；正式App路由/入口、会话签发与跨平台账户绑定尚未接通。目前按environment/provider/AppID身份隔离，不自动把微信小程序、抖音与未来App资产合并。未核定绑定协议和实际平台配置前不能用开发入口替代。
 
 ## 账户数据与注销
 

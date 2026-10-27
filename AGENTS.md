@@ -113,3 +113,9 @@ collect核对batchVersion和financial revision，Store同事务harvest items.egg
 新命令domain:'eggs'，旧无domain只严格planting；recovery固定分派/分别固定账，旧字节/指纹/墓碑不重写。schema9升级前拒绝伪造egg意图；备份2–10，恢复禁配置/撤权/version++及prepared隔离。旧工具明确保留7/8/9，HTTP升级10。
 
 client唯一pending/全局原结果面板；成功collect抬高同账户/环境最低资产revision，ack不能解除旧资产写锁，GET可重试。FarmTextField数字语义/灰色placeholder与useFarmDraft复用唯一导航guard，错误保稿、label常显。全部合成开发沙盒，公开Pages仍内存示例，不把四端编译当正式上线。
+
+## App微信授权基础（2026-10-28）
+
+用户已选App微信登录；跨端账户资产共用方式及开放平台移动应用状态仍待答，不能自动创建另一套资产或合并。契约[APP-WEIXIN-AUTH](docs/release/APP-WEIXIN-AUTH.md)，本轮`.scratch/app-weixin-auth/`。api/weixin-app-oauth.mjs只提供固定OAuth交换与冻结私有摘要，不注册路由/环境fallback/Store建账；platform-http.mjs共享受限读取和同一PlatformIdentityError，旧小程序provider协议不变。UnionID证据namespace:null，没有已核实开放平台作用域，不是合并授权；未来入口仍须先持久claim再交换及核定映射。
+
+core/weixin-app.mjs只用plus.oauth code/state，当前uni.login桥丢state不能替代。CSPRNG失败关闭，默认本地60秒覆盖发现/授权；cancel只清本地等待，不关闭微信。client.authorizePlatform在唯一登录代际中等code，退出/新登录可结束旧客户端等待，迟到code不HTTP；该动作不自动清另一authorizer的busy，最终页面生命周期必须显式协调。当前未接App UI/manifest/完整账户入口，标准基座/合成测试/四端资源不能冒充签名真机与正式登录。code/state/平台令牌/原标识/Secret只按契约短暂内存，不进客户端storage/路由URL、日志或原账；官方服务端HTTPS交换查询须按契约出站脱敏。不迁移运行库、不操作桌面或平台设置。

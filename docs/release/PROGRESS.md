@@ -1,5 +1,15 @@
 # 上线推进证据（更新至2026-10-28）
 
+## App微信授权基础模块
+
+用户已明确选择App微信登录。新增独立服务端固定OAuth交换、原生plus.oauth code/state协调器，以及createFarmClient授权等待代际；不注册App账户路由、不开页面入口、不决定跨端资产归并。当前锁定uni.login桥不传回state，因此用官方plus.oauth薄适配并核对CSPRNG随机state，不修改DCloud依赖。详细协议、namespace:null的UnionID证据与真实配置缺口见[App微信授权](APP-WEIXIN-AUTH.md)。
+
+客户端在调用原生前进入现有登录代际/写锁；退出或新登录及时释放旧客户端等待，迟到code不能再发HTTP。无服务配置不打开SDK，原pending账户/环境和已确认资产下限保持。原生协调器的cancel只作废本地等待，客户端不自动清其busy；最终页面/生命周期组合仍需显式协调，不把局部取消当关闭微信。
+
+本机Node24.15.0最终根测试1103项：1101通过、0失败、2项既有Windows POSIX跳过；类型、四端资源、依赖/token/照片及新模块语法均退出0，审计0项已知漏洞。新后端53项、原生63项及客户端17项均有针对行为的专项；独立Spec/Quality审查无剩余P1/P2，额外真实客户端与authorizer合成组合等探针5/5通过。完整执行/RED→GREEN与审查记录在本机`.scratch/app-weixin-auth/`；未将AppID边界已有GREEN误称为修复，也未把探针fixture错误当产品缺陷。
+
+本轮无UI、manifest、schema或运行库变更，无真实平台请求或设备/桌面操作。新模块尚未组成完整登录，资源编译及合成服务不能替代实际签名包、微信回跳、生产API或平台审核；共用账户策略与开放平台移动应用状态仍待用户答复。总体目标保持未完成，独立发布结果另记回执，公开Pages继续prototype内存H5。
+
 ## 登录回复校验与依赖安全更新
 
 客户端原先只检查token类型、truthy账户ID和环境，缺少期限或资料的“成功”回复也可能替换会话并清掉当前资产视图。新增`shared/session.mjs`完整校验真实Store会话DTO并脱离transport对象引用；失败保留原账户/资产、未知请求原key及已确认收蛋资产版本下限。未改变既有登录代际、401、恢复协议或退出逻辑，未新增App登录提供方。精确契约见[API身份](API-CONTRACT.md#身份)。

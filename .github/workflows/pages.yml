@@ -44,6 +44,9 @@ jobs:
           node --check prototype/expansion.js
           node --check prototype/boot.js
           node --check services/api/src/providers.mjs
+          node --check services/api/src/platform-http.mjs
+          node --check services/api/src/weixin-app-oauth.mjs
+          node --check apps/mobile/src/core/weixin-app.mjs
           node --check services/api/src/client-address.mjs
           node --check services/api/src/receipt-codec.mjs
           node --check shared/farm-records.mjs

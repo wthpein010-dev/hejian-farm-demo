@@ -48,6 +48,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     throw new Error('服务地址必须使用 HTTPS，本机联调仅允许 loopback HTTP');
   }
   let token = '', profile = null, snapshot = null, pending = null, generation = 0, loginAttempt = 0, activeLogins = 0, activeMutation = false;
+  let authorizationWait = null;
   let authEnvironment = null;
   let minimumConfirmedRevision = 0, confirmedAccountId = '', confirmedEnvironment = null;
   let recoveryDiscovery = 'unknown', recoveryError = '', recoveryMeta = null, recoveryRead = 0;
@@ -138,12 +139,45 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     if (!response.data || !Object.prototype.hasOwnProperty.call(response.data, 'data')) throw error('SERVER_UNAVAILABLE', '服务回复未能确认，请稍后重试。');
     return response.data.data;
   }
-  async function login(path, body) {
+  function invalidateAuthorization() {
+    const wait = authorizationWait;
+    if (wait) wait.invalidate();
+  }
+  function awaitAuthorization(requestCode, attempt) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const wait = { invalidate: () => finish(error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。')) };
+      function finish(failure, code) {
+        if (settled) return;
+        settled = true;
+        if (authorizationWait === wait) authorizationWait = null;
+        if (failure) reject(failure); else resolve(code);
+      }
+      authorizationWait = wait;
+      Promise.resolve().then(() => {
+        if (settled || attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
+        return requestCode();
+      }).then(code => finish(null, code), () => finish(error('PLATFORM_AUTHORIZATION_FAILED', '平台授权未能完成，请返回后重新尝试。')));
+    });
+  }
+  async function login(path, body, requestCode = null) {
     if (activeMutation || pending?.kind === 'deletion') throw error('PENDING_OPERATION', '正在核对上次操作，请核对完成后再登录或切换账户。');
     const attempt = ++loginAttempt;
+    invalidateAuthorization();
     activeLogins++;
     try {
-      const raw = await send(path, 'POST', body, false);
+      let requestBody = body;
+      if (requestCode) {
+        const code = await awaitAuthorization(requestCode, attempt);
+        // Authorizing outside this attempt would let a code returned after
+        // logout start a fresh HTTP login and revive the departed account.
+        if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
+        if (typeof code !== 'string' || code.length < 1 || code.length > 4096 || /[\u0000-\u001f]/u.test(code)) {
+          throw error('INVALID_PLATFORM_CODE', '平台未返回有效登录凭证，请重新授权。');
+        }
+        requestBody = { ...body, code };
+      }
+      const raw = await send(path, 'POST', requestBody, false);
       if (attempt !== loginAttempt) throw error('SESSION_CHANGED', '登录请求已更新，请以当前账户为准。');
       let result;
       try { result = parseSession(raw); }
@@ -410,6 +444,13 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     hasPending() { return !!pending; },
     loginDevelopment(account) { return login('/auth/development', { account }); },
     loginPlatform(platform, code) { return login('/auth/platform', { platform, code }); },
+    async authorizePlatform(platform, requestCode) {
+      if (!['weixin', 'toutiao', 'weixin-app'].includes(platform) || typeof requestCode !== 'function') {
+        throw error('INVALID_AUTHORIZATION_REQUEST', '平台授权配置暂不可用，请稍后重试。');
+      }
+      if (!base) throw error('SERVICE_UNCONFIGURED', '农场服务尚未配置，请稍后再来。');
+      return login('/auth/platform', { platform }, requestCode);
+    },
     async load() {
       const requestGeneration = generation, result = await send('/bootstrap', 'GET');
       if (requestGeneration !== generation) throw error('SESSION_CHANGED', '账户会话已变化，请查看当前田园。');
@@ -711,6 +752,7 @@ export function createFarmClient({ baseURL = '', transport, generateKey = () => 
     async logout() {
       if (pending || activeMutation || recoveryDiscovery === 'checking' || recoveryDiscovery === 'error') throw error('PENDING_OPERATION', '请先核对上次操作的结果，再退出账户。');
       const requestToken = token, accountId = profile?.id; loginAttempt++;
+      invalidateAuthorization();
       try { if (token) await send('/auth/logout', 'POST', {}); }
       finally { if (token === requestToken || (!token && profile?.id === accountId)) { token = ''; profile = null; snapshot = null; privacy = null; clearFarmRecords(); cancelAccountDeletion(); generation++; } }
     }
