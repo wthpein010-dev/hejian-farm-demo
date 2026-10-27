@@ -48,8 +48,9 @@ async function home(overrides = {}) {
   const mutations = [], actions = [];
   const farm = { farmState: state, onFarmPageShow() {}, mutateFarm: (...args) => mutations.push(args), rewardLabel: reward => `${reward.points}积分`, openShop: () => actions.push('shop'), openFriends: () => actions.push('friends'), openCommunity: () => actions.push('community'), openProfile: () => actions.push('profile'), refreshFarm: () => actions.push('refresh'), retryFarmOperation: () => actions.push('retry'), openConfirmedCheckout() {} };
   const screen = await component('components/FarmScreen.vue', { '../core/farm': farm, './FarmButton.vue': button, './FarmNavigation.vue': invisible });
+  const signIn = await component('components/FarmSignIn.vue', { '../core/farm': farm, './FarmButton.vue': button });
   const empty = await component('components/EmptyPanel.vue');
-  const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty });
+  const page = await component('pages/activities/index.vue', { '@dcloudio/uni-app': { onShow() {} }, '../../core/farm': farm, '../../components/FarmButton.vue': button, '../../components/FarmScreen.vue': screen, '../../components/EmptyPanel.vue': empty, '../../components/FarmSignIn.vue': signIn });
   const ui = mount(page);
   return { ...ui, state, mutations, actions, findButton: match => ui.buttons().find(node => { const name = node.props['aria-label'] || ui.text(node); return typeof match === 'string' ? name === match : match.test(name); }) };
 }
@@ -62,11 +63,31 @@ test('central Home navigation keeps the account activity route and does not re-e
   try {
     const homeButton = ui.buttons().find(node => ui.text(node).endsWith('主页'));
     assert.ok(homeButton, 'Home has a visible, named primary entry');
+    assert.deepEqual(ui.nodes().filter(node => node.type === 'image' && /-selected\.png$/.test(node.props.src)).map(node => node.props.src), ['/static/navigation/farm-selected.png']);
     activate(homeButton); assert.deepEqual(switches, ['/pages/activities/index']);
     route = 'pages/activities/index'; shows[0](); await vue.nextTick();
     assert.equal(homeButton.props['aria-current'], 'page');
+    assert.deepEqual(ui.nodes().filter(node => node.type === 'image' && /-selected\.png$/.test(node.props.src)).map(node => node.props.src), ['/static/navigation/home-selected.png']);
     activate(homeButton); assert.equal(switches.length, 1, 'selected Home does not request another tab switch');
     assert.equal(ui.buttons().length, 5); assert.deepEqual(ui.warnings, []);
+  } finally { ui.close(); }
+});
+
+test('account sign-in uses the shared reward transaction and preserves unknown-result blocking', async () => {
+  const state = vue.reactive({ authenticated: true, snapshot: mobileSnapshot(), busy: false, pending: false });
+  const mutations = [];
+  const farm = { farmState: state, mutateFarm: (...args) => mutations.push(args) };
+  const signIn = await component('components/FarmSignIn.vue', { '../core/farm': farm, './FarmButton.vue': button });
+  const ui = mount(signIn, { showProgress: true });
+  try {
+    assert.equal(ui.nodes().filter(node => /sign-day(?:\s|$)/.test(node.props?.class || '')).length, 7);
+    activate(ui.buttons()[0]); assert.deepEqual(mutations.map(args => [args[0], args[1]]), [['/activities/sign-in', {}]]);
+    state.pending = true; await vue.nextTick(); assert.equal(ui.buttons()[0].props.disabled, true);
+    activate(ui.buttons()[0]); assert.equal(mutations.length, 1);
+    state.pending = false; state.snapshot.signIn.todayClaimed = true; await vue.nextTick();
+    assert.equal(ui.buttons()[0].props.disabled, true); activate(ui.buttons()[0]); assert.equal(mutations.length, 1);
+    state.snapshot.capabilities.activities = false; await vue.nextTick(); assert.equal(ui.buttons().length, 0);
+    assert.deepEqual(ui.warnings, []);
   } finally { ui.close(); }
 });
 

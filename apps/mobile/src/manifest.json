@@ -7,6 +7,10 @@
   "vueVersion": "3",
   "app-plus": {
     "usingComponents": true,
+    "statusbar": {
+      "style": "dark",
+      "background": "#ffeaa0"
+    },
     "distribute": {
       "android": {
         "permissions": []

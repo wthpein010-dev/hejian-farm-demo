@@ -99,18 +99,23 @@ test('destructive friends actions require confirmation and account change remove
   state.authenticated = false; await vue.nextTick(); assert.equal(h.draft.value, ''); assert.equal(h.confirmation.value, null);
 });
 
-async function renderPage(state, path = 'pages/friends/index.vue') {
+async function compileComponent(path, imports) {
   const source = (await readFile(new URL(`../apps/mobile/src/${path}`, import.meta.url), 'utf8')).replace(/<!-- #ifndef H5 -->[\s\S]*?<!-- #endif -->/g, '');
   const content = compileScript(parse(source).descriptor, { id: path, inlineTemplate: true }).content;
-  const shell = vue.defineComponent({ setup(_, { slots }) { return () => vue.h('main', {}, slots.default?.()); } });
-  const button = vue.defineComponent({ props: { disabled: Boolean }, setup(props, { slots, attrs }) { return () => vue.h('button', { ...attrs, disabled: props.disabled }, slots.default?.()); } });
-  const imports = { vue, '@dcloudio/uni-app': { onShow() {}, onHide() {} }, '../../components/FarmScreen.vue': shell, '../../components/FarmButton.vue': button,
-    '../../components/EmptyPanel.vue': shell, '../../../../../shared/friends.mjs': friends,
-    '../../core/farm': { farmState: state, loadFarmFriends() {}, commandFarmFriends() {}, returnFromFriends() {}, openFriends() {}, onFarmPageShow() {}, rewardLabel() {} } };
   const code = ts.transpile(content, { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS });
-  const component = new Function('require', 'exports', `${code}\nreturn exports.default;`)(name => {
+  return new Function('require', 'exports', `${code}\nreturn exports.default;`)(name => {
     assert.ok(imports[name], `explicit import ${name}`); return name.endsWith('.vue') ? { default: imports[name] } : imports[name];
   }, {});
+}
+async function renderPage(state, path = 'pages/friends/index.vue') {
+  const shell = vue.defineComponent({ setup(_, { slots }) { return () => vue.h('main', {}, slots.default?.()); } });
+  const button = vue.defineComponent({ props: { disabled: Boolean }, setup(props, { slots, attrs }) { return () => vue.h('button', { ...attrs, disabled: props.disabled }, slots.default?.()); } });
+  const farm = { farmState: state, loadFarmFriends() {}, commandFarmFriends() {}, returnFromFriends() {}, openFriends() {}, onFarmPageShow() {}, rewardLabel() {}, mutateFarm() {} };
+  const signIn = await compileComponent('components/FarmSignIn.vue', { vue, '../core/farm': farm, './FarmButton.vue': button });
+  const imports = { vue, '@dcloudio/uni-app': { onShow() {}, onHide() {} }, '../../components/FarmScreen.vue': shell, '../../components/FarmButton.vue': button,
+    '../../components/EmptyPanel.vue': shell, '../../components/FarmSignIn.vue': signIn, '../../../../../shared/friends.mjs': friends,
+    '../../core/farm': farm };
+  const component = await compileComponent(path, imports);
   const renderer = vue.createRenderer({
     createElement: type => ({ type, tagName: type.toUpperCase(), props: {}, children: [], addEventListener() {}, removeEventListener() {} }), createText: text => ({ type: '#text', text }), createComment: () => ({ type: '#comment', text: '' }),
     setText: (node, text) => { node.text = text; }, setElementText: (node, text) => { node.text = text; node.children = []; },

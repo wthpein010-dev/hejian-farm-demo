@@ -1,9 +1,9 @@
 /* Expanded farm, store and activity surfaces. Canonical tokens remain in styles.css. */
 
-.app-top{padding-bottom:10px;border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent);background:var(--paper)}
+.app-top{padding-bottom:10px}
 .app-scroll{padding-top:10px;padding-bottom:28px;scroll-padding-block:16px}
 .page-heading{margin-top:3px;margin-bottom:14px}
-.page-heading h1{letter-spacing:1px}
+.page-heading h1{letter-spacing:0}
 .demo-notice{margin-bottom:10px}
 .segmented{background:var(--brand-soft);border:1px solid var(--line);padding:4px;margin-bottom:13px}
 .segment{min-height:48px;transition:background .18s,color .18s,box-shadow .18s}
@@ -23,7 +23,7 @@
 .live-stage{border:1px solid var(--line);box-shadow:0 7px 18px color-mix(in srgb,var(--brand) 7%,transparent)}
 .bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr));padding:8px 4px max(10px,env(safe-area-inset-bottom));gap:2px;background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 -6px 18px color-mix(in srgb,var(--brand) 4%,transparent);backdrop-filter:blur(16px)}
 .nav-item{min-width:48px;min-height:54px;gap:3px;border-radius:12px;padding:4px 1px;font-size:13px;line-height:1.45;transition:background .18s,color .18s}
-.nav-item.active{background:var(--brand-soft);color:var(--brand)}
+.nav-item.active{background:transparent;color:var(--secondary)}
 .nav-item .icon{width:23px;height:23px}
 
 .asset-ribbon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;margin:0 0 15px;overflow:hidden}
@@ -67,7 +67,7 @@
 .store-wallet{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:14px;font-size:14px;color:var(--secondary)}
 .store-wallet strong{color:var(--ink);font:21px var(--font-data);margin-inline:4px}
 .store-wallet>button{min-height:48px;min-width:48px;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--canvas);color:var(--ink);font-size:14px}
-.cart-badge{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:1px 5px;border-radius:7px;background:var(--brand);color:var(--paper);font:12px/1 var(--font-data);font-variant-numeric:tabular-nums}
+.cart-badge{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:1px 5px;border-radius:50%;background:var(--action);color:var(--action-ink);font:12px/1 var(--font-data);font-variant-numeric:tabular-nums}
 .goods-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 18px}
 .goods-card{position:relative;min-width:0;display:flex;flex-direction:column;padding:11px;border:1px solid var(--line);border-radius:17px;background:var(--paper);transition:border-color .18s,box-shadow .18s}
 .goods-art{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:1.22;min-height:120px;min-width:0;border-radius:11px;overflow:hidden;background:radial-gradient(ellipse at 50% 75%,color-mix(in srgb,var(--accent) 9%,var(--paper)),var(--brand-soft));color:var(--brand)}
@@ -79,7 +79,7 @@
 .goods-cost{color:var(--ink);font:22px/1.45 var(--font-data);font-variant-numeric:tabular-nums;margin-top:auto}
 .goods-cost small,.goods-cost span{font:12px/1.6 var(--font-body);margin-left:3px;color:var(--secondary)}
 .goods-stock{font-size:12px;line-height:1.7;color:var(--secondary);margin:4px 0 10px}
-.goods-add{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 7px;border-radius:10px;background:var(--brand);color:var(--paper);font-size:14px;font-weight:500;margin-top:9px}
+.goods-add{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 7px;border-radius:10px;background:var(--action);color:var(--action-ink);font-size:16px;font-weight:500;margin-top:9px}
 .goods-add .icon{width:18px;height:18px}
 .goods-add:disabled{opacity:1;background:var(--brand-soft);color:var(--secondary)}
 .quantity-stepper{display:grid;grid-template-columns:48px minmax(38px,1fr) 48px;align-items:center;min-width:136px;max-width:172px;border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}
@@ -138,7 +138,7 @@
 .task-reward .icon{width:16px;height:16px}
 .task-progress{height:5px;background:var(--brand-soft);border-radius:6px;overflow:hidden;margin:11px 0 5px}
 .task-progress>span{height:100%;display:block;background:var(--brand);border-radius:6px;transition:width .25s}
-.task-action{min-height:48px;min-width:112px;padding:10px 15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;background:var(--brand);color:var(--paper);font-size:14px}
+.task-action{min-height:48px;min-width:112px;padding:10px 15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;background:var(--action);color:var(--action-ink);font-size:14px}
 .task-card>.task-action,.task-card>.task-reward,.task-card>.task-progress{grid-column:2;justify-self:start}
 .task-action:disabled{background:var(--brand-soft);color:var(--secondary);opacity:1}
 .season-card{padding:18px;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:18px;background:linear-gradient(140deg,var(--paper),color-mix(in srgb,var(--accent) 6%,var(--paper)));margin:15px 0}
@@ -149,7 +149,7 @@
 .stamp>.icon,.stamp>svg{width:30px;height:30px;opacity:.7}
 .stamp.completed{border-style:solid;border-color:color-mix(in srgb,var(--brand) 30%,var(--line));background:var(--brand-soft);color:var(--brand)}
 .stamp.completed>.icon,.stamp.completed>svg{opacity:1}
-.claim-button{min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 14px;background:var(--brand);color:var(--paper);border-radius:11px;font-size:15px;width:100%}
+.claim-button{min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 14px;background:var(--action);color:var(--action-ink);border-radius:11px;font-size:15px;width:100%}
 .claim-button:disabled{opacity:1;background:var(--brand-soft);color:var(--secondary)}
 .achievement-card{display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;gap:14px;padding:17px;border-radius:16px;border:1px solid var(--line);background:var(--paper);margin:12px 0}
 .achievement-medal{width:54px;height:60px;display:grid;place-items:center;border-radius:15px 15px 20px 20px;background:color-mix(in srgb,var(--accent) 13%,var(--paper));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));color:var(--warning)}
@@ -198,7 +198,7 @@
 .hero-decorated.decor-sign .hero-label{border-left:3px solid var(--accent)}
 .hero-decor-label{position:absolute;right:10px;bottom:79px;z-index:3;display:flex;align-items:center;gap:4px;writing-mode:vertical-rl;max-height:98px;padding:6px 3px;border:1px solid color-mix(in srgb,var(--accent) 65%,var(--line));border-radius:5px;background:color-mix(in srgb,var(--paper) 94%,transparent);font-size:12px;line-height:1.45;letter-spacing:1px;color:var(--ink);pointer-events:none}
 .hero-decor-label .icon{width:13px;height:13px}
-.inventory-use{display:flex;align-items:center;justify-content:center;gap:5px;min-height:48px;min-width:48px;width:100%;padding:10px 9px;border:1px solid var(--line);border-radius:10px;background:var(--brand-soft);color:var(--brand);font-size:14px}
+.inventory-use{display:flex;align-items:center;justify-content:center;gap:5px;min-height:48px;min-width:48px;width:100%;padding:10px 9px;border:1px solid var(--line);border-radius:10px;background:var(--brand-soft);color:var(--brand);font-size:16px}
 .inventory-use:disabled{opacity:1;background:var(--canvas);color:var(--secondary)}
 .ledger-list{list-style:none;padding:0;margin:14px 0;border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden}
 .ledger-list>li,.ledger-list>.ledger-row{display:flex;align-items:flex-start;justify-content:space-between;gap:13px;padding:14px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.7}
@@ -235,7 +235,7 @@ button:where(:not(:disabled)){transition:background-color .16s,border-color .16s
   .goods-card:hover,.product-card:hover{border-color:color-mix(in srgb,var(--brand) 30%,var(--line));box-shadow:0 5px 15px color-mix(in srgb,var(--brand) 5%,transparent)}
   .coupon-choice:hover:not(:disabled),.store-wallet>button:hover:not(:disabled),.quantity-stepper>button:hover:not(:disabled),.warehouse-actions>button:hover:not(:disabled){background:var(--brand-soft);border-color:color-mix(in srgb,var(--brand) 30%,var(--line))}
   .goods-add:hover:not(:disabled),.claim-button:hover:not(:disabled),.task-action>button:hover:not(:disabled){box-shadow:inset 0 0 0 30px color-mix(in srgb,var(--ink) 13%,transparent)}
-  .nav-item:hover:not(:disabled){background:var(--brand-soft)}
+  .nav-item:hover:not(:disabled){background:transparent}
 }
 :is(.goods-add,.claim-button,.task-action>button,.warehouse-actions>button,.coupon-choice,.shortcut,.asset-ribbon>button):active:not(:disabled){transform:translateY(1px)}
 .app-scroll>:is(.store-hero,.activity-hero,.growth-hero,.goods-grid,.checkin-card,.season-card,.warehouse-grid,.album-grid,.reward-panel){animation:field-enter .22s ease-out both}

@@ -81,35 +81,45 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f5f6fa",
+    "navigationBarBackgroundColor": "#ffeaa0",
+    "backgroundColor": "#f8f8f6",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#5d6675",
-    "selectedColor": "#006cd9",
+    "color": "#68665f",
+    "selectedColor": "#68665f",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/farm/index",
-        "text": "我的农场"
+        "text": "我的农场",
+        "iconPath": "static/navigation/farm.png",
+        "selectedIconPath": "static/navigation/farm-selected.png"
       },
       {
         "pagePath": "pages/shop/index",
-        "text": "商城"
+        "text": "商城",
+        "iconPath": "static/navigation/shop.png",
+        "selectedIconPath": "static/navigation/shop-selected.png"
       },
       {
         "pagePath": "pages/activities/index",
-        "text": "主页"
+        "text": "主页",
+        "iconPath": "static/navigation/home.png",
+        "selectedIconPath": "static/navigation/home-selected.png"
       },
       {
         "pagePath": "pages/live/index",
-        "text": "实景"
+        "text": "实景",
+        "iconPath": "static/navigation/live.png",
+        "selectedIconPath": "static/navigation/live-selected.png"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/navigation/profile.png",
+        "selectedIconPath": "static/navigation/profile-selected.png"
       }
     ],
     "fontSize": "14px",

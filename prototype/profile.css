@@ -1,0 +1,63 @@
+/* Profile composition consumes the shared visual tokens and app interactions. */
+.profile-page{margin:-6px -20px 0;background:var(--canvas);color:var(--ink)}
+.profile-hero{padding:28px 20px 0;text-align:center;background:linear-gradient(180deg,var(--header-warm),var(--header-fade) 72%,var(--paper));}
+.profile-avatar{width:82px;height:82px;overflow:hidden;margin:0 auto 12px;border:4px solid var(--paper);border-radius:50%;background:var(--paper)}
+.profile-avatar .asset-photo{width:100%;height:100%;display:block;object-fit:cover}
+.profile-hero h1{font:650 24px/1.4 var(--font-body)}
+.profile-identity{display:inline-block;margin-top:7px;color:var(--secondary);font-size:13px}
+.profile-motto{margin-top:7px;color:var(--secondary);font-size:14px}
+.profile-share{min-height:48px;margin:16px 0 8px;padding:10px 22px;border-radius:24px;background:var(--action);color:var(--action-ink);font-size:16px}
+.profile-share .icon{width:19px;height:19px}
+.profile-assets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 -20px;padding:22px 12px;background:var(--paper)}
+.profile-assets>div{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;border-right:1px solid var(--line);min-width:0}
+.profile-assets>div:last-child{border-right:0}
+.profile-assets dt{font-size:14px;color:var(--secondary);overflow-wrap:anywhere}
+.profile-assets dd{margin:0;font:650 26px/1.4 var(--font-data);overflow-wrap:anywhere}
+.profile-content{padding:0 16px 10px}
+.profile-growth-entry{display:flex;align-items:center;gap:12px;min-height:64px;width:100%;margin:12px 0;padding:11px 13px;border-radius:var(--radius);background:var(--paper);text-align:left}
+.profile-level-mark{flex-shrink:0;display:grid;place-items:center;min-width:48px;min-height:38px;padding:3px 8px;border-radius:9px;background:var(--brand-soft);color:var(--brand);font:650 16px/1.4 var(--font-data)}
+.profile-growth-entry strong{display:block;font-size:16px;font-weight:600}
+.profile-growth-entry small{display:block;font-size:12px;color:var(--secondary)}
+.profile-growth-entry>.icon{width:18px;height:18px;margin-left:auto;color:var(--secondary)}
+.profile-checkin{margin:12px 0 16px;padding:17px 15px 7px;border-radius:var(--radius);background:var(--brand-soft)}
+.profile-checkin-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.profile-checkin h2{font-size:20px;font-weight:650}
+.profile-checkin-head p{margin-top:5px;font-size:14px;line-height:1.6;color:var(--secondary)}
+.profile-signin-claim{flex-shrink:0;min-width:94px;min-height:48px;padding:10px 13px;background:var(--action);color:var(--action-ink);font-size:16px;border-radius:10px}
+.profile-signin-claim:disabled{background:var(--paper);color:var(--secondary);opacity:1;box-shadow:inset 0 0 0 1px var(--line)}
+.profile-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;list-style:none;padding:0;margin:18px 0 0}
+.profile-week li{display:flex;flex-direction:column;align-items:center;min-width:0;gap:6px;color:var(--secondary)}
+.profile-week li>span{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:var(--paper);font:600 15px/1 var(--font-data)}
+.profile-week li>small{font-size:12px;line-height:1.4;white-space:nowrap}
+.profile-week .is-claimed>span{background:var(--action);border-color:var(--action);color:var(--action-ink)}
+.profile-week .is-today>span{border:2px solid var(--brand);color:var(--ink)}
+.profile-week .is-today>small{color:var(--ink);font-weight:600}
+.profile-week-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin-top:4px;font-size:14px;color:var(--brand)}
+.profile-week-link .icon{width:16px;height:16px}
+.profile-checkin-note{padding-bottom:5px;font-size:12px;line-height:1.7;color:var(--secondary)}
+.profile-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:17px 4px;margin:0 -16px 16px;background:var(--paper)}
+.profile-shortcut{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-width:0;min-height:72px;padding:4px 2px;border-radius:8px}
+.profile-shortcut>.icon{width:27px;height:27px;color:var(--brand)}
+.profile-shortcut>span{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.profile-section{margin:18px 0}
+.profile-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 2px;margin-bottom:9px}
+.profile-section-head h2{font-size:17px;font-weight:650}
+.profile-section-head>span{font-size:12px;color:var(--secondary)}
+.profile-menu{margin:0;border:0;background:var(--paper);border-radius:var(--radius);overflow:visible}
+.profile-menu .menu-row{min-height:58px;padding:13px 14px;gap:11px}
+.profile-menu .menu-row>.icon:first-child{width:21px;height:21px;color:var(--secondary)}
+.profile-menu .menu-row>span{font-size:16px;line-height:1.6;min-width:0}
+.profile-menu .menu-row>small{font-size:12px;line-height:1.6;color:var(--secondary);text-align:right;max-width:42%;overflow-wrap:anywhere}
+.profile-menu .menu-row>.icon:last-child{width:16px;height:16px;color:var(--secondary)}
+.profile-platform{padding:16px;margin:18px 0;border-radius:var(--radius);background:var(--paper)}
+.profile-platform>p{font-size:14px;line-height:1.8;color:var(--secondary)}
+.profile-platform .platform-row{margin-top:14px}
+.profile-platform .platform-option{min-height:48px;font-size:14px}
+.profile-platform .platform-option.active{background:var(--brand-soft);color:var(--ink);border-color:var(--brand)}
+.profile-privacy{display:flex;align-items:flex-start;gap:7px;padding:0 2px;font-size:12px;line-height:1.8;color:var(--secondary)}
+.profile-privacy>.icon{width:16px;height:16px;margin-top:2px}
+@media(max-width:370px){.profile-content{padding-right:12px;padding-left:12px}.profile-shortcuts{margin-right:-12px;margin-left:-12px}.profile-checkin{padding-right:12px;padding-left:12px}.profile-week{gap:3px}.profile-checkin-head{gap:8px}.profile-signin-claim{min-width:88px;padding-right:10px;padding-left:10px}.profile-menu .menu-row{padding-right:12px;padding-left:12px;gap:8px}.profile-menu .menu-row>small{max-width:37%}}
+@media(forced-colors:active){.profile-week .is-today>span,.profile-week .is-claimed>span{border:2px solid Highlight}.profile-signin-claim:disabled{border:1px solid GrayText}}
+
+@media(max-width:600px){.profile-page{margin-inline:-18px}}
+@media(max-width:370px){.profile-page{margin-inline:-14px}}
