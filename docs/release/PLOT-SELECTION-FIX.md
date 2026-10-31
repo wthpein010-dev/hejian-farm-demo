@@ -16,3 +16,5 @@
 [逐帧判据和视频摘要](../../unity/Documentation/plot-selection/portable-video-comparison.json) · [真实连续帧对比](../../unity/Documentation/plot-selection/recording-comparison.png) · [胡萝卜照料](../../unity/Documentation/plot-selection/selected-carrot-care.png) · [鸡的照料](../../unity/Documentation/plot-selection/selected-chicken-care.png)。原始录屏留本机，公开材料不含设备地址或个人资料。
 
 最终APK71,450,412字节，SHA256 `3d8758cda68caec50b0423f3606533ced77b23b5f2457d90c867e72dcd32b433`。应用在MuMu我的农场保持运行。仍为离线体验，真实ARM手机、生产微信/设备/履约另验；原跨端依赖审计阻断状态不因本次Unity修复改变。
+
+修复源码已推送独立仓库，本机已交付0.1.2 APK和工程ZIP。GitHub附件首次上传及有时限的HTTP/1.1重试均超时，0.1.2 release保留为草稿，不能当作公网下载成功；已发布的0.1.1版本保持原状。
