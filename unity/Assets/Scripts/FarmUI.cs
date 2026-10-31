@@ -75,7 +75,9 @@ namespace Hegeng
         }
         public static RectTransform Row(Transform parent,float height=52,float gap=8)
         {
-            var r=Rect("Row",parent);Height(r,height);
+            var r=Rect("Row",parent);var element=r.gameObject.AddComponent<LayoutElement>();
+            // Reserve the baseline height, but let child font metrics and wrapped text grow the row.
+            element.minHeight=height;element.flexibleHeight=0;
             var g=r.gameObject.AddComponent<HorizontalLayoutGroup>();g.spacing=gap;
             g.childControlHeight=true;g.childControlWidth=true;g.childForceExpandWidth=false;g.childForceExpandHeight=true;
             return r;
@@ -148,7 +150,7 @@ namespace Hegeng
         {
             var c=VBox(parent,7);Label(c,label,16,null,true,24);
             var r=Rect(label+" input",c);Height(r,multiline?126:54);Surface(r,FarmTheme.Canvas,10);
-            var input=r.gameObject.AddComponent<InputField>();input.characterLimit=limit;input.contentType=type;
+            var input=r.gameObject.AddComponent<FarmInputField>();input.characterLimit=limit;input.contentType=type;
             input.lineType=multiline?InputField.LineType.MultiLineNewline:InputField.LineType.SingleLine;
             var t=Label(r,"",17,FarmTheme.Ink);Fill((RectTransform)t.transform,13,12,13,12);t.alignment=multiline?TextAnchor.UpperLeft:TextAnchor.MiddleLeft;
             var p=Label(r,placeholder,16,FarmTheme.Muted);Fill((RectTransform)p.transform,13,12,13,12);p.alignment=t.alignment;
@@ -159,6 +161,45 @@ namespace Hegeng
         public static void Clear(Transform parent)
         {
             for(int i=parent.childCount-1;i>=0;i--){var go=parent.GetChild(i).gameObject;go.SetActive(false);UnityEngine.Object.Destroy(go);}
+        }
+    }
+
+    // Dismissing the mobile keyboard ends editing; discarding a form belongs to its explicit dialog.
+    public sealed class FarmInputField : InputField
+    {
+        bool dispatching;
+
+        protected override void LateUpdate() { PreserveDraft(() => base.LateUpdate()); }
+        public override void OnUpdateSelected(BaseEventData eventData) { PreserveDraft(() => base.OnUpdateSelected(eventData)); }
+        public override void OnDeselect(BaseEventData eventData)
+        {
+            PreserveDraft(() => base.OnDeselect(eventData));
+        }
+        protected override void OnDisable() { PreserveDraft(() => base.OnDisable()); }
+
+        void PreserveDraft(Action update)
+        {
+            if(dispatching||!isFocused){update();return;}
+            // Both native keyboard status and Escape can call non-virtual DeactivateInputField.
+            // Keep each live edit, but ignore its canceled rollback after isFocused becomes false.
+            string latest=text;bool didEnd=false;
+            var changed=onValueChanged;var ended=onEndEdit;var values=new List<string>();
+            var liveChanges=new OnChangeEvent();var editEnd=new EndEditEvent();
+            liveChanges.AddListener(value=>
+            {
+                // A value read from an already canceled keyboard is not a new user edit,
+                // even if UGUI has not marked wasCanceled yet.
+                bool keyboardCanceled=touchScreenKeyboard!=null&&touchScreenKeyboard.status==TouchScreenKeyboard.Status.Canceled;
+                if(!keyboardCanceled&&(isFocused||!wasCanceled)){latest=value;values.Add(value);}
+            });
+            editEnd.AddListener(value=>{if(wasCanceled)SetTextWithoutNotify(latest);didEnd=true;});
+            dispatching=true;onValueChanged=liveChanges;onEndEdit=editEnd;
+            try{update();}
+            finally{onValueChanged=changed;onEndEdit=ended;dispatching=false;}
+            // Restore the public events before notifying consumers so listener changes and
+            // callbacks that open/close a dialog keep their normal ownership.
+            foreach(string value in values)changed?.Invoke(value);
+            if(didEnd)ended?.Invoke(text);
         }
     }
 

@@ -125,3 +125,5 @@ core/weixin-app.mjs只用plus.oauth code/state，当前uni.login桥丢state不�
 用户明确要求用Unity开发当前内容并打APK。原生工程`unity/`，边界[UNITY-APK](docs/release/UNITY-APK.md)，构建[README](unity/README.md)。FarmModel拥有唯一进程内演示钱包/规则，FarmUI共享UGUI控件，FarmApp导航/内存社区；不要误接生产账户或重复建账。主题由tools/sync-unity-theme.mjs从canonical CSS生成，照片同源转换并核摘要，字体Noto CJK+OFL许可随包。Unity对象不得用C# `??`代替其`==null`检查；共享Surface重用Image；自定义Graphic需要CanvasRenderer；旧Input模式显式设0。
 
 本轮只生成体验签名APK，不代表微信/抖音SDK、生产设备/支付/广告/物流或正式上架。所有业务及UGC只在进程内、收货仅示例脱敏，退出重置。构建源码留工作树，Library/Gradle/TEMP/产物在有marker的D:/farm-unity-build；脚本只同步自身副本，不覆盖其他工程或操作其他模拟器。编辑器图形探针与APK编译/验签分别报告；后台或未知设备不能自动确认成功，草稿确认必须隔离原sheet键盘交互。
+
+0.1.1按用户明确要求完成专属MuMu Android15安装和ADB交互，见[Android验收](docs/release/UNITY-ANDROID-VERIFICATION.md)，不替代ARM真机。Row只设最小高度，让实际字体行高决定首选高度。FarmInputField统一保留键盘取消/Escape直接结束路径的最新文字，临时事件保护仅内存，明确弃稿才销毁。空场景动态UI显式关闭stripEngineCode，避免MonoScript类115启动刷错；不能为减包重新启用而跳过实际启动日志。最终模拟器及App留运行，未触其他实例/包。

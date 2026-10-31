@@ -26,7 +26,7 @@
         "visibleText": 21,
         "visibleButtons": 12,
         "contentWidth": 432.0,
-        "contentHeight": 1501.0,
+        "contentHeight": 1507.0,
         "issues": []
       }
     },
@@ -65,7 +65,7 @@
         "visibleText": 30,
         "visibleButtons": 12,
         "contentWidth": 432.0,
-        "contentHeight": 1178.0,
+        "contentHeight": 1181.0,
         "issues": []
       }
     },
@@ -78,7 +78,7 @@
         "visibleText": 24,
         "visibleButtons": 16,
         "contentWidth": 432.0,
-        "contentHeight": 1590.0,
+        "contentHeight": 1598.0,
         "issues": []
       }
     },
@@ -91,7 +91,7 @@
         "visibleText": 24,
         "visibleButtons": 15,
         "contentWidth": 432.0,
-        "contentHeight": 2039.0,
+        "contentHeight": 2047.0,
         "issues": []
       }
     }
@@ -138,6 +138,24 @@
       "passed": true,
       "error": "",
       "screenshot": "screenshots/case-07.png"
+    },
+    {
+      "name": "title-row-fits-large-font-and-multiple-lines",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-08.png"
+    },
+    {
+      "name": "keyboard-cancel-retains-text-and-draft-state",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-09.png"
+    },
+    {
+      "name": "keyboard-escape-retains-text-and-draft-state",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-10.png"
     }
   ],
   "errors": []

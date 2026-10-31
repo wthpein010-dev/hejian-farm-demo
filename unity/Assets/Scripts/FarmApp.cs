@@ -340,7 +340,7 @@ namespace Hegeng
         void Messages()
         {Modal("消息中心",c=>{if(messages.Count==0){U.Label(c,"还没有新消息",23,null,true,50);U.Label(c,"完成照料、领取福利和兑换后，这里会留下本次体验记录。",17,FarmTheme.Secondary,false,85);}foreach(var m in messages.AsEnumerable().Reverse())Note(c,m);});}
         void About()
-        {Modal("关于合耕小舍",c=>{U.Photo(c,"farm-estate",180);U.Label(c,"合耕小舍",28,null,true,44);U.Label(c,"Unity 原生安卓体验版 · 0.1.0",16,FarmTheme.Secondary,false,35);Note(c,"当前为离线体验，不接真实微信账户、设备、直播、广告、付款和物流。全部业务进度及社区内容仅本次进程内保留。");U.Label(c,"照片为生成的摄影风格示意，不是农场实拍。字体 Noto Sans CJK SC 依 SIL OFL 1.1 使用。",16,FarmTheme.Secondary,false,90);U.Button(c,"查看公开H5体验入口",Share,false);U.Button(c,"查看字体许可",()=>Info("字体许可",Resources.Load<TextAsset>("Fonts/NotoSansCJKsc-LICENSE")?.text??"SIL Open Font License 1.1 · Copyright 2014-2021 Adobe"),false);});}
+        {Modal("关于合耕小舍",c=>{U.Photo(c,"farm-estate",180);U.Label(c,"合耕小舍",28,null,true,44);U.Label(c,"Unity 原生安卓体验版 · 0.1.1",16,FarmTheme.Secondary,false,35);Note(c,"当前为离线体验，不接真实微信账户、设备、直播、广告、付款和物流。全部业务进度及社区内容仅本次进程内保留。");U.Label(c,"照片为生成的摄影风格示意，不是农场实拍。字体 Noto Sans CJK SC 依 SIL OFL 1.1 使用。",16,FarmTheme.Secondary,false,90);U.Button(c,"查看公开H5体验入口",Share,false);U.Button(c,"查看字体许可",()=>Info("字体许可",Resources.Load<TextAsset>("Fonts/NotoSansCJKsc-LICENSE")?.text??"SIL Open Font License 1.1 · Copyright 2014-2021 Adobe"),false);});}
         void Summary(Transform c,string label,string value)
         {var row=U.Row(c,44);U.Label(row,label,16,FarmTheme.Secondary);U.Label(row,value,17,FarmTheme.Ink,true,0,TextAnchor.MiddleRight);}
 

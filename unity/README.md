@@ -1,6 +1,6 @@
 # 合耕小舍 · Unity 安卓体验版
 
-Unity 2022.3.62f3c1 / 原生 C# 与 UGUI，离线竖屏。包名 `com.hegeng.xiaoshe.demo`，版本 `0.1.0`，Android 7.0 / API24 起，目标 API34，IL2CPP ARM64 与 ARMv7。仅提供本地体验签名，不是正式上架包。
+Unity 2022.3.62f3c1 / 原生 C# 与 UGUI，离线竖屏。包名 `com.hegeng.xiaoshe.demo`，版本 `0.1.1`，Android 7.0 / API24 起，目标 API34，IL2CPP ARM64 与 ARMv7。已完成MuMu Android15实际安装运行及ADB交互，见[验收](../docs/release/UNITY-ANDROID-VERIFICATION.md)；不是正式上架包。
 
 直接用Unity打开本目录并进入Play模式即可体验。编辑器菜单“合耕小舍 → 构建安卓体验包”可选择APK输出位置；命令行可复现构建见下文。当前默认使用旧Input Manager，UGUI按钮与输入不依赖新版Input System。
 
@@ -25,7 +25,7 @@ python tools/prepare-unity.py --check
 
 ## 界面证据
 
-[主页](Documentation/screenshots/home.png)、[农场](Documentation/screenshots/farm.png)、[商城](Documentation/screenshots/shop.png)、[我的](Documentation/screenshots/profile.png)为本轮实际Unity Editor PlayMode的432×900截图，不是安卓真机截图。`Documentation/preview-report.json`记录7页和7项操作回归，全数通过；不把编辑器证据当作Android安装验收。
+[主页](Documentation/screenshots/home.png)、[农场](Documentation/screenshots/farm.png)、[商城](Documentation/screenshots/shop.png)、[我的](Documentation/screenshots/profile.png)为Unity Editor PlayMode的432×900截图，不是安卓真机截图。`Documentation/preview-report.json`记录7页和10项操作回归，全数通过；不把编辑器证据当作Android安装验收。`Documentation/android/`另存ADB实际截图的432×768等比缩略图，原始1440×2560图片和运行日志保留本机。
 
 ## 构建
 

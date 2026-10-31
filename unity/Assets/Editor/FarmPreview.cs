@@ -21,7 +21,9 @@ public static class FarmPreview
     static readonly string[] Pages = { "home", "farm", "shop", "live", "profile", "community", "activities" };
     static readonly string[] Cases = { "coupon-can-be-removed-below-threshold", "pause-marks-water-unknown",
         "draft-confirmation-isolates-and-focuses", "multiline-post-fits-card-and-detail", "animal-adoption-selects-new-unit",
-        "egg-delivery-shortcut-renders-pasture", "meat-delivery-shortcut-selects-pasture" };
+        "egg-delivery-shortcut-renders-pasture", "meat-delivery-shortcut-selects-pasture",
+        "title-row-fits-large-font-and-multiple-lines", "keyboard-cancel-retains-text-and-draft-state",
+        "keyboard-escape-retains-text-and-draft-state" };
     static readonly BindingFlags Instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
     static FarmPreview() { if (SessionState.GetBool(Prefix + "active", false)) Bind(); }
@@ -218,6 +220,35 @@ public static class FarmPreview
                 ModalButtons(app).Where(b => ButtonText(b) == "先去收获").ElementAt(2).onClick.Invoke();
                 Need((string)Get(app, "farmTab") == "animal", "Meat delivery shortcut selected farmTab=" + Get(app, "farmTab") + ".");
             }
+            else if (index == 7)
+            {
+                Call(app, "Navigate", "shop");
+                Text title = ((RectTransform)Get(app, "content")).GetComponentsInChildren<Text>().First(t => t.text == "农场商城");
+                // Android font metrics can exceed the nominal 40-point title row even for one line.
+                // Two explicit lines at a larger size reproduce that pressure in the Editor as well.
+                title.fontSize = 48; title.text = "农场商城\n字体行高回归"; ForceLayout(app);
+                var row = (RectTransform)title.transform.parent;
+                Need(title.preferredHeight > 40, "Title regression did not exceed the nominal row height.");
+                Need(row.rect.height + .5f >= title.preferredHeight && title.rectTransform.rect.height + .5f >= title.preferredHeight &&
+                    title.cachedTextGenerator.lineCount == 2,
+                    "Large multiline title: row " + row.rect.height + "; text " + title.rectTransform.rect.height + "/" + title.preferredHeight +
+                    " actual/preferred height; generated lines " + title.cachedTextGenerator.lineCount + ".");
+            }
+            else if (index == 8 || index == 9)
+            {
+                Call(app, "Compose");
+                InputField input = ((RectTransform)Get(app, "modalContent")).GetComponentInChildren<InputField>();
+                foreach (string[] values in new[] { new[] { "已有内容", "已有内容" }, new[] { "", "drafttwo" }, new[] { "已有内容", "" } })
+                {
+                    VerifyCanceledEdit(input, values[0], values[1], index == 9);
+                    Need(((Func<bool>)Get(app, "dirty"))() == (values[1].Length > 0), "Canceled keyboard changed the form's draft check.");
+                }
+                VerifyCanceledEdit(input, "", "需要保留的草稿", index == 9);
+                Call(app, "TryClose", new object[] { null });
+                Need(Get(app, "confirmLayer") is GameObject confirmation && confirmation.activeInHierarchy,
+                    "Closing the form after keyboard cancellation skipped the discard confirmation.");
+                Need(input.text == "需要保留的草稿", "Opening the discard confirmation changed the draft.");
+            }
         }
         catch (Exception failure) { error = Unwrap(failure).Message; Failed(); }
         try { ForceLayout(app); CaptureCamera(app, Path.Combine(Output, screenshot), null); }
@@ -226,6 +257,49 @@ public static class FarmPreview
             ",\"error\":" + Quote(error) + ",\"screenshot\":" + Quote(screenshot) + "}");
         Call(app, "OnApplicationPause", false);
     }
+
+    static void VerifyCanceledEdit(InputField input, string original, string edited, bool escape)
+    {
+        // Cover both UGUI paths: native-keyboard cancellation reaches OnDeselect, while an
+        // Escape key in OnUpdateSelected calls non-virtual DeactivateInputField directly.
+        input.SetTextWithoutNotify(original);
+        typeof(InputField).GetField("m_OriginalText", Instance).SetValue(input, original);
+        typeof(InputField).GetField("m_AllowInput", Instance).SetValue(input, true);
+        typeof(InputField).GetField("m_WasCanceled", Instance).SetValue(input, false);
+        input.caretPosition = original.Length;
+        var changes = new List<string>(); var ended = new List<string>();
+        var expectedChanges = new List<string>();
+        UnityEngine.Events.UnityAction<string> changed = value => changes.Add(value), end = value => ended.Add(value);
+        input.onValueChanged.AddListener(changed); input.onEndEdit.AddListener(end);
+        try
+        {
+            if (escape)
+            {
+                if (original != edited && original.Length == 0)
+                    for (int i = 0; i < edited.Length; i++)
+                    { QueueInput(new Event { type = EventType.KeyDown, character = edited[i] }); expectedChanges.Add(edited.Substring(0, i + 1)); }
+                else if (original != edited && edited.Length == 0)
+                    for (int i = original.Length - 1; i >= 0; i--)
+                    { QueueInput(new Event { type = EventType.KeyDown, keyCode = KeyCode.Backspace }); expectedChanges.Add(original.Substring(0, i)); }
+                QueueInput(new Event { type = EventType.KeyDown, keyCode = KeyCode.Escape });
+                input.OnUpdateSelected(new BaseEventData(EventSystem.current));
+            }
+            else
+            {
+                input.text = edited;
+                if (original != edited) expectedChanges.Add(edited);
+                typeof(InputField).GetField("m_WasCanceled", Instance).SetValue(input, true);
+                input.OnDeselect(null);
+            }
+            input.OnDeselect(null); // A repeated deselection must not erase an already retained edit.
+            Need(!input.isFocused && input.text == edited, "Keyboard cancel lost the latest text (including an intentional empty edit).");
+            Need(changes.SequenceEqual(expectedChanges), "Keyboard cancel emitted rollback changes or lost live typing/deletion changes.");
+            Need(ended.Count == 1 && ended[0] == edited, "Keyboard cancel did not report exactly one end edit with the latest text.");
+        }
+        finally { input.onValueChanged.RemoveListener(changed); input.onEndEdit.RemoveListener(end); }
+    }
+
+    static void QueueInput(Event value) => typeof(Event).GetMethod("QueueEvent", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { value });
 
     static void Reset(MonoBehaviour app)
     {

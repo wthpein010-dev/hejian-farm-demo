@@ -58,7 +58,7 @@ public static class FarmBuild
             throw new BuildFailedException("Farm Android build failed: " + report.summary.result);
         if (!File.Exists(output) || new FileInfo(output).Length == 0)
             throw new BuildFailedException("Unity reported success without a non-empty APK.");
-        Debug.Log("HEGENG_BUILD_SUCCEEDED package=" + PackageId + " version=0.1.0");
+        Debug.Log("HEGENG_BUILD_SUCCEEDED package=" + PackageId + " version=0.1.1");
     }
 
     private static void ConfigurePlayer()
@@ -70,7 +70,7 @@ public static class FarmBuild
         input.intValue=0;settings.ApplyModifiedPropertiesWithoutUndo();
         PlayerSettings.companyName = "HeGeng";
         PlayerSettings.productName = "合耕小舍";
-        PlayerSettings.bundleVersion = "0.1.0";
+        PlayerSettings.bundleVersion = "0.1.1";
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
         PlayerSettings.allowedAutorotateToPortrait = false;
@@ -78,7 +78,7 @@ public static class FarmBuild
         PlayerSettings.allowedAutorotateToLandscapeLeft = false;
         PlayerSettings.allowedAutorotateToLandscapeRight = false;
         PlayerSettings.runInBackground = false;
-        PlayerSettings.Android.bundleVersionCode = 1;
+        PlayerSettings.Android.bundleVersionCode = 2;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
@@ -86,6 +86,9 @@ public static class FarmBuild
         PlayerSettings.Android.forceSDCardPermission = false;
         PlayerSettings.Android.useCustomKeystore = false;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+        // The UI is created from an empty bootstrap scene. Preserve native engine types
+        // required by dynamically created components (MonoScript class ID 115 included).
+        PlayerSettings.stripEngineCode = false;
         PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Android, Il2CppCompilerConfiguration.Release);
         PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Low);
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;

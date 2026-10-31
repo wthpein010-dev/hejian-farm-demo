@@ -136,11 +136,11 @@ try {
         (Get-Item -LiteralPath $apk).LastWriteTimeUtc -lt $started) {
         throw 'No fresh non-empty APK was produced; previous artifacts are not proof of this build.'
     }
-    if (-not (Select-String -LiteralPath $logPath -SimpleMatch 'HEGENG_BUILD_SUCCEEDED package=com.hegeng.xiaoshe.demo version=0.1.0' -Quiet)) {
+    if (-not (Select-String -LiteralPath $logPath -SimpleMatch 'HEGENG_BUILD_SUCCEEDED package=com.hegeng.xiaoshe.demo version=0.1.1' -Quiet)) {
         throw 'Unity did not emit the required successful domain-check/build marker.'
     }
     $buildInfo = [ordered]@{
-        schema = 1; packageId = $packageId; version = '0.1.0'; unity = '2022.3.62f3c1'
+        schema = 1; packageId = $packageId; version = '0.1.1'; unity = '2022.3.62f3c1'
         architectures = @('arm64-v8a', 'armeabi-v7a'); signing = 'Unity local development key; not a production signing identity'
         apk = [IO.Path]::GetFileName($apk); bytes = (Get-Item -LiteralPath $apk).Length
         sha256 = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
