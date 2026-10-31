@@ -29,7 +29,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='Verify without writing files.')
     args = parser.parse_args()
-    canonical_bytes = (PHOTOS / 'manifest.json').read_bytes()
+    # Git stores text with LF. Windows checkouts may contain CRLF; fingerprint
+    # the same UTF-8/LF representation so clean clones can verify the assets.
+    canonical_bytes = (PHOTOS / 'manifest.json').read_bytes().replace(b'\r\n', b'\n')
     canonical = json.loads(canonical_bytes)
     assets = canonical['assets']
     if len(assets) != 25 or len({a['key'] for a in assets}) != 25:
@@ -37,7 +39,7 @@ def main():
     expected_names = {a['key'] + '.jpg' for a in assets}
     if args.check:
         generated = json.loads((OUTPUT / 'manifest.json').read_text(encoding='utf-8'))
-        if generated['canonicalManifestSha256'] != digest(canonical_bytes):
+        if generated.get('canonicalManifestLineEndings') != 'LF' or generated['canonicalManifestSha256'] != digest(canonical_bytes):
             raise ValueError('Canonical photo manifest changed; regenerate Unity assets.')
         if generated['conversion'] != SETTINGS or len(generated['assets']) != 25:
             raise ValueError('Unity photo conversion manifest is invalid.')
@@ -83,6 +85,7 @@ def main():
             'description': 'AI-generated photographic examples; not actual farm photographs or live video.',
             'canonicalManifest': 'prototype/assets/photos/manifest.json',
             'canonicalManifestSha256': digest(canonical_bytes),
+            'canonicalManifestLineEndings': 'LF',
             'generationPrompts': 'See canonical manifest; source photos remain the single asset authority.',
             'generator': 'Pillow ' + pillow_version,
             'conversion': SETTINGS, 'assets': results})

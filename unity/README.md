@@ -15,7 +15,7 @@ python tools/prepare-unity.py
 python tools/prepare-unity.py --check
 ```
 
-照片单一来源为 `prototype/assets/photos/manifest.json` 中的25张WebP。工具先核实源SHA256和尺寸，保持尺寸转换为RGB JPEG（quality90、subsampling0）；`Assets/Resources/Photos/manifest.json` 记录源及衍生文件的SHA256、字节与转换参数，完整生成prompt仍归原manifest。工具不生成新图片。
+照片单一来源为 `prototype/assets/photos/manifest.json` 中的25张WebP。工具先核实源SHA256和尺寸，保持尺寸转换为RGB JPEG（quality90、subsampling0）；`Assets/Resources/Photos/manifest.json` 记录源及衍生文件的SHA256、字节与转换参数，完整生成prompt仍归原manifest。JSON清单指纹按Git统一的UTF-8/LF计算，Windows CRLF与导出工程能得到同一结果；25张照片仍核对原始二进制摘要。工具不生成新图片。
 
 字体仅复制本机已明确授权的 `D:/app/RingHaven/Assets/Resources/Fonts/NotoSansCJKsc.otf` 和同目录 `NotoSansCJKsc-LICENSE.txt`；不读取该项目其他文件。副本与OFL许可证一起交付，摘要见 `Assets/Resources/Fonts/provenance.json`。已有资源的 `--check` 不依赖外部字体目录，其他电脑可直接验收仓库中的副本。
 

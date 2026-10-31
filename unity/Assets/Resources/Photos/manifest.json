@@ -2,7 +2,8 @@
   "schema": 1,
   "description": "AI-generated photographic examples; not actual farm photographs or live video.",
   "canonicalManifest": "prototype/assets/photos/manifest.json",
-  "canonicalManifestSha256": "cbc2b46d5a420cd9439df7f45f02648831fd0b79cb2e47aeb226f6153a3310c2",
+  "canonicalManifestSha256": "72168fae79304147152e1d6583cedecf1a704be63f8c7e909805b2edba177b68",
+  "canonicalManifestLineEndings": "LF",
   "generationPrompts": "See canonical manifest; source photos remain the single asset authority.",
   "generator": "Pillow 12.2.0",
   "conversion": {
