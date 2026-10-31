@@ -127,3 +127,5 @@ core/weixin-app.mjs只用plus.oauth code/state，当前uni.login桥丢state不�
 本轮只生成体验签名APK，不代表微信/抖音SDK、生产设备/支付/广告/物流或正式上架。所有业务及UGC只在进程内、收货仅示例脱敏，退出重置。构建源码留工作树，Library/Gradle/TEMP/产物在有marker的D:/farm-unity-build；脚本只同步自身副本，不覆盖其他工程或操作其他模拟器。编辑器图形探针与APK编译/验签分别报告；后台或未知设备不能自动确认成功，草稿确认必须隔离原sheet键盘交互。
 
 0.1.1按用户明确要求完成专属MuMu Android15安装和ADB交互，见[Android验收](docs/release/UNITY-ANDROID-VERIFICATION.md)，不替代ARM真机。Row只设最小高度，让实际字体行高决定首选高度。FarmInputField统一保留键盘取消/Escape直接结束路径的最新文字，临时事件保护仅内存，明确弃稿才销毁。空场景动态UI显式关闭stripEngineCode，避免MonoScript类115启动刷错；不能为减包重新启用而跳过实际启动日志。最终模拟器及App留运行，未触其他实例/包。
+
+0.1.2修复点击地块/牲畜图片整页重建导致的单帧回顶，见[选择修复](docs/release/PLOT-SELECTION-FIX.md)。FarmApp拥有同一view的tile绑定与carePanel，Render换页先清绑定，SelectFarmUnit只变高亮及照料子项，同对象重复选择无操作；保持照片/viewport/content/button实例与滚动位置，末尾缩短仅钳制合法范围。禁止重新用Render处理仅选中变化。Editor原10+农田/牧场跨帧2条、MuMu实际录屏前后对比均有证据。

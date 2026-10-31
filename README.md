@@ -1,6 +1,6 @@
 # 合耕小舍 · 竖版 H5 Demo
 
-2026-10-31新增[Unity原生安卓体验工程](unity/README.md)，包含离线五页和种养、商城、签到、社区等操作；[下载APK与工程包](https://github.com/wthpein010-dev/hejian-farm-demo/releases/tag/unity-demo-v0.1.1)，[范围与验收](docs/release/UNITY-APK.md)。0.1.1已完成[MuMu安装及ADB交互验收](docs/release/UNITY-ANDROID-VERIFICATION.md)，修复标题裁字、返回键丢草稿及启动裁剪报错。Unity体验包与原H5、正式跨端账户工程各自保留，不把APK打包视为生产服务或平台上架完成。
+2026-10-31新增[Unity原生安卓体验工程](unity/README.md)，包含离线五页和种养、商城、签到、社区等操作；[下载APK与工程包](https://github.com/wthpein010-dev/hejian-farm-demo/releases/tag/unity-demo-v0.1.2)，[范围与验收](docs/release/UNITY-APK.md)。0.1.1已完成[MuMu安装及ADB交互验收](docs/release/UNITY-ANDROID-VERIFICATION.md)，修复标题裁字、返回键丢草稿及启动裁剪报错；0.1.2另修复[农场图片点击闪动](docs/release/PLOT-SELECTION-FIX.md)，经12项界面回归、MuMu安装和连续点击录屏核对。Unity体验包与原H5、正式跨端账户工程各自保留，不把APK打包视为生产服务或平台上架完成。
 
 > 正式App／微信／抖音小程序工程正在推进，尚未达到全量上线验收。新增 `apps/mobile` 跨端客户端与 `services/api` 持久账户/资产服务；现有公开Pages仍是 `prototype/` H5演示。两者验证边界见[上线矩阵](docs/release/READINESS.md)，不能把演示发布或跨端编译写成正式上架。
 

@@ -23,8 +23,30 @@ public static class FarmPreview
         "draft-confirmation-isolates-and-focuses", "multiline-post-fits-card-and-detail", "animal-adoption-selects-new-unit",
         "egg-delivery-shortcut-renders-pasture", "meat-delivery-shortcut-selects-pasture",
         "title-row-fits-large-font-and-multiple-lines", "keyboard-cancel-retains-text-and-draft-state",
-        "keyboard-escape-retains-text-and-draft-state" };
+        "keyboard-escape-retains-text-and-draft-state", "crop-selection-keeps-photos-and-scroll-stable",
+        "pasture-selection-keeps-photos-and-scroll-stable" };
     static readonly BindingFlags Instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+    static SelectionProbe selectionProbe;
+
+    sealed class SelectionProbe
+    {
+        public bool Pasture;
+        public int Step, ReadyFrame;
+        public ScrollRect Scroll;
+        public RectTransform Content, Hero;
+        public Image[] Photos;
+        public Button[] Tiles;
+        public Button First, Target;
+        public Component[] Preserved;
+        public int[] InstanceIds;
+        public Sprite[] Sprites;
+        public Vector2 Position;
+        public Color SelectedColor, UnselectedColor;
+        public string FirstLabel => Pasture ? "生态黑猪" : "地块1 · 小番茄";
+        public string TargetLabel => Pasture ? "林下土鸡" : "地块2 · 甜脆胡萝卜";
+        public string TargetId => Pasture ? "C01" : "A02";
+        public string ExpectedHeading => Pasture ? "林下土鸡 · 生长中 · 86/120天" : "地块2 · 甜脆胡萝卜 · 可以收获";
+    }
 
     static FarmPreview() { if (SessionState.GetBool(Prefix + "active", false)) Bind(); }
 
@@ -140,15 +162,16 @@ public static class FarmPreview
                 {
                     SessionState.SetString(Prefix + "stage", "leaving"); EditorApplication.isPlaying = false; return;
                 }
-                RunRegression(app, index);
+                if (!RunRegression(app, index)) return;
                 SessionState.SetInt(Prefix + "case", index + 1);
             }
         }
         catch (Exception error) { Fatal(error); }
     }
 
-    static void RunRegression(MonoBehaviour app, int index)
+    static bool RunRegression(MonoBehaviour app, int index)
     {
+        if (index >= 10) return RunSelectionRegression(app, index);
         string error = ""; string screenshot = "case-" + (index + 1).ToString("00") + ".png";
         try
         {
@@ -251,6 +274,134 @@ public static class FarmPreview
             }
         }
         catch (Exception failure) { error = Unwrap(failure).Message; Failed(); }
+        CompleteRegression(app, index, screenshot, error);
+        return true;
+    }
+
+    static bool RunSelectionRegression(MonoBehaviour app, int index)
+    {
+        string error = "";
+        try
+        {
+            if (selectionProbe == null)
+            {
+                selectionProbe = new SelectionProbe { Pasture = index == 11 };
+                Reset(app); Call(app, "Navigate", "farm");
+                WaitSelectionFrame(selectionProbe, 1); return false;
+            }
+            SelectionProbe probe = selectionProbe;
+            if (UnityEngine.Time.frameCount < probe.ReadyFrame) return false;
+            ForceLayout(app);
+            if (probe.Step == 1)
+            {
+                if (probe.Pasture)
+                {
+                    Button segment = ((RectTransform)Get(app, "content")).GetComponentsInChildren<Button>()
+                        .FirstOrDefault(b => ButtonText(b) == "牧场");
+                    Need(segment != null && segment.interactable, "Pasture segment is not available to the user.");
+                    segment.onClick.Invoke();
+                }
+                WaitSelectionFrame(probe, 2); return false;
+            }
+            if (probe.Step == 2)
+            {
+                // Establish the initial selection through the same public button event as the tested switch.
+                SelectionTile((RectTransform)Get(app, "content"), probe.FirstLabel).onClick.Invoke();
+                WaitSelectionFrame(probe, 3); return false;
+            }
+            if (probe.Step == 3)
+            {
+                CaptureSelection(app, probe);
+                probe.Target.onClick.Invoke();
+                VerifySelection(app, probe, "Selecting another tile");
+                WaitSelectionFrame(probe, 4); return false;
+            }
+            if (probe.Step == 4)
+            {
+                VerifySelection(app, probe, "The frame after selecting another tile");
+                probe.Target.onClick.Invoke();
+                VerifySelection(app, probe, "Selecting the same tile again");
+                WaitSelectionFrame(probe, 5); return false;
+            }
+            VerifySelection(app, probe, "The frame after selecting the same tile again");
+        }
+        catch (Exception failure) { error = Unwrap(failure).Message; Failed(); }
+        CompleteRegression(app, index, "case-" + (index + 1).ToString("00") + ".png", error);
+        selectionProbe = null;
+        return true;
+    }
+
+    static void WaitSelectionFrame(SelectionProbe probe, int step)
+    {
+        probe.Step = step;
+        // A later Editor update is not necessarily a later rendered frame. Let Destroy,
+        // ScrollRect.LateUpdate and any deferred position restoration actually run.
+        probe.ReadyFrame = UnityEngine.Time.frameCount + 2;
+    }
+
+    static Button SelectionTile(RectTransform content, string label)
+    {
+        Button tile = content.GetComponentsInChildren<Button>().FirstOrDefault(b =>
+            b.GetComponentsInChildren<Text>().Any(t => t.text == label) &&
+            b.GetComponentsInChildren<Image>().Any(i => i.name == "Cover"));
+        Need(tile != null && tile.interactable, "Expected an enabled photo tile: " + label);
+        return tile;
+    }
+
+    static void CaptureSelection(MonoBehaviour app, SelectionProbe probe)
+    {
+        probe.Scroll = (ScrollRect)Get(app, "scroll"); probe.Content = (RectTransform)Get(app, "content");
+        probe.Hero = probe.Content.GetComponentsInChildren<RectTransform>().FirstOrDefault(r => r.name == "Landscape");
+        probe.Photos = probe.Content.GetComponentsInChildren<Image>().Where(i => i.name == "Cover").ToArray();
+        probe.Tiles = probe.Content.GetComponentsInChildren<Button>().Where(b =>
+            b.GetComponentsInChildren<Image>().Any(i => i.name == "Cover")).ToArray();
+        probe.First = SelectionTile(probe.Content, probe.FirstLabel); probe.Target = SelectionTile(probe.Content, probe.TargetLabel);
+        Need(probe.Hero != null && probe.Photos.Length >= 3 && probe.Tiles.Length >= 2,
+            "Selection regression needs the farm hero and at least two photo tiles.");
+        Need(probe.Content.GetComponentsInChildren<Text>().Any(t => t.text.StartsWith(probe.FirstLabel + " · ", StringComparison.Ordinal)),
+            "The initial care card does not describe the first tile.");
+        probe.SelectedColor = probe.First.GetComponent<Image>().color; probe.UnselectedColor = probe.Target.GetComponent<Image>().color;
+        Need(probe.SelectedColor != probe.UnselectedColor, "The initial selected tile is not visually distinguished.");
+        probe.Preserved = new Component[] { probe.Scroll, probe.Content, probe.Hero }
+            .Concat(probe.Photos.Cast<Component>()).Concat(probe.Tiles.Cast<Component>()).ToArray();
+        probe.InstanceIds = probe.Preserved.Select(c => c.GetInstanceID()).ToArray();
+        probe.Sprites = probe.Photos.Select(p => p.sprite).ToArray();
+        Need(probe.Sprites.All(sprite => sprite != null), "Selection regression started with a missing photo.");
+        float maximum = probe.Content.rect.height - probe.Scroll.viewport.rect.height;
+        Need(maximum > 100, "Selection regression requires a scrollable farm page.");
+        probe.Scroll.StopMovement(); probe.Scroll.verticalNormalizedPosition = .5f;
+        probe.Position = probe.Content.anchoredPosition;
+        Need(probe.Position.y > 1 && probe.Position.y < maximum - 1, "The farm was not scrolled to a middle position.");
+    }
+
+    static void VerifySelection(MonoBehaviour app, SelectionProbe probe, string action)
+    {
+        Need((ScrollRect)Get(app, "scroll") == probe.Scroll, action + " replaced the farm ScrollRect.");
+        Need((RectTransform)Get(app, "content") == probe.Content, action + " replaced the farm content.");
+        for (int i = 0; i < probe.Preserved.Length; i++)
+        {
+            Component component = probe.Preserved[i];
+            Need(component != null && component.GetInstanceID() == probe.InstanceIds[i] && component.gameObject.activeInHierarchy,
+                action + " destroyed or hid an existing farm hero, photo, tile or scroll object (index " + i + ").");
+        }
+        Image[] photos = probe.Content.GetComponentsInChildren<Image>().Where(i => i.name == "Cover").ToArray();
+        Need(photos.Length == probe.Photos.Length && photos.Select(i => i.GetInstanceID()).SequenceEqual(probe.Photos.Select(i => i.GetInstanceID())),
+            action + " replaced farm photos.");
+        for (int i = 0; i < probe.Photos.Length; i++)
+            Need(probe.Photos[i].enabled && probe.Photos[i].sprite == probe.Sprites[i], action + " blanked an existing farm photo.");
+        Need(Vector2.Distance(probe.Content.anchoredPosition, probe.Position) < .25f,
+            action + " moved the farm scroll position from " + probe.Position + " to " + probe.Content.anchoredPosition + ".");
+        Need((string)Get(app, "selectedUnit") == probe.TargetId, action + " did not select the clicked unit.");
+        Need(probe.Content.GetComponentsInChildren<Text>().Any(t => t.text == probe.ExpectedHeading),
+            action + " did not update the care card to the clicked unit.");
+        Need(!probe.Content.GetComponentsInChildren<Text>().Any(t => t.text.StartsWith(probe.FirstLabel + " · ", StringComparison.Ordinal)),
+            action + " left the previous unit's care card visible.");
+        Need(probe.Target.GetComponent<Image>().color == probe.SelectedColor && probe.First.GetComponent<Image>().color == probe.UnselectedColor,
+            action + " did not move the visible selection highlight to the clicked photo tile.");
+    }
+
+    static void CompleteRegression(MonoBehaviour app, int index, string screenshot, string error)
+    {
         try { ForceLayout(app); CaptureCamera(app, Path.Combine(Output, screenshot), null); }
         catch (Exception captureError) { error += " Screenshot: " + Unwrap(captureError).Message; Failed(); }
         Append("cases", "{\"name\":" + Quote(Cases[index]) + ",\"passed\":" + (error.Length == 0 ? "true" : "false") +

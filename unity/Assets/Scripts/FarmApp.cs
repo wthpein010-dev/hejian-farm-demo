@@ -18,6 +18,8 @@ namespace Hegeng
         Text balance,toastLabel;
         string page="home",farmTab="crop",shopTab="adoption",circle="全部",cameraKey="farm-estate",selectedUnit="plot-1",renderedKey="home:";
         readonly Dictionary<string,float> positions=new Dictionary<string,float>();
+        readonly Dictionary<string,Image> farmTileImages=new Dictionary<string,Image>();
+        RectTransform farmCarePanel;
         readonly HashSet<string> joined=new HashSet<string>(),friends=new HashSet<string>{"f1"},requested=new HashSet<string>(),liked=new HashSet<string>(),hidden=new HashSet<string>();
         readonly HashSet<string> shipping=new HashSet<string>();
         readonly List<Post> posts=new List<Post>();
@@ -94,7 +96,7 @@ namespace Hegeng
         void SavePosition(){if(content!=null)positions[renderedKey]=Mathf.Max(0,content.anchoredPosition.y);}
         void Render(bool preserve=true)
         {
-            if(preserve)SavePosition();U.Clear(body);scroll=U.Scroll(body,out content);BuildFooter();UpdateBalance();
+            if(preserve)SavePosition();farmTileImages.Clear();farmCarePanel=null;U.Clear(body);scroll=U.Scroll(body,out content);BuildFooter();UpdateBalance();
             switch(page){case "home":Home();break;case "farm":Farm();break;case "shop":Shop();break;case "live":Live();break;case "profile":Profile();break;case "community":Community();break;case "friends":Friends();break;case "activities":Activities();break;}
             renderedKey=PositionKey;U.Spacer(content,12);StartCoroutine(RestorePosition(positions.TryGetValue(PositionKey,out var y)?y:0));
         }
@@ -153,13 +155,36 @@ namespace Hegeng
                 var row=U.Row(content,174,10);
                 for(int j=i;j<Math.Min(i+2,units.Count);j++)
                 {
-                    var unit=units[j];var b=U.Button(row,"",()=>{selectedUnit=unit.Id;Render();},false,true,174);b.GetComponent<Image>().color=selectedUnit==unit.Id?FarmTheme.Soft:FarmTheme.Paper;
+                    var unit=units[j];var b=U.Button(row,"",()=>SelectFarmUnit(unit.Id),false,true,174);var tile=b.GetComponent<Image>();tile.color=selectedUnit==unit.Id?FarmTheme.Soft:FarmTheme.Paper;farmTileImages.Add(unit.Id,tile);
                     var ph=U.Rect("Picture",b.transform);U.Place(ph,8,8,174,99);var picture=U.Photo(ph,unit.Art??"empty",99);U.Fill((RectTransform)picture.transform.parent);
                     var label=U.Label(b.transform,UnitName(unit),16,null,true);U.Place((RectTransform)label.transform,12,106,166,43);
                     var status=U.Label(b.transform,UnitStatus(unit),13,FarmTheme.Secondary);U.Place((RectTransform)status.transform,12,150,166,23);
                 }
             }
-            var selected=units.Find(u=>u.Id==selectedUnit)??units[0];var card=U.Card(content);
+            var selected=units.Find(u=>u.Id==selectedUnit)??units[0];farmCarePanel=U.Card(content);BuildFarmCare(selected);
+            if(model.DeviceStatus!="idle")U.Button(content,"查看灌溉状态 · "+DeviceLabel(),()=>Device(model.DeviceUnitId),false,true,54,"water");
+            if(farmTab=="animal")
+            {var eggs=U.Card(content);U.Label(eggs,"今天的鲜鸡蛋",21,null,true,32);U.Label(eggs,model.EggsAvailable>0?"示例登记 "+model.EggsAvailable+" 枚，手动收取后进入仓库。":"今日示例鸡蛋已收入仓库。",16,FarmTheme.Secondary,false,52);U.Button(eggs,model.EggsAvailable>0?"收取鸡蛋":"今日已收取",()=>{Act(model.CollectEggs());Render();},true,model.EggsAvailable>0,54,"gift");}
+            var q=U.Row(content,80);Quick(q,"gift","我的仓库","看看攒下的收获",Warehouse);Quick(q,"calendar","每日农事","查看今日待办",()=>Navigate("activities"));
+            Note(content,"种养与设备为离线演示。次数、间隔与农时为方案样本，真实操作需农场确认。");
+        }
+        void SelectFarmUnit(string id)
+        {
+            if(page!="farm"||farmCarePanel==null||selectedUnit==id)return;
+            var units=farmTab=="crop"?model.Plots:model.Animals;
+            var selected=units.Find(unit=>unit.Id==id);if(selected==null)return;
+            Vector2 position=content.anchoredPosition;selectedUnit=id;
+            foreach(var tile in farmTileImages)if(tile.Value!=null)tile.Value.color=tile.Key==id?FarmTheme.Soft:FarmTheme.Paper;
+            // Keep the existing viewport, hero and photo tiles alive. Only the care
+            // panel's text/actions change, with layout settled before this frame renders.
+            U.Clear(farmCarePanel);BuildFarmCare(selected);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);Canvas.ForceUpdateCanvases();
+            scroll.StopMovement();float maximum=Mathf.Max(0,content.rect.height-scroll.viewport.rect.height);
+            content.anchoredPosition=new Vector2(position.x,Mathf.Clamp(position.y,0,maximum));SavePosition();
+        }
+        void BuildFarmCare(FarmUnit selected)
+        {
+            var card=farmCarePanel;
             U.Label(card,UnitName(selected)+" · "+UnitStatus(selected),20,null,true,56);
             if(selected.Status=="empty"||selected.Status=="harvested")
             {U.Label(card,"选一份当季种养，开启新的田园时光。",16,FarmTheme.Secondary,false,50);U.Button(card,"去选择种养",()=>{shopTab="adoption";Navigate("shop");},true,true,54,"leaf");}
@@ -175,11 +200,6 @@ namespace Hegeng
                 U.Button(actions,"查看档案",()=>UnitDetails(selected),false,true,54);
                 if(selected.Status=="ready")U.Button(card,selected.Kind=="crop"?"收获成熟作物":"预约处理成品",()=>Confirm("确认收获",selected.Kind=="crop"?"收获这份成熟的示例作物，加入仓库。":"演示工作人员处理完成后的成品收取，不邮寄活体。",()=>{Act(model.Harvest(selected.Id));Render();}),true,true,54,"gift");
             }
-            if(model.DeviceStatus!="idle")U.Button(content,"查看灌溉状态 · "+DeviceLabel(),()=>Device(model.DeviceUnitId),false,true,54,"water");
-            if(farmTab=="animal")
-            {var eggs=U.Card(content);U.Label(eggs,"今天的鲜鸡蛋",21,null,true,32);U.Label(eggs,model.EggsAvailable>0?"示例登记 "+model.EggsAvailable+" 枚，手动收取后进入仓库。":"今日示例鸡蛋已收入仓库。",16,FarmTheme.Secondary,false,52);U.Button(eggs,model.EggsAvailable>0?"收取鸡蛋":"今日已收取",()=>{Act(model.CollectEggs());Render();},true,model.EggsAvailable>0,54,"gift");}
-            var q=U.Row(content,80);Quick(q,"gift","我的仓库","看看攒下的收获",Warehouse);Quick(q,"calendar","每日农事","查看今日待办",()=>Navigate("activities"));
-            Note(content,"种养与设备为离线演示。次数、间隔与农时为方案样本，真实操作需农场确认。");
         }
         string UnitName(FarmUnit unit)=>unit.Kind=="crop"?"地块"+(model.Plots.IndexOf(unit)+1)+" · "+unit.Name:unit.Name;
         static string UnitStatus(FarmUnit u)=>u.Status=="empty"?"待种植":u.Status=="ready"?"可以收获":u.Status=="harvested"?"已收取":"生长中 · "+u.Days+"/"+u.Total+"天";
@@ -340,7 +360,7 @@ namespace Hegeng
         void Messages()
         {Modal("消息中心",c=>{if(messages.Count==0){U.Label(c,"还没有新消息",23,null,true,50);U.Label(c,"完成照料、领取福利和兑换后，这里会留下本次体验记录。",17,FarmTheme.Secondary,false,85);}foreach(var m in messages.AsEnumerable().Reverse())Note(c,m);});}
         void About()
-        {Modal("关于合耕小舍",c=>{U.Photo(c,"farm-estate",180);U.Label(c,"合耕小舍",28,null,true,44);U.Label(c,"Unity 原生安卓体验版 · 0.1.1",16,FarmTheme.Secondary,false,35);Note(c,"当前为离线体验，不接真实微信账户、设备、直播、广告、付款和物流。全部业务进度及社区内容仅本次进程内保留。");U.Label(c,"照片为生成的摄影风格示意，不是农场实拍。字体 Noto Sans CJK SC 依 SIL OFL 1.1 使用。",16,FarmTheme.Secondary,false,90);U.Button(c,"查看公开H5体验入口",Share,false);U.Button(c,"查看字体许可",()=>Info("字体许可",Resources.Load<TextAsset>("Fonts/NotoSansCJKsc-LICENSE")?.text??"SIL Open Font License 1.1 · Copyright 2014-2021 Adobe"),false);});}
+        {Modal("关于合耕小舍",c=>{U.Photo(c,"farm-estate",180);U.Label(c,"合耕小舍",28,null,true,44);U.Label(c,"Unity 原生安卓体验版 · 0.1.2",16,FarmTheme.Secondary,false,35);Note(c,"当前为离线体验，不接真实微信账户、设备、直播、广告、付款和物流。全部业务进度及社区内容仅本次进程内保留。");U.Label(c,"照片为生成的摄影风格示意，不是农场实拍。字体 Noto Sans CJK SC 依 SIL OFL 1.1 使用。",16,FarmTheme.Secondary,false,90);U.Button(c,"查看公开H5体验入口",Share,false);U.Button(c,"查看字体许可",()=>Info("字体许可",Resources.Load<TextAsset>("Fonts/NotoSansCJKsc-LICENSE")?.text??"SIL Open Font License 1.1 · Copyright 2014-2021 Adobe"),false);});}
         void Summary(Transform c,string label,string value)
         {var row=U.Row(c,44);U.Label(row,label,16,FarmTheme.Secondary);U.Label(row,value,17,FarmTheme.Ink,true,0,TextAnchor.MiddleRight);}
 

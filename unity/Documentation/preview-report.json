@@ -156,6 +156,18 @@
       "passed": true,
       "error": "",
       "screenshot": "screenshots/case-10.png"
+    },
+    {
+      "name": "crop-selection-keeps-photos-and-scroll-stable",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-11.png"
+    },
+    {
+      "name": "pasture-selection-keeps-photos-and-scroll-stable",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-12.png"
     }
   ],
   "errors": []

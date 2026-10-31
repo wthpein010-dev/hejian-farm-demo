@@ -1,0 +1,779 @@
+{
+  "schema": 1,
+  "analysis": "Recorded plot selection flicker comparison",
+  "thresholds_fixed_for_both": {
+    "template_score_max_exclusive": 0.1,
+    "displacement_px_min_inclusive": 4,
+    "coherence_difference_px_max_inclusive": 2,
+    "white_channel_min_inclusive": 240,
+    "pure_white_roi_fraction_min_inclusive": 0.9
+  },
+  "reference_template": {
+    "source_video_filename": "plot-flicker-before.mp4",
+    "frame_index_0based": 0,
+    "roi_boxes_xyxy": {
+      "tomato": [
+        75,
+        470,
+        305,
+        600
+      ],
+      "carrot": [
+        405,
+        470,
+        650,
+        600
+      ],
+      "hero": [
+        75,
+        150,
+        640,
+        390
+      ]
+    },
+    "search_y_range_half_open": [
+      114,
+      1141
+    ],
+    "matching": "cv2.TM_SQDIFF_NORMED, fixed x per photographic interior; RGB frames decoded with ffmpeg -fps_mode passthrough"
+  },
+  "before": {
+    "video_filename": "plot-flicker-before.mp4",
+    "sha256": "75cb3be900a0b010e9d9d2d071654242b1f3d808e3b3ea26d23d4b675406f5b5",
+    "metadata": {
+      "ffmpeg_version": "7.1-essentials_build-www.gyan.dev built with gcc 14.2.0 (Rev1, Built by MSYS2 project)",
+      "codec": "h264",
+      "pix_fmt": "yuv420p(tv, bt709, progressive)",
+      "fps": 57.88,
+      "source_size": [
+        720,
+        1280
+      ],
+      "size": [
+        720,
+        1280
+      ],
+      "rotate": 0,
+      "duration": 7.98
+    },
+    "frame_count": 462,
+    "pts_count": 462,
+    "pts_first_seconds": 0.0,
+    "pts_last_seconds": 7.9657,
+    "pts_interval_seconds": {
+      "min": 0.005667000000000005,
+      "median": 0.016688000000000258,
+      "max": 0.06913299999999989
+    },
+    "calibration_method": "Median best-y among recognized frames, independently per photo, using same fixed before-frame-0 RGB templates. Unrecognized frames are separately counted and cannot be scored as stable.",
+    "calibrated_template_top_y": {
+      "tomato": 470,
+      "carrot": 470,
+      "hero": 150
+    },
+    "calibration_offset_from_before_reference_y": {
+      "tomato": 0,
+      "carrot": 0,
+      "hero": 0
+    },
+    "photo_stats": {
+      "tomato": {
+        "recognized_frame_count": 462,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          382
+        ],
+        "template_score_range": [
+          0.0,
+          0.026126790791749954
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.0,
+          0.2214046822742475
+        ],
+        "calibrated_original_roi_mae_range": [
+          0.0,
+          85.6051839464883
+        ]
+      },
+      "carrot": {
+        "recognized_frame_count": 462,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          382
+        ],
+        "template_score_range": [
+          0.0,
+          0.040586698800325394
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.0,
+          0.0
+        ],
+        "calibrated_original_roi_mae_range": [
+          0.0,
+          55.04267922553637
+        ]
+      },
+      "hero": {
+        "recognized_frame_count": 462,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          382
+        ],
+        "template_score_range": [
+          1.6179937745164352e-07,
+          0.03782159835100174
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.01915929203539823,
+          0.798547197640118
+        ],
+        "calibrated_original_roi_mae_range": [
+          0.0,
+          162.6641297935103
+        ]
+      }
+    },
+    "coherent_body_displacement_frame_count": 10,
+    "coherent_body_displacement_events": [
+      {
+        "frame_index_0based": 55,
+        "pts_seconds": 0.966456,
+        "next_pts_seconds": 0.980522,
+        "recorder_interval_ms": 14.066,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.009243817068636417,
+          "carrot": 0.01629747450351715,
+          "hero": 0.020516008138656616
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 70,
+        "pts_seconds": 1.250333,
+        "next_pts_seconds": 1.265411,
+        "recorder_interval_ms": 15.078,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.011646848171949387,
+          "carrot": 0.019799180328845978,
+          "hero": 0.023303501307964325
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 84,
+        "pts_seconds": 1.534833,
+        "next_pts_seconds": 1.550411,
+        "recorder_interval_ms": 15.578,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.015189523808658123,
+          "carrot": 0.025047335773706436,
+          "hero": 0.028308866545557976
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 98,
+        "pts_seconds": 1.780944,
+        "next_pts_seconds": 1.801267,
+        "recorder_interval_ms": 20.323,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.015273173339664936,
+          "carrot": 0.024605104699730873,
+          "hero": 0.028210924938321114
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 113,
+        "pts_seconds": 2.047478,
+        "next_pts_seconds": 2.066267,
+        "recorder_interval_ms": 18.789,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.020039822906255722,
+          "carrot": 0.03215601295232773,
+          "hero": 0.03433562442660332
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 128,
+        "pts_seconds": 2.331444,
+        "next_pts_seconds": 2.349111,
+        "recorder_interval_ms": 17.667,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.01697992905974388,
+          "carrot": 0.027455246075987816,
+          "hero": 0.030115747824311256
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 143,
+        "pts_seconds": 2.615133,
+        "next_pts_seconds": 2.632122,
+        "recorder_interval_ms": 16.989,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.015189887955784798,
+          "carrot": 0.024964118376374245,
+          "hero": 0.028114885091781616
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 157,
+        "pts_seconds": 2.864811,
+        "next_pts_seconds": 2.880544,
+        "recorder_interval_ms": 15.733,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.01873035915195942,
+          "carrot": 0.030269483104348183,
+          "hero": 0.032675016671419144
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 172,
+        "pts_seconds": 3.131,
+        "next_pts_seconds": 3.1509,
+        "recorder_interval_ms": 19.9,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.02261507324874401,
+          "carrot": 0.036063045263290405,
+          "hero": 0.03782159835100174
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      },
+      {
+        "frame_index_0based": 188,
+        "pts_seconds": 3.415389,
+        "next_pts_seconds": 3.431211,
+        "recorder_interval_ms": 15.822,
+        "offset_y": {
+          "tomato": 382,
+          "carrot": 382,
+          "hero": 382
+        },
+        "template_scores": {
+          "tomato": 0.017069004476070404,
+          "carrot": 0.027325185015797615,
+          "hero": 0.030222740024328232
+        },
+        "previous_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        },
+        "next_offsets_y": {
+          "tomato": 0,
+          "carrot": 0,
+          "hero": 0
+        }
+      }
+    ],
+    "any_photo_displacement_frames": [
+      55,
+      70,
+      84,
+      98,
+      113,
+      128,
+      143,
+      157,
+      172,
+      188
+    ],
+    "unrecognized_photo_frame_count": 0,
+    "unrecognized_photo_frames": [],
+    "pure_white_roi_frames": []
+  },
+  "after": {
+    "video_filename": "plot-flicker-after.mp4",
+    "sha256": "16441ebc948c07d3ce130946b050f49215e00708446f491792af6272228ba610",
+    "metadata": {
+      "ffmpeg_version": "7.1-essentials_build-www.gyan.dev built with gcc 14.2.0 (Rev1, Built by MSYS2 project)",
+      "codec": "h264",
+      "pix_fmt": "yuv420p(tv, bt709, progressive)",
+      "fps": 59.96,
+      "source_size": [
+        720,
+        1280
+      ],
+      "size": [
+        720,
+        1280
+      ],
+      "rotate": 0,
+      "duration": 7.99
+    },
+    "frame_count": 479,
+    "pts_count": 479,
+    "pts_first_seconds": 0.0,
+    "pts_last_seconds": 7.973622,
+    "pts_interval_seconds": {
+      "min": 0.00527778,
+      "median": 0.016666499999999917,
+      "max": 0.03614442
+    },
+    "calibration_method": "Median best-y among recognized frames, independently per photo, using same fixed before-frame-0 RGB templates. Unrecognized frames are separately counted and cannot be scored as stable.",
+    "calibrated_template_top_y": {
+      "tomato": 481,
+      "carrot": 481,
+      "hero": 161
+    },
+    "calibration_offset_from_before_reference_y": {
+      "tomato": 11,
+      "carrot": 11,
+      "hero": 11
+    },
+    "photo_stats": {
+      "tomato": {
+        "recognized_frame_count": 479,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          0
+        ],
+        "template_score_range": [
+          0.0065115392208099365,
+          0.009023820050060749
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.00030100334448160534,
+          0.0007023411371237458
+        ],
+        "calibrated_original_roi_mae_range": [
+          5.769453734671126,
+          7.326744704570792
+        ]
+      },
+      "carrot": {
+        "recognized_frame_count": 479,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          0
+        ],
+        "template_score_range": [
+          0.006993547547608614,
+          0.010501112788915634
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.0,
+          0.0
+        ],
+        "calibrated_original_roi_mae_range": [
+          6.779581371009942,
+          8.598597592883307
+        ]
+      },
+      "hero": {
+        "recognized_frame_count": 479,
+        "unrecognized_frames": [],
+        "offset_y_range": [
+          0,
+          0
+        ],
+        "template_score_range": [
+          0.006932706106454134,
+          0.010438033379614353
+        ],
+        "calibrated_original_roi_white_fraction_range": [
+          0.03894542772861357,
+          0.04595132743362832
+        ],
+        "calibrated_original_roi_mae_range": [
+          5.096359390363816,
+          6.748670108161258
+        ]
+      }
+    },
+    "coherent_body_displacement_frame_count": 0,
+    "coherent_body_displacement_events": [],
+    "any_photo_displacement_frames": [],
+    "unrecognized_photo_frame_count": 0,
+    "unrecognized_photo_frames": [],
+    "pure_white_roi_frames": []
+  },
+  "limitations": [
+    "The evidence applies to these two recordings only, on the tested emulator and build; it does not establish every phone or platform.",
+    "PTS interval is recorder hold time, not exact Unity render or display scanout time. Artifacts shorter than captured sampling may be missed.",
+    "Only a recorded result is claimed; no missing or unrecognized photo template is treated as zero movement.",
+    "No synchronized tap telemetry was supplied. Ten alternating taps are stated by the test operator, and selection-state screenshot evidence is evaluated separately.",
+    "Photo positions are calibrated independently to allow different stable initial scroll offsets; thresholds, templates, search span, and white-pixel rule are unchanged."
+  ],
+  "evidence_filenames": [
+    "before-jump-triptych.png",
+    "recording-comparison.png",
+    "after-contact.png"
+  ],
+  "after_selection_validation": {
+    "purpose": "Confirm visible selection changes were recorded; this signal is separate from photo-flicker detection.",
+    "sample_rois_xyxy": {
+      "tomato_card_background": [
+        320,
+        650,
+        340,
+        715
+      ],
+      "carrot_card_background": [
+        660,
+        650,
+        680,
+        715
+      ]
+    },
+    "rule": "Mean blue left minus right < -15 means tomato, > +15 means carrot, otherwise unresolved. Transitions between resolved states only are counted.",
+    "resolved_state_transition_count": 10,
+    "raw_state_transitions": [
+      {
+        "frame": 0,
+        "pts": 0.0,
+        "state": "tomato",
+        "left_rgb": [
+          253.46769230769232,
+          244.46769230769232,
+          217.46769230769232
+        ],
+        "right_rgb": [
+          253.0,
+          253.0,
+          253.0
+        ],
+        "blue_difference": -35.53230769230768
+      },
+      {
+        "frame": 58,
+        "pts": 0.973867,
+        "state": "unresolved",
+        "left_rgb": [
+          253.0,
+          244.0,
+          217.0
+        ],
+        "right_rgb": [
+          241.88,
+          237.0,
+          221.36923076923077
+        ],
+        "blue_difference": -4.369230769230768
+      },
+      {
+        "frame": 59,
+        "pts": 0.993133,
+        "state": "carrot",
+        "left_rgb": [
+          253.52923076923076,
+          252.43384615384616,
+          253.07384615384615
+        ],
+        "right_rgb": [
+          241.0,
+          224.0,
+          180.0
+        ],
+        "blue_difference": 73.07384615384615
+      },
+      {
+        "frame": 75,
+        "pts": 1.259633,
+        "state": "tomato",
+        "left_rgb": [
+          241.0,
+          224.0,
+          179.24923076923076
+        ],
+        "right_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "blue_difference": -37.75076923076924
+      },
+      {
+        "frame": 90,
+        "pts": 1.508056,
+        "state": "carrot",
+        "left_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "right_rgb": [
+          240.98153846153846,
+          223.90769230769232,
+          179.88923076923078
+        ],
+        "blue_difference": 37.11076923076922
+      },
+      {
+        "frame": 106,
+        "pts": 1.774311,
+        "state": "tomato",
+        "left_rgb": [
+          240.8923076923077,
+          223.7076923076923,
+          179.8
+        ],
+        "right_rgb": [
+          243.16307692307691,
+          235.41846153846154,
+          217.0
+        ],
+        "blue_difference": -37.19999999999999
+      },
+      {
+        "frame": 122,
+        "pts": 2.042544,
+        "state": "carrot",
+        "left_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "right_rgb": [
+          240.13846153846154,
+          224.0,
+          180.0
+        ],
+        "blue_difference": 37.0
+      },
+      {
+        "frame": 138,
+        "pts": 2.308933,
+        "state": "tomato",
+        "left_rgb": [
+          241.0,
+          224.0,
+          180.0
+        ],
+        "right_rgb": [
+          243.80307692307693,
+          235.1846153846154,
+          217.49846153846153
+        ],
+        "blue_difference": -37.49846153846153
+      },
+      {
+        "frame": 153,
+        "pts": 2.557022,
+        "state": "carrot",
+        "left_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "right_rgb": [
+          241.0,
+          224.0,
+          180.0
+        ],
+        "blue_difference": 37.0
+      },
+      {
+        "frame": 170,
+        "pts": 2.840867,
+        "state": "tomato",
+        "left_rgb": [
+          241.0,
+          224.0,
+          181.66153846153847
+        ],
+        "right_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "blue_difference": -35.33846153846153
+      },
+      {
+        "frame": 186,
+        "pts": 3.1096,
+        "state": "carrot",
+        "left_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "right_rgb": [
+          241.0,
+          224.0,
+          180.0
+        ],
+        "blue_difference": 37.0
+      },
+      {
+        "frame": 201,
+        "pts": 3.357111,
+        "state": "tomato",
+        "left_rgb": [
+          241.0,
+          224.0,
+          180.0
+        ],
+        "right_rgb": [
+          244.0,
+          235.0,
+          217.0
+        ],
+        "blue_difference": -37.0
+      }
+    ],
+    "resolved_selection_sequence": [
+      "tomato",
+      "carrot",
+      "tomato",
+      "carrot",
+      "tomato",
+      "carrot",
+      "tomato",
+      "carrot",
+      "tomato",
+      "carrot",
+      "tomato"
+    ],
+    "screenshot_evidence": [
+      {
+        "filename": "flicker-after-selection.png",
+        "sha256": "ea09963ceb07b2f74e8352e0b76896d96d8ce3d22f8b0d1f6b2a31bc5a323b48",
+        "visual_observation": "First tomato plot visibly selected at the end of the alternating-tap test."
+      },
+      {
+        "filename": "selected-carrot-care.png",
+        "sha256": "380c14d2a7d7d137169b2234d21983c1ff4c46e50bdea5676bf098179cff6e94",
+        "visual_observation": "Subsequent care card visibly names plot 2, sweet carrot, ready to harvest. This later screenshot is supplementary and is not part of the analyzed video."
+      }
+    ]
+  },
+  "comparison_image_note": "Top: genuine consecutive before frames 54,55,56 showing the first displacement. Bottom: genuine consecutive after frames 57,58,59 bracketing its first recorded selection change. These are different local PTS times; tap synchronization is not claimed."
+}
