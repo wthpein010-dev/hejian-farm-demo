@@ -1,0 +1,269 @@
+{
+  "schema": 1,
+  "description": "AI-generated photographic examples; not actual farm photographs or live video.",
+  "canonicalManifest": "prototype/assets/photos/manifest.json",
+  "canonicalManifestSha256": "cbc2b46d5a420cd9439df7f45f02648831fd0b79cb2e47aeb226f6153a3310c2",
+  "generationPrompts": "See canonical manifest; source photos remain the single asset authority.",
+  "generator": "Pillow 12.2.0",
+  "conversion": {
+    "format": "JPEG",
+    "mode": "RGB",
+    "quality": 90,
+    "subsampling": 0,
+    "optimize": true,
+    "progressive": false,
+    "resize": false
+  },
+  "assets": [
+    {
+      "key": "tomato",
+      "file": "tomato.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 146690,
+      "sha256": "800abe121757c65341a828e6782758baf39d323b0a7bad851f17edc0bc58834f",
+      "source": "prototype/assets/photos/tomato.webp",
+      "sourceSha256": "2bc2b1339a521118c77d877ab97996fb96cc7937991ea1e1c1a846b28ff69543"
+    },
+    {
+      "key": "carrot",
+      "file": "carrot.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 223511,
+      "sha256": "ed184b14e398024a3d4a044a17018e2672b0568cd8cddacbdc15cd2f1817f15b",
+      "source": "prototype/assets/photos/carrot.webp",
+      "sourceSha256": "78ede0a57f5fed03f93e57ac6600e21ba7abfbe8dce89d308922d66a3f0ae3d9"
+    },
+    {
+      "key": "lettuce",
+      "file": "lettuce.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 154734,
+      "sha256": "19a46550556aef8744b11379afc1ce8afcfec1374e0e69037475278974bb1077",
+      "source": "prototype/assets/photos/lettuce.webp",
+      "sourceSha256": "a77d65630cab7c18d0d96a10f5e88173448acf56d023b68fe034acfafdc1be38"
+    },
+    {
+      "key": "radish",
+      "file": "radish.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 197797,
+      "sha256": "0a6106f178d02886e8eb021f1b682e292e5ab5f8abf231acef8ae5528c12a664",
+      "source": "prototype/assets/photos/radish.webp",
+      "sourceSha256": "6ed6b0ca0101c7665c26c0d9fe3da88f46a06034175825e50c908554b842bacc"
+    },
+    {
+      "key": "onion",
+      "file": "onion.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 206024,
+      "sha256": "6ff57121dea188e198f18c24f4f79ce08c72fcc714797db826490e60951be0d5",
+      "source": "prototype/assets/photos/onion.webp",
+      "sourceSha256": "aad328da799ba2014f4e60128c498606707dd5b42f88224bbca6a6303f22d2e5"
+    },
+    {
+      "key": "bokchoy",
+      "file": "bokchoy.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 156518,
+      "sha256": "fc95443d4704426e62ee78f36698ce2aad2f014dcc9cbbd0bc37f26ff9b85d19",
+      "source": "prototype/assets/photos/bokchoy.webp",
+      "sourceSha256": "4f46f8db72547cbb1348074d4e5907be157477d3a852751e8666b96c8418ac13"
+    },
+    {
+      "key": "egg",
+      "file": "egg.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 150193,
+      "sha256": "d2165b28b9c7c3118c732907339c5f261e5dd87c9e791b83766931ef94a96eab",
+      "source": "prototype/assets/photos/egg.webp",
+      "sourceSha256": "2e94208fd7e5f85d46e47ced1f14468d8e1fd9a7ae8db06753c1c791a8144abb"
+    },
+    {
+      "key": "empty",
+      "file": "empty.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 220631,
+      "sha256": "fae20d94f2cf884118be77f1ef759ae36934860ab5c6cd0480f8e77054692b20",
+      "source": "prototype/assets/photos/empty.webp",
+      "sourceSha256": "ad419d36d1167829e3896fc965f80db339cedb160e1f593860cf820a9a548ead"
+    },
+    {
+      "key": "feed",
+      "file": "feed.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 134058,
+      "sha256": "4c1afe09cd05ca0d7eafc5f6e04596f1b297fccd6b917f71860fd7a0e00729b1",
+      "source": "prototype/assets/photos/feed.webp",
+      "sourceSha256": "26432859159f6d50421f972ef48c3cebde11ff909512fdda9ed9b0169d4107a1"
+    },
+    {
+      "key": "fertilizer",
+      "file": "fertilizer.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 168225,
+      "sha256": "a5269e3a342beba92694f7c199e36ca8147794e4516eba285976101212276667",
+      "source": "prototype/assets/photos/fertilizer.webp",
+      "sourceSha256": "7663f291aa3be376836586d53a01d82cb98c238342bf7edba4578984942eefb4"
+    },
+    {
+      "key": "tools",
+      "file": "tools.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 149438,
+      "sha256": "fb3845b279f4aad81375e860a612e93ddc31fdda8674713aae2e8cd32b96b5f5",
+      "source": "prototype/assets/photos/tools.webp",
+      "sourceSha256": "8e1017815d062342389711ecd98773612b1b8b67b70817bedb399a20678cfc91"
+    },
+    {
+      "key": "seed",
+      "file": "seed.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 123698,
+      "sha256": "f672874aaa8d126e85599bbe006187d013cfb85e1a0f6bfebc06aa7c904d23d6",
+      "source": "prototype/assets/photos/seed.webp",
+      "sourceSha256": "ec161d9af4ba18520a0e866516036542bd7fc0a629976f4590e536125d8606cf"
+    },
+    {
+      "key": "sign",
+      "file": "sign.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 163113,
+      "sha256": "a970f73b7008902a649c41d90df2828843c7432ba3401cc6f823fad2a99e160e",
+      "source": "prototype/assets/photos/sign.webp",
+      "sourceSha256": "2a96d0e4102af47643608b0a2e8c555c25f49a3f2997c38b540f3f8ef51beecd"
+    },
+    {
+      "key": "frame",
+      "file": "frame.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 142487,
+      "sha256": "ce883d657e2d5338f946627b8bf3b92ed10ab02cb677ad8b0ccd6353615fa942",
+      "source": "prototype/assets/photos/frame.webp",
+      "sourceSha256": "803cddbff7f0c98fd2674638324eb0031ad3943c6725372688500765389829c2"
+    },
+    {
+      "key": "bundle",
+      "file": "bundle.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 149186,
+      "sha256": "a5c8f74522097e9f0d3d4f4c7741a48b003e569901c7452196aa265631fa7d19",
+      "source": "prototype/assets/photos/bundle.webp",
+      "sourceSha256": "5a5e55dbc502c83dac107708cdd48fcd35c11703cac96afad60b6ee4e915fd83"
+    },
+    {
+      "key": "gift",
+      "file": "gift.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 159675,
+      "sha256": "ffa2c98972b5920d6d3501d885065bc75f4b59716e3e4b1fdb5bea9c266c5a8f",
+      "source": "prototype/assets/photos/gift.webp",
+      "sourceSha256": "43d9f4548fedb7d486c50612482b124db9b5544b5602150c7a61efbd09d49171"
+    },
+    {
+      "key": "farm-estate",
+      "file": "farm-estate.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 351365,
+      "sha256": "abfb3bb549cfd697b24e7554677548f756beae7c80a4ce5814aff5121e1ba324",
+      "source": "prototype/assets/photos/farm-estate.webp",
+      "sourceSha256": "ec2f631ed3d5e10349ee24be1b3a2ddf3c8034bcf2f3392851c4705ffb77a5ff"
+    },
+    {
+      "key": "livestock",
+      "file": "livestock.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 228483,
+      "sha256": "6c511692322b2f920d7a8b0969f965fe1cff870c97074925ca2da4cb1878fbc8",
+      "source": "prototype/assets/photos/livestock.webp",
+      "sourceSha256": "6aede53d11bb2d8e125772397e6ec2a1520044a9858c8da544c6f4129d86bff2"
+    },
+    {
+      "key": "pig-pov",
+      "file": "pig-pov.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 235224,
+      "sha256": "222f3cb4d39b5f05e4f199625172c2fedad11c67a808d934504a1b0c215e6fa3",
+      "source": "prototype/assets/photos/pig-pov.webp",
+      "sourceSha256": "d0c8fd0a90b4a49c14fade9d32b64aaa932e9eac17779792821c448381236ad7"
+    },
+    {
+      "key": "shop-banner",
+      "file": "shop-banner.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 233109,
+      "sha256": "ea08448e48981f8c5e8cb67bafedf9cf96f40fbb7172b735688761b0bd6daa36",
+      "source": "prototype/assets/photos/shop-banner.webp",
+      "sourceSha256": "4cc26ce0e3a497131446d5314538b762e652cfe7c3a6ca2858455a433091639d"
+    },
+    {
+      "key": "activity-banner",
+      "file": "activity-banner.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 228316,
+      "sha256": "cb225362630c9907650d62f74e66170902c7af526ee9f69d879b80603c48397c",
+      "source": "prototype/assets/photos/activity-banner.webp",
+      "sourceSha256": "5e1b41a878539fa7f8d0e8f35128a38ad0763fc5c96d0469b181cec774b04c71"
+    },
+    {
+      "key": "season-banner",
+      "file": "season-banner.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 252731,
+      "sha256": "c7177f0bf9d0b365755d47bc57c9f24fad046c48736ae51114a2a555f9253289",
+      "source": "prototype/assets/photos/season-banner.webp",
+      "sourceSha256": "33177cb2ea807747a768f971ba3d65d76b516dbc196d6cec78a90d49b5e8c040"
+    },
+    {
+      "key": "pig",
+      "file": "pig.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 155477,
+      "sha256": "5b4728b04f6e82efea8df36b26d6c0d01c60921138fb31709c17336c98bd9ff0",
+      "source": "prototype/assets/photos/pig.webp",
+      "sourceSha256": "6ee14d3d2cd3bfd3ced4f488bcc6e6f8bb6c365c0cd39ce1139d8dcb4ca1ab18"
+    },
+    {
+      "key": "goat",
+      "file": "goat.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 159504,
+      "sha256": "cd18503af3c2d38902713b4a4997743c792ccbe5be769f599128da2e9dff4e7c",
+      "source": "prototype/assets/photos/goat.webp",
+      "sourceSha256": "eaf9c404e72f3d074436ba274fb53c8bd506c99ef3251a571444935c709d2ef1"
+    },
+    {
+      "key": "chicken",
+      "file": "chicken.jpg",
+      "width": 640,
+      "height": 640,
+      "bytes": 182147,
+      "sha256": "022ee60b6dc61594919c99081b3e267fd0bb26ec26ae37ecd19fbc6e28818c88",
+      "source": "prototype/assets/photos/chicken.webp",
+      "sourceSha256": "9c0029f2eb649523b40f4c793efc2be2a8cbeef32e43d2943b5d196981d85a16"
+    }
+  ]
+}

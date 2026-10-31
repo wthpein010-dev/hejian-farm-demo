@@ -241,3 +241,9 @@ components:
 ### 作业与表单细节
 
 新workbench.css仅消费canonical token；订单日期/组别/状态分组清楚，48px动作、自然滚动，工作人员区域明确演示。输入占位使用secondary灰字和原生placeholder，label持续显示；不能将示例提示预填为真实数据。
+
+## Unity 安卓体验适配（2026-10-31）
+
+用户要求将当前内容用 Unity 开发并交付APK。`unity/`以原生C#/UGUI延续当前暖黄五入口，大字、大触控、写实摄影和单一当前图标选中；无WebView。`prototype/styles.css`仍为唯一颜色源，`tools/sync-unity-theme.mjs`生成`FarmTheme.cs`并提供`--check`；`FarmUI`拥有共享按钮、输入、模态、滚动和图标，`FarmApp`只组合页面。432点宽画布随设备缩放并处理安全区；正文17点、辅助至少12点、主按钮52–56点。UGUI不是HTML语义控件，Android读屏、系统大字和真实软键盘仍需专项真机验证，不把编译或编辑器截图当完整适老验收。
+
+本包为独立离线体验；颜色和既有H5不改，来源清单随照片/字体交付。农事、奖励、认养、社区及配送仅进程内示例，不自动接通既有账户资产或生产服务。

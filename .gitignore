@@ -12,3 +12,11 @@ apps/*/dist/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/[Bb]uilds/
+unity/*.csproj
+unity/*.sln

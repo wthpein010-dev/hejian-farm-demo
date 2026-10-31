@@ -1,0 +1,144 @@
+{
+  "evidence": "Unity Editor PlayMode only; not Android/device screenshots",
+  "width": 432,
+  "height": 900,
+  "failures": 0,
+  "pages": [
+    {
+      "page": "home",
+      "screenshot": "screenshots/home.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 26,
+        "visibleButtons": 14,
+        "contentWidth": 432.0,
+        "contentHeight": 1762.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "farm",
+      "screenshot": "screenshots/farm.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 21,
+        "visibleButtons": 12,
+        "contentWidth": 432.0,
+        "contentHeight": 1501.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "shop",
+      "screenshot": "screenshots/shop.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 18,
+        "visibleButtons": 9,
+        "contentWidth": 432.0,
+        "contentHeight": 4054.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "live",
+      "screenshot": "screenshots/live.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 18,
+        "visibleButtons": 9,
+        "contentWidth": 432.0,
+        "contentHeight": 889.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "profile",
+      "screenshot": "screenshots/profile.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 30,
+        "visibleButtons": 12,
+        "contentWidth": 432.0,
+        "contentHeight": 1178.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "community",
+      "screenshot": "screenshots/community.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 24,
+        "visibleButtons": 16,
+        "contentWidth": 432.0,
+        "contentHeight": 1590.0,
+        "issues": []
+      }
+    },
+    {
+      "page": "activities",
+      "screenshot": "screenshots/activities.png",
+      "method": "gameview-screencapture-editor",
+      "nativeFallbackReason": "",
+      "inspection": {
+        "visibleText": 24,
+        "visibleButtons": 15,
+        "contentWidth": 432.0,
+        "contentHeight": 2039.0,
+        "issues": []
+      }
+    }
+  ],
+  "regressions": [
+    {
+      "name": "coupon-can-be-removed-below-threshold",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-01.png"
+    },
+    {
+      "name": "pause-marks-water-unknown",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-02.png"
+    },
+    {
+      "name": "draft-confirmation-isolates-and-focuses",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-03.png"
+    },
+    {
+      "name": "multiline-post-fits-card-and-detail",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-04.png"
+    },
+    {
+      "name": "animal-adoption-selects-new-unit",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-05.png"
+    },
+    {
+      "name": "egg-delivery-shortcut-renders-pasture",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-06.png"
+    },
+    {
+      "name": "meat-delivery-shortcut-selects-pasture",
+      "passed": true,
+      "error": "",
+      "screenshot": "screenshots/case-07.png"
+    }
+  ],
+  "errors": []
+}

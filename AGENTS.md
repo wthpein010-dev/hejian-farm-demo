@@ -119,3 +119,9 @@ client唯一pending/全局原结果面板；成功collect抬高同账户/环境�
 用户已选App微信登录；跨端账户资产共用方式及开放平台移动应用状态仍待答，不能自动创建另一套资产或合并。契约[APP-WEIXIN-AUTH](docs/release/APP-WEIXIN-AUTH.md)，本轮`.scratch/app-weixin-auth/`。api/weixin-app-oauth.mjs只提供固定OAuth交换与冻结私有摘要，不注册路由/环境fallback/Store建账；platform-http.mjs共享受限读取和同一PlatformIdentityError，旧小程序provider协议不变。UnionID证据namespace:null，没有已核实开放平台作用域，不是合并授权；未来入口仍须先持久claim再交换及核定映射。
 
 core/weixin-app.mjs只用plus.oauth code/state，当前uni.login桥丢state不能替代。CSPRNG失败关闭，默认本地60秒覆盖发现/授权；cancel只清本地等待，不关闭微信。client.authorizePlatform在唯一登录代际中等code，退出/新登录可结束旧客户端等待，迟到code不HTTP；该动作不自动清另一authorizer的busy，最终页面生命周期必须显式协调。当前未接App UI/manifest/完整账户入口，标准基座/合成测试/四端资源不能冒充签名真机与正式登录。code/state/平台令牌/原标识/Secret只按契约短暂内存，不进客户端storage/路由URL、日志或原账；官方服务端HTTPS交换查询须按契约出站脱敏。不迁移运行库、不操作桌面或平台设置。
+
+## Unity 安卓体验版（2026-10-31）
+
+用户明确要求用Unity开发当前内容并打APK。原生工程`unity/`，边界[UNITY-APK](docs/release/UNITY-APK.md)，构建[README](unity/README.md)。FarmModel拥有唯一进程内演示钱包/规则，FarmUI共享UGUI控件，FarmApp导航/内存社区；不要误接生产账户或重复建账。主题由tools/sync-unity-theme.mjs从canonical CSS生成，照片同源转换并核摘要，字体Noto CJK+OFL许可随包。Unity对象不得用C# `??`代替其`==null`检查；共享Surface重用Image；自定义Graphic需要CanvasRenderer；旧Input模式显式设0。
+
+本轮只生成体验签名APK，不代表微信/抖音SDK、生产设备/支付/广告/物流或正式上架。所有业务及UGC只在进程内、收货仅示例脱敏，退出重置。构建源码留工作树，Library/Gradle/TEMP/产物在有marker的D:/farm-unity-build；脚本只同步自身副本，不覆盖其他工程或操作其他模拟器。编辑器图形探针与APK编译/验签分别报告；后台或未知设备不能自动确认成功，草稿确认必须隔离原sheet键盘交互。

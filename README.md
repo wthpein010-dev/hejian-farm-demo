@@ -1,5 +1,7 @@
 # 合耕小舍 · 竖版 H5 Demo
 
+2026-10-31新增[Unity原生安卓体验工程](unity/README.md)，包含离线五页和种养、商城、签到、社区等操作；[下载APK与工程包](https://github.com/wthpein010-dev/hejian-farm-demo/releases/tag/unity-demo-v0.1.0)，[范围与验收](docs/release/UNITY-APK.md)。Unity体验包与原H5、正式跨端账户工程各自保留，不把APK打包视为生产服务或平台上架完成。
+
 > 正式App／微信／抖音小程序工程正在推进，尚未达到全量上线验收。新增 `apps/mobile` 跨端客户端与 `services/api` 持久账户/资产服务；现有公开Pages仍是 `prototype/` H5演示。两者验证边界见[上线矩阵](docs/release/READINESS.md)，不能把演示发布或跨端编译写成正式上架。
 
 跨端本地开发（Node≥24.15）：先按[服务端说明](services/api/README.md)启动明确的本机沙盒，再运行 `npm ci --ignore-scripts` 及根 `npm run dev:mobile`。客户端公开配置与构建说明见[移动工程](apps/mobile/README.md)。真实平台AppID／后端HTTPS域名、签名和设备联调仍待配置。
